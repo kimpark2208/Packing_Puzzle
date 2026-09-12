@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
@@ -15,8 +15,8 @@ public class BlockDrag : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDra
     [Tooltip("우클릭 시 좌우반전")]
     public bool flipOnRightClick = true;
 
-    [Header("롱프레스 설정")]
-    [Tooltip("롱프레스(초) 동안 누르면 플립됩니다.")]
+    [Header("론프레스 설정")]
+    [Tooltip("론프레스(초) 동안 누르면 플립됩니다.")]
     public float longPressThreshold = 0.6f;
 
     private float lastClickTime = -1f;
@@ -41,7 +41,7 @@ public class BlockDrag : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDra
     private bool isPlacedOnGrid = false;
     private bool wasPlacedBeforeDrag = false;
 
-    // 롱프레스 관련 상태
+    // 론프레스 관련 상태
     private bool pointerDown = false;
     private float pointerDownTime = 0f;
     private bool hadLongPress = false;
@@ -78,13 +78,13 @@ public class BlockDrag : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDra
 
     void Update()
     {
-        // 롱프레스 감지: 포인터가 눌려있고 드래그 중이 아닐 때만 카운트
+        // 론프레스 감지: 포인터가 눌려있고 드래그 중이 아닐 때만 카운트
         if (pointerDown && !isDragging && !hadLongPress)
         {
             if (Time.unscaledTime - pointerDownTime >= longPressThreshold)
             {
                 hadLongPress = true;
-                pointerDown = false; // 롱프레스 한 번만 트리거
+                pointerDown = false; // 론프레스 한 번만 트리거
                 FlipHorizontal();
             }
         }
@@ -116,7 +116,7 @@ public class BlockDrag : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDra
         transform.SetParent(rootCanvas.transform, true);
         canvasGroup.blocksRaycasts = false;
 
-        // 드래그 시작 시 롱프레스 취소
+        // 드래그 시작 시 론프레스 취소
         isDragging = true;
         pointerDown = false;
     }
@@ -133,7 +133,7 @@ public class BlockDrag : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDra
 
         bool placed = TryPlaceOnGrid(eventData);
 
-        // 드래그 끝났음을 표시
+        // 드래그 끓났음을 표시
         isDragging = false;
 
         if (!placed)
@@ -153,7 +153,7 @@ public class BlockDrag : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDra
 
     public void OnPointerDown(PointerEventData eventData)
     {
-        // 포인터 다운 시 롱프레스 타이머 시작
+        // 포인터 다운 시 론프레스 타이머 시작
         pointerDown = true;
         hadLongPress = false;
         pointerDownTime = Time.unscaledTime;
@@ -161,13 +161,13 @@ public class BlockDrag : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDra
 
     public void OnPointerUp(PointerEventData eventData)
     {
-        // 포인터 업 시 롱프레스 취소(이미 롱프레스가 발생했다면 hadLongPress가 true)
+        // 포인터 업 시 론프레스 취소(이미 론프레스가 발생했다면 hadLongPress가 true)
         pointerDown = false;
     }
 
     public void OnPointerClick(PointerEventData eventData)
     {
-        // 롱프레스가 이미 발생했다면 클릭 이벤트 처리하지 않음
+        // 론프레스가 이미 발생했다면 클릭 이벤트 처리하지 않음
         if (hadLongPress)
         {
             hadLongPress = false;
@@ -332,7 +332,7 @@ public class BlockDrag : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDra
         return true;
     }
 
-    // GridManager가 호출하여, 이 블록이 다른 블록과 겹쳐 있는지 여부를 색으로 표시하도록 지시한다.
+    // GridManager가 호출하여, 이 블록이 다른 블록과 겹쳤 있는지 여부를 색으로 표시하도록 지시한다.
     public void SetOverlapVisual(bool isOverlapping)
     {
         if (blockImage == null) return;
