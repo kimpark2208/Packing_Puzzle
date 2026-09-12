@@ -1,20 +1,20 @@
 using UnityEngine;
 using UnityEngine.UI;
 
-// Èò ¹è°æ Image À§¿¡ ÀÌ ÄÄÆ÷³ÍÆ®¸¦ ¾ñÀ¸¸é, ½ºÇÁ¶óÀÌÆ® ¾øÀÌ °İÀÚ¼±À» º¤ÅÍ·Î ±×·ÁÁØ´Ù.
-// GridManager¿Í °°Àº ¿ÀºêÁ§Æ®(¶Ç´Â ±× ÀÚ½Ä)¿¡ ºÙ¿©¼­ rows/cols/cellWidth/cellHeight¸¦ ±×´ë·Î ÂüÁ¶ÇÑ´Ù.
+// í•˜ì–€ ë°°ê²½ Image ìœ„ì— ì´ ì»´í¬ë„ŒíŠ¸ë¥¼ ì–¹ìœ¼ë©´, ìŠ¤í”„ë¼ì´íŠ¸ ì—†ì´ ê²©ìì„ ì„ ë²¡í„°ë¡œ ê·¸ë ¤ì¤€ë‹¤.
+// GridManagerì™€ ê°™ì€ ì˜¤ë¸Œì íŠ¸(ë˜ëŠ” ê·¸ ìì‹)ì— ë¶™ì—¬ì„œ rows/cols/cellWidth/cellHeightë¥¼ ê·¸ëŒ€ë¡œ ì°¸ì¡°í•œë‹¤.
 [RequireComponent(typeof(CanvasRenderer))]
 public class GridLineRenderer : MaskableGraphic
 {
-    [Header("±×¸®µå Å©±â (GridManager¿Í µ¿ÀÏÇÏ°Ô ¸ÂÃâ °Í)")]
+    [Header("ê·¸ë¦¬ë“œ í¬ê¸° (GridManagerì™€ ë™ì¼í•˜ê²Œ ë§ì¶œ ê²ƒ)")]
     public int rows = 5;
     public int cols = 5;
 
-    [Header("¼± ½ºÅ¸ÀÏ")]
+    [Header("ì„  ìŠ¤íƒ€ì¼")]
     public float lineThickness = 2f;
     public Color lineColor = new Color(0.7f, 0.65f, 0.6f, 1f);
 
-    [Header("Å×µÎ¸®¸¦ ´õ µÎ²®°Ô ÇÏ°í ½ÍÀ» ¶§")]
+    [Header("í…Œë‘ë¦¬ë¥¼ ë” ë‘ê¹ê²Œ í•˜ê³  ì‹¶ì„ ë•Œ")]
     public bool thickerBorder = true;
     public float borderThickness = 4f;
     public Color borderColor = new Color(0.55f, 0.5f, 0.45f, 1f);
@@ -32,28 +32,28 @@ public class GridLineRenderer : MaskableGraphic
         float cellW = width / cols;
         float cellH = height / rows;
 
-        // ³»ºÎ ¼¼·Î¼± (cols - 1°³)
+        // ë‚´ë¶€ ì„¸ë¡œì„  (cols - 1ê°œ)
         for (int c = 1; c < cols; c++)
         {
             float x = originX + c * cellW;
             AddVerticalLine(vh, x, originY, originY + height, lineThickness, lineColor);
         }
 
-        // ³»ºÎ °¡·Î¼± (rows - 1°³)
+        // ë‚´ë¶€ ê°€ë¡œì„  (rows - 1ê°œ)
         for (int rIdx = 1; rIdx < rows; rIdx++)
         {
             float y = originY + rIdx * cellH;
             AddHorizontalLine(vh, y, originX, originX + width, lineThickness, lineColor);
         }
 
-        // ¹Ù±ù Å×µÎ¸® (´õ µÎ²®°Ô)
+        // ë°”ê¹¥ í…Œë‘ë¦¬ (ë” ë‘ê¹ê²Œ)
         float bt = thickerBorder ? borderThickness : lineThickness;
         Color bc = thickerBorder ? borderColor : lineColor;
 
-        AddHorizontalLine(vh, originY, originX, originX + width, bt, bc);              // ¾Æ·¡
-        AddHorizontalLine(vh, originY + height, originX, originX + width, bt, bc);     // À§
-        AddVerticalLine(vh, originX, originY, originY + height, bt, bc);               // ¿ŞÂÊ
-        AddVerticalLine(vh, originX + width, originY, originY + height, bt, bc);       // ¿À¸¥ÂÊ
+        AddHorizontalLine(vh, originY, originX, originX + width, bt, bc);              // ì•„ë˜
+        AddHorizontalLine(vh, originY + height, originX, originX + width, bt, bc);     // ìœ„
+        AddVerticalLine(vh, originX, originY, originY + height, bt, bc);               // ì™¼ìª½
+        AddVerticalLine(vh, originX + width, originY, originY + height, bt, bc);       // ì˜¤ë¥¸ìª½
     }
 
     private void AddVerticalLine(VertexHelper vh, float x, float yMin, float yMax, float thickness, Color color)
