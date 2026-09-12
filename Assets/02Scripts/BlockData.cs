@@ -20,18 +20,18 @@ public class BlockData : ScriptableObject
         Purple 
     }
 
-    [Header("ºí·Ï Á¤º¸")]
+    [Header("ë¸”ë¡ ì •ë³´")]
     public int blockID;
     public int blockScore;
     public Color color;
 
-    [Header("ºí·Ï ¸ğ¾ç")]
+    [Header("ë¸”ë¡ ëª¨ì–‘")]
     public BlockRow[] shapeGrid;
 
-    [Header("È¸Àü ±âÁØÁ¡")]
+    [Header("íšŒì „ ê¸°ì¤€ì ")]
     public Vector2Int anchorCoord;
     
     public GameObject blockPrefab;
 
-    //TODO: ²É ¸¹¾ÆÁö¸é ¸ğ¾çÁ¤º¸¶û »ö»ó¹×ÇÁ¸®Æé Á¤º¸ÀÇSOºĞ¸®
+    //TODO: ê¿ƒ ë§ì•„ì§€ë©´ ëª¨ì–‘ì •ë³´ë‘ ìƒ‰ìƒë°í”„ë¦¬íŒ© ì •ë³´ì˜SOë¶„ë¦¬
 }
