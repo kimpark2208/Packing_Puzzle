@@ -7,7 +7,7 @@ using Random = UnityEngine.Random;
 public class GachaManager : MonoBehaviour
 {
     [SerializeField] Button PurseBTN;
-    [SerializeField] List<BlockData> blockData; //TODO: ³ªÁß¿£ ºí·° ¼±ÅÃÈ­¸é¿¡¼­ ¹Ş¾Æ¿À°Ô ÇÒ°ÅÀÓ.
+    [SerializeField] List<BlockData> blockData; //TODO: ë‚˜ì¤‘ì—” ë¸”ëŸ­ ì„ íƒí™”ë©´ì—ì„œ ë°›ì•„ì˜¤ê²Œ í• ê±°ì„.
     [SerializeField] Transform tray;
     [SerializeField] int drawCount = 3;
     [SerializeField] int maxRerolls = 3;
@@ -25,7 +25,7 @@ public class GachaManager : MonoBehaviour
         Debug.Log("gacha");
         if ((rerollCount >= maxRerolls) && (curSpawned.Count > 0))
         {
-            Debug.Log("´Ù»Ì¾Ò¾îÀÓ¸¶");
+            Debug.Log("ë‹¤ë¿‘ì•˜ì–´ì„ë§ˆ");
             return;
         }
 
@@ -40,12 +40,12 @@ public class GachaManager : MonoBehaviour
             if (draggable != null)
             {
                 draggable.blockData = picked;
-                // ¹èÄ¡ ¿Ï·á ½Ã curSpawned¿¡¼­ ½º½º·Î Á¦°ÅÇÏµµ·Ï Äİ¹é µî·Ï
+                // ë°°ì¹˜ ì™„ë£Œ ì‹œ curSpawnedì—ì„œ ìŠ¤ìŠ¤ë¡œ ì œê±°í•˜ë„ë¡ ì½œë°± ë“±ë¡
                 draggable.OnPlaced += HandleBlockPlaced;
             }
             else
             {
-                Debug.LogWarning($"{picked.name}ÀÇ blockPrefab¿¡ BlockDrag ÄÄÆ÷³ÍÆ®°¡ ¾ø½À´Ï´Ù.");
+                Debug.LogWarning($"{picked.name}ì˜ blockPrefabì— BlockDrag ì»´í¬ë„ŒíŠ¸ê°€ ì—†ìŠµë‹ˆë‹¤.");
             }
 
             curSpawned.Add(block);
@@ -54,7 +54,7 @@ public class GachaManager : MonoBehaviour
         Debug.Log(++rerollCount + "/" + maxRerolls);
     }
 
-    // ±×¸®µå¿¡ ¹èÄ¡°¡ ¿Ï·áµÈ ºí·ÏÀº ´õ ÀÌ»ó "Æ®·¹ÀÌÀÇ ¸®·Ñ ´ë»ó"ÀÌ ¾Æ´Ï¹Ç·Î ¸ñ·Ï¿¡¼­ Á¦°Å
+    // ê·¸ë¦¬ë“œì— ë°°ì¹˜ê°€ ì™„ë£Œëœ ë¸”ë¡ì€ ë” ì´ìƒ "íŠ¸ë ˆì´ì˜ ë¦¬ë¡¤ ëŒ€ìƒ"ì´ ì•„ë‹ˆë¯€ë¡œ ëª©ë¡ì—ì„œ ì œê±°
     private void HandleBlockPlaced(GameObject block)
     {
         curSpawned.Remove(block);
