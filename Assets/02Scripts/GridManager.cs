@@ -6,11 +6,11 @@ public class GridManager : MonoBehaviour
 {
     public static GridManager Instance { get; private set; }
 
-    [Header("±×¸®µå Å©±â (Çà, ¿­)")]
+    [Header("ê·¸ë¦¬ë“œ í¬ê¸° (í–‰, ì—´)")]
     public int rows = 5;
     public int cols = 5;
 
-    [Header("°ãÄ§ Ç¥½Ã »ö»ó")]
+    [Header("ê²¹ì¹¨ í‘œì‹œ ìƒ‰ìƒ")]
     public Color overlapColor = new Color(1f, 0.2f, 0.2f, 0.85f);
 
     private RectTransform rectTransform;
@@ -21,7 +21,7 @@ public class GridManager : MonoBehaviour
     public float CellWidth => cellWidth;
     public float CellHeight => cellHeight;
 
-    // ÇÑ Ä­¿¡ ¿©·¯ ºí·ÏÀÌ °ãÄ¥ ¼ö ÀÖÀ¸¹Ç·Î ¸®½ºÆ®·Î °ü¸®
+    // í•œ ì¹¸ì— ì—¬ëŸ¬ ë¸”ë¡ì´ ê²¹ì¹  ìˆ˜ ìˆìœ¼ë¯€ë¡œ ë¦¬ìŠ¤íŠ¸ë¡œ ê´€ë¦¬
     private List<BlockDrag>[,] cellOwners;
 
     void Awake()
@@ -71,7 +71,7 @@ public class GridManager : MonoBehaviour
         return true;
     }
 
-    // ±×¸®µå ¹üÀ§ ¾È¿¡ µé¾î°¡´ÂÁö¸¸ È®ÀÎÇÑ´Ù. ´Ù¸¥ ºí·Ï°ú °ãÄ¡´Â °ÍÀº ´õ ÀÌ»ó ¹èÄ¡ ½ÇÆĞ »çÀ¯°¡ ¾Æ´Ï´Ù.
+    // ê·¸ë¦¬ë“œ ë²”ìœ„ ì•ˆì— ë“¤ì–´ê°€ëŠ”ì§€ë§Œ í™•ì¸í•œë‹¤. ë‹¤ë¥¸ ë¸”ë¡ê³¼ ê²¹ì¹˜ëŠ” ê²ƒì€ ë” ì´ìƒ ë°°ì¹˜ ì‹¤íŒ¨ ì‚¬ìœ ê°€ ì•„ë‹ˆë‹¤.
     public bool CanPlace(BlockRow[] shapeGrid, Vector2Int anchor, int anchorRow, int anchorCol)
     {
         for (int r = 0; r < shapeGrid.Length; r++)
@@ -88,7 +88,7 @@ public class GridManager : MonoBehaviour
         return true;
     }
 
-    // placedBy°¡ Â÷ÁöÇÑ Ä­À» µî·ÏÇÏ°í, ±× Ä­¿¡ ÀÌ¹Ì ´Ù¸¥ ºí·ÏÀÌ ÀÖÀ¸¸é µÑ ´Ù °ãÄ§ »óÅÂ·Î Ç¥½ÃÇÑ´Ù.
+    // placedByê°€ ì°¨ì§€í•œ ì¹¸ì„ ë“±ë¡í•˜ê³ , ê·¸ ì¹¸ì— ì´ë¯¸ ë‹¤ë¥¸ ë¸”ë¡ì´ ìˆìœ¼ë©´ ë‘˜ ë‹¤ ê²¹ì¹¨ ìƒíƒœë¡œ í‘œì‹œí•œë‹¤.
     public void PlaceBlock(BlockRow[] shapeGrid, Vector2Int anchor, int anchorRow, int anchorCol, BlockDrag placedBy)
     {
         for (int r = 0; r < shapeGrid.Length; r++)
@@ -108,7 +108,7 @@ public class GridManager : MonoBehaviour
         RefreshOverlapStates();
     }
 
-    // Àç¹èÄ¡/È¸Àü/¹İÀü ½Ã, Æ¯Á¤ ºí·ÏÀÌ Â÷ÁöÇÏ°í ÀÖ´ø Ä­ µî·ÏÀ» ÀüºÎ Áö¿î´Ù.
+    // ì¬ë°°ì¹˜/íšŒì „/ë°˜ì „ ì‹œ, íŠ¹ì • ë¸”ë¡ì´ ì°¨ì§€í•˜ê³  ìˆë˜ ì¹¸ ë“±ë¡ì„ ì „ë¶€ ì§€ìš´ë‹¤.
     public void ClearOwnedCells(BlockDrag block)
     {
         for (int r = 0; r < rows; r++)
@@ -122,7 +122,7 @@ public class GridManager : MonoBehaviour
         RefreshOverlapStates();
     }
 
-    // ¸ğµç Ä­À» ÈÈ¾î¼­, 2°³ ÀÌ»óÀÇ ºí·ÏÀÌ Â÷ÁöÇÑ Ä­¿¡ °ü·ÃµÈ ºí·Ïµé¿¡°Ô °ãÄ§ ¿©ºÎ¸¦ ÅëÁöÇÑ´Ù.
+    // ëª¨ë“  ì¹¸ì„ í›‘ì–´ì„œ, 2ê°œ ì´ìƒì˜ ë¸”ë¡ì´ ì°¨ì§€í•œ ì¹¸ì— ê´€ë ¨ëœ ë¸”ë¡ë“¤ì—ê²Œ ê²¹ì¹¨ ì—¬ë¶€ë¥¼ í†µì§€í•œë‹¤.
     private void RefreshOverlapStates()
     {
         HashSet<BlockDrag> overlapping = new HashSet<BlockDrag>();
@@ -161,7 +161,7 @@ public class GridManager : MonoBehaviour
         return new Vector2(x, y);
     }
 
-    // ¾î´À Ä­ÀÌµç 2°³ ÀÌ»óÀÇ ºí·ÏÀÌ °ãÃÄ ÀÖÀ¸¸é true (Å¬¸®¾î/½Â¸® ÆÇÁ¤ µî¿¡¼­ È°¿ë °¡´É)
+    // ì–´ëŠ ì¹¸ì´ë“  2ê°œ ì´ìƒì˜ ë¸”ë¡ì´ ê²¹ì³ ìˆìœ¼ë©´ true (í´ë¦¬ì–´/ìŠ¹ë¦¬ íŒì • ë“±ì—ì„œ í™œìš© ê°€ëŠ¥)
     public bool HasAnyOverlap()
     {
         for (int r = 0; r < rows; r++)
