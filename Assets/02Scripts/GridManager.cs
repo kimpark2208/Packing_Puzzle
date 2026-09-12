@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 [RequireComponent(typeof(RectTransform))]
@@ -9,6 +10,9 @@ public class GridManager : MonoBehaviour
     public int rows = 5;
     public int cols = 5;
 
+    [Header("겹침 표시 색상")]
+    public Color overlapColor = new Color(1f, 0.2f, 0.2f, 0.85f);
+
     private RectTransform rectTransform;
     private Canvas parentCanvas;
     private float cellWidth;
@@ -17,25 +21,21 @@ public class GridManager : MonoBehaviour
     public float CellWidth => cellWidth;
     public float CellHeight => cellHeight;
 
-
-    private bool[,] occupied;
+    // 한 칸에 여러 블록이 겹칠 수 있으므로 리스트로 관리
+    private List<BlockDrag>[,] cellOwners;
 
     void Awake()
     {
         Instance = this;
         rectTransform = GetComponent<RectTransform>();
         parentCanvas = GetComponentInParent<Canvas>();
-        occupied = new bool[rows, cols];
-        RecalculateCellSize();
 
-        // ▼ 디버깅: Grid와 그 부모들의 위치/스케일을 전부 출력 ▼
-        Transform t = transform;
-        while (t != null)
-        {
-            Debug.Log($"[계층] {t.name} - localPos: {t.localPosition}, localScale: {t.localScale}, worldPos: {t.position}");
-            t = t.parent;
-        }
-        // ▲ 디버깅 ▲
+        cellOwners = new List<BlockDrag>[rows, cols];
+        for (int r = 0; r < rows; r++)
+            for (int c = 0; c < cols; c++)
+                cellOwners[r, c] = new List<BlockDrag>();
+
+        RecalculateCellSize();
     }
 
     public void RecalculateCellSize()
@@ -55,11 +55,7 @@ public class GridManager : MonoBehaviour
 
         Vector2 localPoint;
         bool converted = RectTransformUtility.ScreenPointToLocalPointInRectangle(rectTransform, screenPoint, cam, out localPoint);
-        if (!converted)
-        {
-            Debug.LogWarning($"변환 실패. cam: {cam}");
-            return false;
-        }
+        if (!converted) return false;
 
         Rect rect = rectTransform.rect;
 
@@ -75,6 +71,7 @@ public class GridManager : MonoBehaviour
         return true;
     }
 
+    // 그리드 범위 안에 들어가는지만 확인한다. 다른 블록과 겹치는 것은 더 이상 배치 실패 사유가 아니다.
     public bool CanPlace(BlockRow[] shapeGrid, Vector2Int anchor, int anchorRow, int anchorCol)
     {
         for (int r = 0; r < shapeGrid.Length; r++)
@@ -85,23 +82,14 @@ public class GridManager : MonoBehaviour
                 if (!rowCols[c]) continue;
                 int targetRow = anchorRow + (r - anchor.y);
                 int targetCol = anchorCol + (c - anchor.x);
-
-                if (targetRow < 0 || targetRow >= rows || targetCol < 0 || targetCol >= cols)
-                {
-                    Debug.Log($"CanPlace 실패: 범위 밖 -> r:{r} c:{c} => targetRow:{targetRow} targetCol:{targetCol} (anchorRow:{anchorRow} anchorCol:{anchorCol})");
-                    return false;
-                }
-                if (occupied[targetRow, targetCol])
-                {
-                    Debug.Log($"CanPlace 실패: 이미 점유됨 -> targetRow:{targetRow} targetCol:{targetCol}");
-                    return false;
-                }
+                if (targetRow < 0 || targetRow >= rows || targetCol < 0 || targetCol >= cols) return false;
             }
         }
         return true;
     }
 
-    public void PlaceBlock(BlockRow[] shapeGrid, Vector2Int anchor, int anchorRow, int anchorCol)
+    // placedBy가 차지한 칸을 등록하고, 그 칸에 이미 다른 블록이 있으면 둘 다 겹침 상태로 표시한다.
+    public void PlaceBlock(BlockRow[] shapeGrid, Vector2Int anchor, int anchorRow, int anchorCol, BlockDrag placedBy)
     {
         for (int r = 0; r < shapeGrid.Length; r++)
         {
@@ -111,10 +99,59 @@ public class GridManager : MonoBehaviour
                 if (!rowCols[c]) continue;
                 int targetRow = anchorRow + (r - anchor.y);
                 int targetCol = anchorCol + (c - anchor.x);
-                occupied[targetRow, targetCol] = true;
+
+                var list = cellOwners[targetRow, targetCol];
+                if (!list.Contains(placedBy)) list.Add(placedBy);
             }
         }
+
+        RefreshOverlapStates();
     }
+
+    // 재배치/회전/반전 시, 특정 블록이 차지하고 있던 칸 등록을 전부 지운다.
+    public void ClearOwnedCells(BlockDrag block)
+    {
+        for (int r = 0; r < rows; r++)
+        {
+            for (int c = 0; c < cols; c++)
+            {
+                cellOwners[r, c].Remove(block);
+            }
+        }
+
+        RefreshOverlapStates();
+    }
+
+    // 모든 칸을 훑어서, 2개 이상의 블록이 차지한 칸에 관련된 블록들에게 겹침 여부를 통지한다.
+    private void RefreshOverlapStates()
+    {
+        HashSet<BlockDrag> overlapping = new HashSet<BlockDrag>();
+
+        for (int r = 0; r < rows; r++)
+        {
+            for (int c = 0; c < cols; c++)
+            {
+                var list = cellOwners[r, c];
+                if (list.Count >= 2)
+                {
+                    foreach (var b in list) overlapping.Add(b);
+                }
+            }
+        }
+
+        HashSet<BlockDrag> allBlocks = new HashSet<BlockDrag>();
+        for (int r = 0; r < rows; r++)
+            for (int c = 0; c < cols; c++)
+                foreach (var b in cellOwners[r, c]) allBlocks.Add(b);
+
+        foreach (var b in allBlocks)
+        {
+            if (b == null) continue;
+            b.SetOverlapVisual(overlapping.Contains(b));
+        }
+    }
+
+    public Color OverlapColor => overlapColor;
 
     public Vector2 GetCellAnchoredPosition(int row, int col)
     {
@@ -124,10 +161,20 @@ public class GridManager : MonoBehaviour
         return new Vector2(x, y);
     }
 
+    // 어느 칸이든 2개 이상의 블록이 겹쳐 있으면 true (클리어/승리 판정 등에서 활용 가능)
+    public bool HasAnyOverlap()
+    {
+        for (int r = 0; r < rows; r++)
+            for (int c = 0; c < cols; c++)
+                if (cellOwners[r, c].Count >= 2) return true;
+        return false;
+    }
+
     public bool IsFull()
     {
-        foreach (bool b in occupied)
-            if (!b) return false;
+        for (int r = 0; r < rows; r++)
+            for (int c = 0; c < cols; c++)
+                if (cellOwners[r, c].Count == 0) return false;
         return true;
     }
 }

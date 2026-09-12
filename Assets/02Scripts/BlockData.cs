@@ -12,11 +12,12 @@ public class BlockData : ScriptableObject
     public enum Color
     {
         Red,
-        Pink,
         Blue,
         Yellow,
         Black,
-        Green
+        Green,
+        white,
+        Purple 
     }
 
     [Header("블록 정보")]
