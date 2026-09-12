@@ -33,5 +33,6 @@ public class BlockData : ScriptableObject
     
     public GameObject blockPrefab;
 
-    //TODO: 꿃 많아지면 모양정보랑 색상및프리팩 정보의SO분리
+    //TODO: 꽃 많아지면 모양정보랑 색상및프리펩 정보의SO분리
 }
+// read this 
