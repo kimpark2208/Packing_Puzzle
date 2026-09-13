@@ -85,7 +85,7 @@ GameObject:
   - component: {fileID: 6820901117362889665}
   - component: {fileID: 1906454935495373031}
   m_Layer: 5
-  m_Name: Grid
+  m_Name: DayGrid
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
