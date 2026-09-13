@@ -4,6 +4,7 @@ using UnityEngine.UI;
 /// <summary>
 /// 밤 퍼즐 그리드의 셀 하나.
 /// NightCell(빈 오브젝트, 패딩용) 의 자식인 CellFilled 이미지를 이 스크립트가 제어한다.
+/// CellFilled 참조는 Inspector 연결 없이 자식에서 자동으로 찾는다.
 /// </summary>
 public class NightCellView : MonoBehaviour
 {
@@ -14,10 +15,6 @@ public class NightCellView : MonoBehaviour
         PreviewInvalid, // 드래그 중, 목표 범위 밖 (작게+붉게 표시)
         Confirmed       // 손을 뗀 뒤 확정된 상태 (정상 크기)
     }
-
-    [Header("References")]
-    [SerializeField] private RectTransform filledRect; // CellFilled의 RectTransform
-    [SerializeField] private Image filledImage;         // CellFilled의 Image
 
     [Header("Visual Settings")]
     [SerializeField] private float previewScale = 0.55f;
@@ -30,6 +27,9 @@ public class NightCellView : MonoBehaviour
     [SerializeField] private float popDuration = 0.12f;
     [SerializeField] private float popOvershoot = 1.08f;
 
+    private RectTransform filledRect;
+    private Image filledImage;
+
     public Vector2Int Coord { get; private set; }
     public CellVisualState State { get; private set; } = CellVisualState.Empty;
     public bool IsWall { get; private set; }
@@ -38,8 +38,44 @@ public class NightCellView : MonoBehaviour
     private Color pendingFlowerColor;
     private Coroutine popRoutine;
 
+    private void Awake()
+    {
+        CacheChildReferences();
+    }
+
+    /// <summary>
+    /// 자식의 Image 컴포넌트를 자동으로 찾는다.
+    /// 자식이 여러 개라면 이름이 "CellFilled"인 자식을 우선 사용한다.
+    /// </summary>
+    private void CacheChildReferences()
+    {
+        Transform filledTransform = transform.Find("CellFilled");
+
+        if (filledTransform == null)
+        {
+            filledImage = GetComponentInChildren<Image>(true);
+        }
+        else
+        {
+            filledImage = filledTransform.GetComponent<Image>();
+        }
+
+        if (filledImage == null)
+        {
+            Debug.LogError($"{name}: CellFilled 이미지를 찾지 못했습니다. 자식 오브젝트 이름이나 Image 컴포넌트를 확인하세요.");
+            return;
+        }
+
+        filledRect = filledImage.rectTransform;
+    }
+
     public void Initialize(Vector2Int coord)
     {
+        if (filledImage == null)
+        {
+            CacheChildReferences();
+        }
+
         Coord = coord;
         IsWall = false;
         SetEmpty();
@@ -142,4 +178,6 @@ public class NightCellView : MonoBehaviour
 
         filledRect.localScale = Vector3.one * confirmedScale;
     }
+
+
 }

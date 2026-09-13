@@ -737,6 +737,27 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 818827390}
   m_CullTransparentMesh: 1
+--- !u!1 &822484693 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 3508660149425423160, guid: fb8c149f7df9ba147a4830702466aec1, type: 3}
+  m_PrefabInstance: {fileID: 958620494}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &822484696
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 822484693}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5d204a8f91daed746b0e4983ed65d334, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::NightBoardController
+  cellPrefab: {fileID: 4721971061429647684, guid: 650327a9f07ad0a458101a6ef52c84a5, type: 3}
+  curFlowerCellSprite: {fileID: 9147473820320516533, guid: eba91a1e6c217cf4c8b85c2d3ea47aae, type: 3}
+  curFlowerColor: {r: 0.9528302, g: 0.004494493, b: 0.004494493, a: 1}
+  gridSize: 5
 --- !u!1001 &958620494
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -745,6 +766,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 425578412}
     m_Modifications:
+    - target: {fileID: 823372428205084303, guid: fb8c149f7df9ba147a4830702466aec1, type: 3}
+      propertyPath: m_Enabled
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 3181269211305225555, guid: fb8c149f7df9ba147a4830702466aec1, type: 3}
       propertyPath: m_Name
       value: NIghtGrid
@@ -829,10 +854,42 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 7920120818745765610, guid: fb8c149f7df9ba147a4830702466aec1, type: 3}
+      propertyPath: m_Enabled
+      value: 1
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
-    m_RemovedGameObjects: []
+    m_RemovedGameObjects:
+    - {fileID: 4921517922385063590, guid: fb8c149f7df9ba147a4830702466aec1, type: 3}
+    - {fileID: 6494763639091799064, guid: fb8c149f7df9ba147a4830702466aec1, type: 3}
+    - {fileID: 8442232191172325148, guid: fb8c149f7df9ba147a4830702466aec1, type: 3}
+    - {fileID: 7559963189847612336, guid: fb8c149f7df9ba147a4830702466aec1, type: 3}
+    - {fileID: 6976950271976612739, guid: fb8c149f7df9ba147a4830702466aec1, type: 3}
+    - {fileID: 4531217450995924734, guid: fb8c149f7df9ba147a4830702466aec1, type: 3}
+    - {fileID: 4886985248645156954, guid: fb8c149f7df9ba147a4830702466aec1, type: 3}
+    - {fileID: 6095566267963227579, guid: fb8c149f7df9ba147a4830702466aec1, type: 3}
+    - {fileID: 2134830290907682401, guid: fb8c149f7df9ba147a4830702466aec1, type: 3}
+    - {fileID: 5387659314184457158, guid: fb8c149f7df9ba147a4830702466aec1, type: 3}
+    - {fileID: 6448776107004071353, guid: fb8c149f7df9ba147a4830702466aec1, type: 3}
+    - {fileID: 2448781074985063013, guid: fb8c149f7df9ba147a4830702466aec1, type: 3}
+    - {fileID: 3392372666188041668, guid: fb8c149f7df9ba147a4830702466aec1, type: 3}
+    - {fileID: 2810861774390940203, guid: fb8c149f7df9ba147a4830702466aec1, type: 3}
+    - {fileID: 8044456666451848004, guid: fb8c149f7df9ba147a4830702466aec1, type: 3}
+    - {fileID: 4691102568164152334, guid: fb8c149f7df9ba147a4830702466aec1, type: 3}
+    - {fileID: 5506217304146474389, guid: fb8c149f7df9ba147a4830702466aec1, type: 3}
+    - {fileID: 3812928872772553262, guid: fb8c149f7df9ba147a4830702466aec1, type: 3}
+    - {fileID: 6046931614471322267, guid: fb8c149f7df9ba147a4830702466aec1, type: 3}
+    - {fileID: 2878508915987956385, guid: fb8c149f7df9ba147a4830702466aec1, type: 3}
+    - {fileID: 5971039202645780843, guid: fb8c149f7df9ba147a4830702466aec1, type: 3}
+    - {fileID: 1470094416346669484, guid: fb8c149f7df9ba147a4830702466aec1, type: 3}
+    - {fileID: 1921587084978108468, guid: fb8c149f7df9ba147a4830702466aec1, type: 3}
+    - {fileID: 2904020658005338601, guid: fb8c149f7df9ba147a4830702466aec1, type: 3}
+    - {fileID: 6576246820932868607, guid: fb8c149f7df9ba147a4830702466aec1, type: 3}
     m_AddedGameObjects: []
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 3508660149425423160, guid: fb8c149f7df9ba147a4830702466aec1, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 822484696}
   m_SourcePrefab: {fileID: 100100000, guid: fb8c149f7df9ba147a4830702466aec1, type: 3}
 --- !u!224 &958620495 stripped
 RectTransform:
