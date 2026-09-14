@@ -21,6 +21,9 @@ public class NightBoardController : MonoBehaviour
     [SerializeField] private BlockData testTargetBlock;
 
     private bool[,] filled;
+    private int[,] placedBlockIds;
+    private int nextPlacedBlockId;
+
     private NightCellView[,] cells;
     private GridLayoutGroup gridLayout;
     private GraphicRaycaster graphicRaycaster;
@@ -32,6 +35,13 @@ public class NightBoardController : MonoBehaviour
 
     // 프리뷰가 표시된 셀들. 드래그 실패 시 한 번에 원상복구하기 위해 별도로 보관한다.
     private readonly List<Vector2Int> previewCells = new();
+
+    // 점유된 칸에서 시작한 입력은 블럭 삭제 모드다.
+    private bool isErasing;
+
+    // 한 번의 삭제 드래그에서 이미 삭제한 블럭 ID들.
+    // 같은 블럭의 다른 칸을 다시 지나가도 중복 삭제하지 않는다.
+    private readonly HashSet<int> erasedBlockIds = new();
 
     private bool isDrawing;
     private bool currentDrawIsInvalid;
@@ -76,6 +86,17 @@ public class NightBoardController : MonoBehaviour
         gridSize = size;
         cells = new NightCellView[size, size];
         filled = new bool[size, size];
+        placedBlockIds = new int[size, size];
+        nextPlacedBlockId = 0;
+
+        // 빈 칸은 -1. 0 이상은 확정된 블럭 배치 ID다.
+        for (int row = 0; row < size; row++)
+        {
+            for (int col = 0; col < size; col++)
+            {
+                placedBlockIds[row, col] = -1;
+            }
+        }
 
         gridLayout.constraint = GridLayoutGroup.Constraint.FixedColumnCount;
         gridLayout.constraintCount = size;
@@ -146,23 +167,6 @@ public class NightBoardController : MonoBehaviour
             _ => OnCellPointerEnter(cell));
     }
 
-    private void AddEventTriggerToGameObject(GameObject go, NightCellView cell)
-    {
-        EventTrigger trigger = go.GetComponent<EventTrigger>();
-
-        if (trigger != null)
-        {
-            trigger.triggers.Clear();
-        }
-        else
-        {
-            trigger = go.AddComponent<EventTrigger>();
-        }
-
-        AddTrigger(trigger, EventTriggerType.PointerDown, _ => OnCellPointerDown(cell));
-        AddTrigger(trigger, EventTriggerType.PointerEnter, _ => OnCellPointerEnter(cell));
-    }
-
     private void AddTrigger(EventTrigger trigger, EventTriggerType type, System.Action<BaseEventData> action)
     {
         EventTrigger.Entry entry = new EventTrigger.Entry { eventID = type };
@@ -207,12 +211,23 @@ public class NightBoardController : MonoBehaviour
     private void OnCellPointerDown(NightCellView cell)
     {
         if (cell.IsWall) return;
-        if (filled[cell.Coord.y, cell.Coord.x]) return;
 
         isDrawing = true;
         currentDrawIsInvalid = false;
         currentPathSet.Clear();
         previewCells.Clear();
+        erasedBlockIds.Clear();
+
+        Vector2Int coord = cell.Coord;
+
+        // 이미 점유된 셀에서 시작하면 이 입력 전체는 블럭 삭제 모드다.
+        isErasing = filled[coord.y, coord.x];
+
+        if (isErasing)
+        {
+            ErasePlacedBlockAt(coord);
+            return;
+        }
 
         TryAddToCurrentBlock(cell);
     }
@@ -221,6 +236,13 @@ public class NightBoardController : MonoBehaviour
     {
         if (!isDrawing) return;
         if (cell.IsWall) return;
+
+        if (isErasing)
+        {
+            // 삭제 모드에서는 지나간 점유 칸이 속한 블럭 전체를 지운다.
+            ErasePlacedBlockAt(cell.Coord);
+            return;
+        }
 
         // 같은 칸 재통과는 한 붓으로 못 그리는 도형을 허용하기 위해 무시한다.
         if (currentPathSet.Contains(cell.Coord)) return;
@@ -240,6 +262,7 @@ public class NightBoardController : MonoBehaviour
             currentDrawIsInvalid = true;
             cell.ShowPreview(false, curFlowerCellSprite, curFlowerColor);
             previewCells.Add(coord);
+            ShowCurrentPreviewAsInvalid();
             return;
         }
 
@@ -268,19 +291,63 @@ public class NightBoardController : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// 클릭/드래그가 닿은 점유 칸이 속한 블럭 하나를 통째로 삭제한다.
+    /// 같은 blockId를 가진 모든 셀을 찾아 Empty로 되돌린다.
+    /// </summary>
+    private void ErasePlacedBlockAt(Vector2Int clickedCoord)
+    {
+        int blockId = placedBlockIds[clickedCoord.y, clickedCoord.x];
+
+        // 빈 칸이거나 이미 이번 드래그에서 삭제한 블럭이면 무시한다.
+        if (blockId < 0 || erasedBlockIds.Contains(blockId)) return;
+
+        erasedBlockIds.Add(blockId);
+
+        int rowCount = placedBlockIds.GetLength(0);
+        int colCount = placedBlockIds.GetLength(1);
+
+        for (int row = 0; row < rowCount; row++)
+        {
+            for (int col = 0; col < colCount; col++)
+            {
+                if (placedBlockIds[row, col] != blockId) continue;
+
+                cells[row, col].ResetToEmpty();
+                filled[row, col] = false;
+                placedBlockIds[row, col] = -1;
+            }
+        }
+    }
+
     private void EndDrawing()
     {
         isDrawing = false;
+
+        // 점유 칸에서 시작한 클릭/드래그는 블럭 삭제만 하고 종료한다.
+        // 클릭만 해도 PointerDown에서 해당 블럭 전체가 즉시 지워지고,
+        // 손을 떼는 시점에는 상태만 정리한다.
+        if (isErasing)
+        {
+            isErasing = false;
+            erasedBlockIds.Clear();
+            CheckCompletion();
+            return;
+        }
 
         bool isExactBlock = !currentDrawIsInvalid && shapeValidator.IsExactMatch(currentPathSet);
 
         if (isExactBlock)
         {
+            // 이번 드래그로 확정되는 모든 칸에 동일한 배치 ID를 기록한다.
+            int placedBlockId = nextPlacedBlockId++;
+
             foreach (Vector2Int coord in currentPathSet)
             {
                 NightCellView cell = cells[coord.y, coord.x];
                 cell.Confirm();
                 filled[coord.y, coord.x] = true;
+                placedBlockIds[coord.y, coord.x] = placedBlockId;
             }
 
             CheckCompletion();
