@@ -24,12 +24,16 @@ public class CurrencyManager : MonoBehaviour
     // ========== 일일 요청 ==========
     private List<int> requestedFlowerIdsForTonight = new();  // 오늘 밤에 얻을 꽃
 
+    // ========== 고객 요구사항 ==========
+    private CustomerRequirementGenerator.CustomerRequirement currentRequirement;
+
     // ========== 프로퍼티 (읽기 전용) ==========
     public int CurrentMoney => currentMoney;
     public int CurrentDay => currentDay;
     public IReadOnlyCollection<int> OwnedWrappers => ownedWrappers;
     public IReadOnlyDictionary<int, bool> ObtainedFlowers => obtainedFlowers;
     public IReadOnlyList<int> RequestedFlowerIdsForTonight => requestedFlowerIdsForTonight;
+    public CustomerRequirementGenerator.CustomerRequirement CurrentRequirement => currentRequirement;
 
     private void Awake()
     {
@@ -206,6 +210,10 @@ public class CurrencyManager : MonoBehaviour
     {
         currentDay++;
         requestedFlowerIdsForTonight.Clear();
+
+        // Phase 3: 새로운 고객 요구사항 생성
+        currentRequirement = CustomerRequirementGenerator.GenerateRandomRequirement(currentDay);
+
         EventBus.RaiseDayAdvanced(currentDay);
         Debug.Log($"[CurrencyManager] 일수 진행: Day {currentDay}");
     }

@@ -61,9 +61,20 @@ public class PuzzleValidator : MonoBehaviour
         // 4. 매출 계산
         int earnings = result.baseScore;
 
-        // 고객 요구사항 보너스 확인
-        // TODO: Phase 3에서 CustomerRequirementGenerator와 연동
-        // 현재는 기본 매출만 적용
+        // Phase 3: 고객 요구사항 보너스 확인
+        var currencyManager = CurrencyManager.Instance;
+        var requirement = currencyManager.CurrentRequirement;
+        bool requirementMet = CustomerRequirementGenerator.IsRequirementMet(requirement, result);
+
+        if (requirementMet)
+        {
+            earnings += requirement.bonusAmount;
+            Debug.Log($"[PuzzleValidator] 고객 요구사항 달성! +{requirement.bonusAmount} 보너스");
+        }
+        else
+        {
+            Debug.Log($"[PuzzleValidator] 고객 요구사항 미달성");
+        }
 
         result.totalEarnings = earnings;
 
@@ -73,6 +84,8 @@ public class PuzzleValidator : MonoBehaviour
         Debug.Log($"  기본 점수: {result.baseScore}");
         Debug.Log($"  최다 색상: ID {result.mostUsedColorId}");
         Debug.Log($"  최다 꽃: ID {result.mostUsedFlowerId}");
+        Debug.Log($"  고객 요구사항: {requirement.description}");
+        Debug.Log($"  요구사항 달성: {requirementMet}");
         Debug.Log($"  총 매출: {result.totalEarnings}");
 
         // 6. EventBus 발행
