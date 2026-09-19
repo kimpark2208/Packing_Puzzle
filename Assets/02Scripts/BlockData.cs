@@ -17,7 +17,7 @@ public class BlockData : ScriptableObject
         Black,
         Green,
         white,
-        Purple 
+        Purple
     }
 
     [Header("블록 정보")]
@@ -25,14 +25,38 @@ public class BlockData : ScriptableObject
     public int blockScore;
     public Color color;
 
+    [Header("이 꽃을 사용하려면 필요한 최소 포장지 단계 (1부터 시작, 누적 해금)")]
+    public int unlockWrapperTier = 1;
+
     [Header("블록 모양")]
     public BlockRow[] shapeGrid;
 
     [Header("회전 기준점")]
     public Vector2Int anchorCoord;
-    
-    public GameObject blockPrefab;
 
-    //TODO: 꽃 많아지면 모양정보랑 색상및프리펩 정보의SO분리
+    [Header("시각 (완성 후 표시되는 꽃 아이콘, 색상은 런타임에 ColorPalette로 틴트됨. 밤 퍼즐 셀 단위 표시에 사용)")]
+    public Sprite flowerIcon;
+
+    [Header("낮 퍼즐 - 배치 중(진행중) 블록 통짜 이미지. BlockImageGenerator가 자동 생성해 채운다.")]
+    public Sprite blockImage;
+
+    [Header("낮 퍼즐 - 완성 후 표시할 블록 크기와 동일한 꽃다발 통짜 이미지 (추후 직접 제작해 채워넣을 슬롯, 비어있으면 임시로 자동 생성된 콜라주 사용)")]
+    public Sprite flowerWholeImage;
+
+    /// <summary>이 블록이 차지하는 칸 수 (= 점수/크기). 모노미노=1 ~ 펜토미노=5.</summary>
+    public int CellCount
+    {
+        get
+        {
+            int count = 0;
+            if (shapeGrid == null) return 0;
+            foreach (var row in shapeGrid)
+            {
+                if (row.cols == null) continue;
+                foreach (var cell in row.cols)
+                    if (cell) count++;
+            }
+            return count;
+        }
+    }
 }
-// read this 

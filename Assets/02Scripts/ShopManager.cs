@@ -5,10 +5,8 @@ using UnityEngine;
 /// 상점 데이터 관리 (싱글톤)
 /// 포장지, 가구, 장식, 예술품 등 모든 아이템 정의
 /// </summary>
-public class ShopManager : MonoBehaviour
+public class ShopManager : Singleton<ShopManager>
 {
-    public static ShopManager Instance { get; private set; }
-
     public enum ShopCategory
     {
         Wrapper,    // 포장지 (그리드 사이즈)
@@ -24,24 +22,19 @@ public class ShopManager : MonoBehaviour
         public int price;               // 가격
         public ShopCategory category;   // 카테고리
         public string description;      // 설명
-        public string gridSize;         // 포장지만: "5x5", "8x8" 등
+        public string gridSize;         // 포장지만: "5x5", "8x8" 등 (표시용)
+        public int gridSizeInt;         // 포장지만: 실제 그리드 한 변 길이
+        public int tier;                // 포장지만: 누적 해금 단계 (1부터)
+        public string colorHintName;    // 포장지만: 명확한 힌트용 색깔 이름 (예: "핑크")
+        public string sizeHintWord;     // 포장지만: 모호한 힌트용 크기 표현 (예: "가장 작은")
     }
 
     // 모든 상점 아이템
     private List<ShopItem> allItems = new();
 
-    private void Awake()
+    protected override void OnAwake()
     {
-        if (Instance == null)
-        {
-            Instance = this;
-            DontDestroyOnLoad(gameObject);
-            InitializeItems();
-        }
-        else
-        {
-            Destroy(gameObject);
-        }
+        InitializeItems();
     }
 
     private void InitializeItems()
@@ -54,7 +47,11 @@ public class ShopManager : MonoBehaviour
             price = 0,
             category = ShopCategory.Wrapper,
             description = "기본 포장지",
-            gridSize = "5x5"
+            gridSize = "5x5",
+            gridSizeInt = 5,
+            tier = 1,
+            colorHintName = "핑크",
+            sizeHintWord = "가장 작은"
         });
 
         allItems.Add(new ShopItem
@@ -64,7 +61,11 @@ public class ShopManager : MonoBehaviour
             price = 1000,
             category = ShopCategory.Wrapper,
             description = "더 큰 포장지",
-            gridSize = "8x8"
+            gridSize = "8x8",
+            gridSizeInt = 8,
+            tier = 2,
+            colorHintName = "노란",
+            sizeHintWord = "중간 크기의"
         });
 
         allItems.Add(new ShopItem
@@ -74,7 +75,11 @@ public class ShopManager : MonoBehaviour
             price = 2500,
             category = ShopCategory.Wrapper,
             description = "매우 큰 포장지",
-            gridSize = "10x10"
+            gridSize = "10x10",
+            gridSizeInt = 10,
+            tier = 3,
+            colorHintName = "보라",
+            sizeHintWord = "가장 큰"
         });
 
         // ========== 가구 (Furniture) ==========
@@ -194,5 +199,33 @@ public class ShopManager : MonoBehaviour
                 return item;
         }
         return null;
+    }
+
+    /// <summary>포장지 ID로 그리드 한 변 길이를 얻는다. 못 찾으면 기본값 5.</summary>
+    public int GetGridSize(int wrapperId)
+    {
+        var item = GetItemById(wrapperId);
+        return (item.HasValue && item.Value.gridSizeInt > 0) ? item.Value.gridSizeInt : 5;
+    }
+
+    /// <summary>포장지 ID로 누적 해금 단계(tier)를 얻는다. 못 찾으면 기본값 1.</summary>
+    public int GetTier(int wrapperId)
+    {
+        var item = GetItemById(wrapperId);
+        return (item.HasValue && item.Value.tier > 0) ? item.Value.tier : 1;
+    }
+
+    /// <summary>손님이 "명확한" 힌트를 줄 때 사용하는 포장지 색깔 이름.</summary>
+    public string GetColorHintName(int wrapperId)
+    {
+        var item = GetItemById(wrapperId);
+        return item.HasValue && !string.IsNullOrEmpty(item.Value.colorHintName) ? item.Value.colorHintName : "특별한";
+    }
+
+    /// <summary>손님이 "모호한" 힌트를 줄 때 사용하는 크기 표현.</summary>
+    public string GetSizeHintWord(int wrapperId)
+    {
+        var item = GetItemById(wrapperId);
+        return item.HasValue && !string.IsNullOrEmpty(item.Value.sizeHintWord) ? item.Value.sizeHintWord : "적당한";
     }
 }

@@ -2,68 +2,74 @@ using System.Collections.Generic;
 using UnityEngine;
 
 /// <summary>
-/// 낮 퍼즐 검증 및 결과 계산
-/// 배치된 블록들로부터 색상/꽃 데이터를 추출하고 매출을 계산
+/// 낮 퍼즐 검증 및 결과 계산.
+/// 배치된 블록들로부터 색상/꽃 데이터를 추출하고 매출을 계산한다.
 /// </summary>
-public class PuzzleValidator : MonoBehaviour
+public static class PuzzleValidator
 {
-    /// <summary>
-    /// 퍼즐 검증 수행
-    /// </summary>
-    public static void ValidatePuzzle()
+    public static PuzzleValidationResult ValidatePuzzle()
     {
         var gridManager = GridManager.Instance;
+        var result = new PuzzleValidationResult
+        {
+            colorCounts = new Dictionary<int, int>(),
+            flowerCounts = new Dictionary<int, int>()
+        };
+
         if (gridManager == null)
         {
             Debug.LogError("[PuzzleValidator] GridManager를 찾을 수 없습니다!");
-            return;
+            return result;
         }
 
-        var result = new PuzzleValidationResult();
-
-        // 1. 완벽도 판정
+        // 1. 완벽도 판정 (겹침 없이 그리드 전체가 채워졌는가)
         bool isFull = gridManager.IsFull();
         bool hasOverlap = gridManager.HasAnyOverlap();
 
         result.isPerfect = isFull && !hasOverlap;
         result.baseScore = result.isPerfect ? 1000 : 500;
 
-        // 2. 배치된 모든 블록 수집 및 색상/꽃 ID 추출
-        var colorCounts = new Dictionary<int, int>();
-        var flowerCounts = new Dictionary<int, int>();
-        int totalBlockCount = 0;
-
-        var allBlocks = GetAllPlacedBlocks(gridManager);
+        // 2. 배치된 모든 블록 수집 및 색상/꽃 ID 별 전체 개수 집계
+        var allBlocks = gridManager.GetAllPlacedBlocks();
 
         foreach (var blockDrag in allBlocks)
         {
             if (blockDrag == null || blockDrag.blockData == null) continue;
 
-            // 색상 ID (enum을 int로 변환)
             int colorId = (int)blockDrag.blockData.color;
-            if (!colorCounts.ContainsKey(colorId))
-                colorCounts[colorId] = 0;
-            colorCounts[colorId]++;
+            result.colorCounts.TryGetValue(colorId, out int c);
+            result.colorCounts[colorId] = c + 1;
 
-            // 꽃 ID (blockID 사용)
             int flowerId = blockDrag.blockData.blockID;
-            if (!flowerCounts.ContainsKey(flowerId))
-                flowerCounts[flowerId] = 0;
-            flowerCounts[flowerId]++;
-
-            totalBlockCount++;
+            result.flowerCounts.TryGetValue(flowerId, out int f);
+            result.flowerCounts[flowerId] = f + 1;
         }
 
-        // 3. 최빈값 계산
-        result.mostUsedColorId = GetMostUsedId(colorCounts);
-        result.mostUsedFlowerId = GetMostUsedId(flowerCounts);
+        result.mostUsedColorId = GetMostUsedId(result.colorCounts);
+        result.mostUsedFlowerId = GetMostUsedId(result.flowerCounts);
+
+        // 진행 중엔 색 블록으로, 제출 후엔 꽃 아이콘 꽃다발로 보이도록 전환한다.
+        foreach (var blockDrag in allBlocks)
+        {
+            blockDrag?.SetFlowerMode(true);
+        }
+
+        // 3. 완벽한 꽃다발 판정 (배치한 블록 모양별 개수가 오늘의 정답 레시피와 정확히 일치하는가)
+        var recipe = CurrencyManager.Instance != null ? CurrencyManager.Instance.CurrentDayRecipe : null;
+        var perfectResult = PerfectChecker.CheckPerfect(gridManager, recipe);
+        result.isPerfectBouquet = perfectResult.isPerfect;
 
         // 4. 매출 계산
         int earnings = result.baseScore;
 
-        // Phase 3: 고객 요구사항 보너스 확인
+        if (result.isPerfectBouquet)
+        {
+            earnings += 500;
+            Debug.Log("[PuzzleValidator] 완벽한 꽃다발! +500 보너스");
+        }
+
         var currencyManager = CurrencyManager.Instance;
-        var requirement = currencyManager.CurrentRequirement;
+        var requirement = currencyManager != null ? currencyManager.CurrentRequirement : default;
         bool requirementMet = CustomerRequirementGenerator.IsRequirementMet(requirement, result);
 
         if (requirementMet)
@@ -73,45 +79,27 @@ public class PuzzleValidator : MonoBehaviour
         }
         else
         {
-            Debug.Log($"[PuzzleValidator] 고객 요구사항 미달성");
+            Debug.Log("[PuzzleValidator] 고객 요구사항 미달성");
         }
 
-        result.totalEarnings = earnings;
+        result.scoreBeforePenalty = earnings;
+        result.targetScore = currencyManager != null ? currencyManager.CurrentTargetScore : 0;
+        result.targetScoreMet = earnings >= result.targetScore;
 
-        // 5. 결과 로깅
-        Debug.Log($"[PuzzleValidator] 낮 퍼즐 검증 완료");
-        Debug.Log($"  완벽: {result.isPerfect}");
-        Debug.Log($"  기본 점수: {result.baseScore}");
-        Debug.Log($"  최다 색상: ID {result.mostUsedColorId}");
-        Debug.Log($"  최다 꽃: ID {result.mostUsedFlowerId}");
-        Debug.Log($"  고객 요구사항: {requirement.description}");
-        Debug.Log($"  요구사항 달성: {requirementMet}");
-        Debug.Log($"  총 매출: {result.totalEarnings}");
+        // 목표 점수(손님이 기대하는 최소 결과)에 못 미치면 매출이 줄어든다.
+        result.totalEarnings = result.targetScoreMet ? earnings : Mathf.RoundToInt(earnings * 0.5f);
 
-        // 6. EventBus 발행
+        Debug.Log($"[PuzzleValidator] 낮 퍼즐 검증 완료 - 완벽: {result.isPerfect}, 완벽한 꽃다발: {result.isPerfectBouquet}, 목표점수: {result.targetScore} (달성: {result.targetScoreMet}), 총 매출: {result.totalEarnings}");
+
+        // 5. EventBus 발행 및 재화 반영
         EventBus.RaiseDayPuzzleComplete(result);
+        currencyManager?.AddMoney(result.totalEarnings);
 
-        // 7. CurrencyManager에 금액 추가
-        CurrencyManager.Instance.AddMoney(result.totalEarnings);
+        return result;
     }
 
-    /// <summary>
-    /// GridManager에서 모든 배치된 블록 수집
-    /// </summary>
-    private static List<BlockDrag> GetAllPlacedBlocks(GridManager gridManager)
-    {
-        var blocks = gridManager.GetAllPlacedBlocks();
-        return new List<BlockDrag>(blocks);
-    }
-
-    /// <summary>
-    /// Dictionary에서 최빈값 ID 반환
-    /// </summary>
     private static int GetMostUsedId(Dictionary<int, int> countDict)
     {
-        if (countDict.Count == 0)
-            return -1;
-
         int maxId = -1;
         int maxCount = 0;
 

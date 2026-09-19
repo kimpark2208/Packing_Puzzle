@@ -22,6 +22,7 @@ public class NightCellView : MonoBehaviour
     [SerializeField] private Color validPreviewColor = new Color(1f, 1f, 1f, 0.55f);
     [SerializeField] private Color invalidPreviewColor = new Color(1f, 0.3f, 0.3f, 0.55f);
     [SerializeField] private Color confirmedColorDefault = Color.white;
+    [SerializeField] private Color wallColor = new Color(0.35f, 0.33f, 0.38f);
 
     [Header("Pop Motion")]
     [SerializeField] private float popDuration = 0.12f;
@@ -81,13 +82,13 @@ public class NightCellView : MonoBehaviour
         SetEmpty();
     }
 
-    public void SetAsWall(Sprite wallSprite)
+    public void SetAsWall()
     {
         IsWall = true;
         State = CellVisualState.Confirmed;
 
-        filledImage.sprite = wallSprite;
-        filledImage.color = confirmedColorDefault;
+        filledImage.sprite = null;
+        filledImage.color = wallColor;
         filledImage.enabled = true;
 
         filledRect.localScale = Vector3.one * confirmedScale;
@@ -130,12 +131,18 @@ public class NightCellView : MonoBehaviour
 
     public void Confirm()
     {
+        Confirm(pendingFlowerSprite, confirmedColorDefault);
+    }
+
+    /// <summary>확정 시 최종적으로 어떤 꽃이 매칭됐는지 알게 된 후, 그 꽃의 아이콘/색으로 표시한다.</summary>
+    public void Confirm(Sprite finalSprite, Color finalColor)
+    {
         if (IsWall) return;
 
         State = CellVisualState.Confirmed;
 
-        filledImage.sprite = pendingFlowerSprite;
-        filledImage.color = confirmedColorDefault;
+        filledImage.sprite = finalSprite;
+        filledImage.color = finalColor;
         filledImage.enabled = true;
 
         if (popRoutine != null)

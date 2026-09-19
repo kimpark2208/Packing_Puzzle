@@ -1,0 +1,25 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 74a634c29bfedc144ae03bdc4755ce48, type: 3}
+  m_Name: SO_07_TetrominoT_Black
+  m_EditorClassIdentifier: Assembly-CSharp::BlockData
+  blockID: 7
+  blockScore: 4
+  color: 3
+  unlockWrapperTier: 1
+  shapeGrid:
+  - cols: 010101
+  - cols: 000100
+  anchorCoord: {x: 1, y: 0}
+  flowerIcon: {fileID: 21300000, guid: 089a720c9cb3009439c7f19f9adccce1, type: 3}
+  blockImage: {fileID: 21300000, guid: 850e434b32e5ea843950aeaa0cbab91f, type: 3}
+  flowerWholeImage: {fileID: 0}

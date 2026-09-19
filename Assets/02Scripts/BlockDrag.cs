@@ -10,26 +10,21 @@ public class BlockDrag : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDra
     public BlockData blockData;
 
     [Header("조작 방식")]
-    [Tooltip("더블클릭 시 90도 회전")]
+    [Tooltip("탭(클릭) 시 90도 회전")]
     public bool rotateOnDoubleClick = true;
-    [Tooltip("우클릭 시 좌우반전")]
+    [Tooltip("우클릭 시 좌우반전 (에디터 테스트용, 모바일에서는 롱프레스가 담당)")]
     public bool flipOnRightClick = true;
 
     [Header("론프레스 설정")]
     [Tooltip("론프레스(초) 동안 누르면 플립됩니다.")]
     public float longPressThreshold = 0.6f;
 
-    private float lastClickTime = -1f;
-    private const float DoubleClickThreshold = 0.3f;
-
     public event Action<GameObject> OnPlaced;
 
     private RectTransform rectTransform;
     private CanvasGroup canvasGroup;
     private Canvas rootCanvas;
-    private Image blockImage;
-    private Color originalColor;
-    private bool hasCachedOriginalColor = false;
+    private BlockView blockView;
 
     private Transform originalParent;
     private Vector2 originalAnchoredPos;
@@ -57,7 +52,11 @@ public class BlockDrag : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDra
             canvasGroup = gameObject.AddComponent<CanvasGroup>();
         }
 
-        blockImage = GetComponent<Image>();
+        blockView = GetComponent<BlockView>();
+        if (blockView == null)
+        {
+            blockView = gameObject.AddComponent<BlockView>();
+        }
 
         Canvas parentCanvas = GetComponentInParent<Canvas>();
         if (parentCanvas == null)
@@ -95,6 +94,15 @@ public class BlockDrag : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDra
         currentShapeGrid = CloneShape(blockData.shapeGrid);
         currentAnchor = blockData.anchorCoord;
         isFlipped = false;
+
+        float cellSize = GridManager.Instance != null ? GridManager.Instance.CellWidth : 100f;
+        blockView.Build(blockData, cellSize);
+    }
+
+    /// <summary>완성 연출 등에서 블록 칸을 색상 대신 꽃 아이콘으로 전환할 때 사용.</summary>
+    public void SetFlowerMode(bool showFlower)
+    {
+        blockView.SetFlowerMode(showFlower);
     }
 
     public void OnBeginDrag(PointerEventData eventData)
@@ -180,18 +188,9 @@ public class BlockDrag : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDra
             return;
         }
 
+        // 모바일 기준: 한 번 탭하면 바로 90도 회전한다 (길게 누르면 반전).
         if (!rotateOnDoubleClick) return;
-
-        float now = Time.unscaledTime;
-        if (now - lastClickTime <= DoubleClickThreshold)
-        {
-            RotateClockwise90();
-            lastClickTime = -1f;
-        }
-        else
-        {
-            lastClickTime = now;
-        }
+        RotateClockwise90();
     }
 
     public void RotateClockwise90()
@@ -335,15 +334,8 @@ public class BlockDrag : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDra
     // GridManager가 호출하여, 이 블록이 다른 블록과 겹쳤 있는지 여부를 색으로 표시하도록 지시한다.
     public void SetOverlapVisual(bool isOverlapping)
     {
-        if (blockImage == null) return;
-
-        if (!hasCachedOriginalColor)
-        {
-            originalColor = blockImage.color;
-            hasCachedOriginalColor = true;
-        }
-
-        blockImage.color = isOverlapping ? GridManager.Instance.OverlapColor : originalColor;
+        if (blockView == null) return;
+        blockView.SetTintOverride(isOverlapping ? GridManager.Instance.OverlapColor : (Color?)null);
     }
 
     private Vector2Int ClampAnchorToFit(BlockRow[] shapeGrid, Vector2Int anchor, int anchorRow, int anchorCol)

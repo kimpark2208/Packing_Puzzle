@@ -86,7 +86,7 @@ public class ShopUI : MonoBehaviour
             layoutElement.flexibleWidth = 1f;
 
             var text = buttonGo.AddComponent<Text>();
-            text.font = Resources.GetBuiltinResource<Font>("Arial.ttf");
+            text.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
             text.text = tabName;
             text.alignment = TextAnchor.MiddleCenter;
             text.color = Color.black;
@@ -142,7 +142,7 @@ public class ShopUI : MonoBehaviour
         infoGo.transform.SetParent(itemGo.transform, false);
 
         var infoText = infoGo.AddComponent<Text>();
-        infoText.font = Resources.GetBuiltinResource<Font>("Arial.ttf");
+        infoText.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
         infoText.text = $"{item.itemName}\n{item.description}\n가격: {item.price}원";
         infoText.alignment = TextAnchor.MiddleLeft;
         infoText.color = Color.black;
@@ -162,7 +162,7 @@ public class ShopUI : MonoBehaviour
         buttonLayout.preferredHeight = 54;
 
         var buttonText = buttonGo.AddComponent<Text>();
-        buttonText.font = Resources.GetBuiltinResource<Font>("Arial.ttf");
+        buttonText.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
         buttonText.text = item.price == 0 ? "보유 중" : "구매";
         buttonText.alignment = TextAnchor.MiddleCenter;
         buttonText.color = Color.black;

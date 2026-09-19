@@ -6,11 +6,20 @@ EditorBuildSettings:
   serializedVersion: 2
   m_Scenes:
   - enabled: 1
+    path: Assets/01Scenes/00Start.unity
+    guid: 2922f92e19a32794687a9520b56032da
+  - enabled: 1
     path: Assets/01Scenes/01Day/01DayMain.unity
     guid: b1afedd70862b884ab1da28685f7a56a
   - enabled: 1
+    path: Assets/01Scenes/01Day/02FlowerSellect.unity
+    guid: ede1fbe557f7d1b4f88cb3bc7714df05
+  - enabled: 1
     path: Assets/01Scenes/01Day/03DayPuzzle.unity
     guid: 8c9cfa26abfee488c85f1582747f6a02
+  - enabled: 1
+    path: Assets/01Scenes/02Night/01NightMain.unity
+    guid: 327921893f678f7428ac2035337addd9
   - enabled: 1
     path: Assets/01Scenes/02Night/02NightPuzzle.unity
     guid: bb89dd902aecb1a40b8e3a05b509cc7f

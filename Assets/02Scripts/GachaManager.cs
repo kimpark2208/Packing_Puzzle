@@ -1,31 +1,72 @@
-using System;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using Random = UnityEngine.Random;
 
+/// <summary>
+/// 낮 퍼즐의 "꽃 가챠". 플레이어가 FlowerSelect 화면에서 고른 3종의 꽃 풀에서
+/// 랜덤으로 drawCount개를 뽑아 트레이에 보여주고, 배치되면 트레이에서 제거한다.
+/// 모든 블록은 동일한 범용 프리팹(BlockDrag+BlockView)에 데이터만 다르게 주입해서 생성한다.
+/// </summary>
 public class GachaManager : MonoBehaviour
 {
-    [SerializeField] Button PurseBTN;
-    [SerializeField] List<BlockData> blockData; //TODO: 나중엔 블럭 선택화면에서 받아오게 할거임.
-    [SerializeField] Transform tray;
-    [SerializeField] int drawCount = 3;
-    [SerializeField] int maxRerolls = 3;
+    [SerializeField] private Button gachaButton;
+    [SerializeField] private GameObject pieceViewPrefab; // BlockDrag(+BlockView) 컴포넌트를 가진 범용 블록 프리팹
+    [SerializeField] private Transform tray;
+    [SerializeField] private int drawCount = 3;
+    [SerializeField] private int maxRerolls = 3;
+    [SerializeField] private List<BlockData> initialPool = new(); // 인스펙터 테스트용 기본 풀
 
-    int rerollCount = 0;
-    List<GameObject> curSpawned = new List<GameObject>();
+    private List<BlockData> pool = new();
+    private int rerollCount = 0;
+    private readonly List<GameObject> curSpawned = new();
+
+    private void Awake()
+    {
+        pool = new List<BlockData>(initialPool);
+    }
+
+    private void OnEnable()
+    {
+        EventBus.OnDayAdvanced += HandleDayAdvanced;
+    }
+
+    private void OnDisable()
+    {
+        EventBus.OnDayAdvanced -= HandleDayAdvanced;
+    }
 
     private void Start()
     {
-        PurseBTN.onClick.AddListener(Gacha);
+        if (gachaButton != null) gachaButton.onClick.AddListener(Gacha);
+
+        // 낮 퍼즐 씬 진입 시, 꽃 선택 화면에서 고른 풀을 스스로 가져온다.
+        // (DayPuzzleUI 등 다른 스크립트의 Start 순서에 의존하지 않기 위함)
+        if (GameFlowController.Instance != null && GameFlowController.Instance.ChosenGachaPool.Count > 0)
+        {
+            SetPool(GameFlowController.Instance.ChosenGachaPool);
+        }
+    }
+
+    /// <summary>FlowerSelect 화면에서 플레이어가 고른 3종(가변 개수)의 꽃으로 가챠 풀을 세팅한다.</summary>
+    public void SetPool(List<BlockData> newPool)
+    {
+        pool = new List<BlockData>(newPool);
+        rerollCount = 0;
+        ClearBlocks();
     }
 
     public void Gacha()
     {
-        Debug.Log("gacha");
-        if ((rerollCount >= maxRerolls) && (curSpawned.Count > 0))
+        if (pool == null || pool.Count == 0)
         {
-            Debug.Log("다뿑았어임마");
+            Debug.LogWarning("[GachaManager] 가챠 풀이 비어 있습니다.");
+            return;
+        }
+
+        if (rerollCount >= maxRerolls && curSpawned.Count > 0)
+        {
+            Debug.Log("[GachaManager] 리롤 횟수를 모두 사용했습니다.");
             return;
         }
 
@@ -33,28 +74,27 @@ public class GachaManager : MonoBehaviour
 
         for (int i = 0; i < drawCount; i++)
         {
-            BlockData picked = blockData[Random.Range(0, blockData.Count)];
-            GameObject block = Instantiate(picked.blockPrefab, tray, false);
+            BlockData picked = pool[Random.Range(0, pool.Count)];
+            GameObject block = Instantiate(pieceViewPrefab, tray, false);
 
             BlockDrag draggable = block.GetComponent<BlockDrag>();
             if (draggable != null)
             {
                 draggable.blockData = picked;
-                // 배치 완료 시 curSpawned에서 스스로 제거하도록 콜백 등록
                 draggable.OnPlaced += HandleBlockPlaced;
             }
             else
             {
-                Debug.LogWarning($"{picked.name}의 blockPrefab에 BlockDrag 컴포넌트가 없습니다.");
+                Debug.LogWarning("[GachaManager] pieceViewPrefab에 BlockDrag 컴포넌트가 없습니다.");
             }
 
             curSpawned.Add(block);
         }
 
-        Debug.Log(++rerollCount + "/" + maxRerolls);
+        rerollCount++;
+        Debug.Log($"[GachaManager] 가챠 {rerollCount}/{maxRerolls}");
     }
 
-    // 그리드에 배치가 완료된 블록은 더 이상 "트레이의 리롤 대상"이 아니므로 목록에서 제거
     private void HandleBlockPlaced(GameObject block)
     {
         curSpawned.Remove(block);
@@ -72,5 +112,10 @@ public class GachaManager : MonoBehaviour
     public void ResetRerollCount()
     {
         rerollCount = 0;
+    }
+
+    private void HandleDayAdvanced(int newDay)
+    {
+        ResetRerollCount();
     }
 }

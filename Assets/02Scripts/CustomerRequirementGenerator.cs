@@ -4,7 +4,7 @@ using UnityEngine;
 /// 고객 요구사항 생성 (매일)
 /// 색상 또는 꽃 기반 랜덤 요구사항 생성
 /// </summary>
-public class CustomerRequirementGenerator : MonoBehaviour
+public static class CustomerRequirementGenerator
 {
     public enum RequirementType
     {
@@ -12,9 +12,6 @@ public class CustomerRequirementGenerator : MonoBehaviour
         Flower   // 꽃 기반: "꽃 101을 2개 사용하세요"
     }
 
-    /// <summary>
-    /// 고객 요구사항 데이터
-    /// </summary>
     public struct CustomerRequirement
     {
         public int requirementId;        // 요구사항 고유 ID (일수)
@@ -25,33 +22,18 @@ public class CustomerRequirementGenerator : MonoBehaviour
         public int bonusAmount;          // 충족 시 보너스
     }
 
-    /// <summary>
-    /// 매일 새로운 요구사항 생성
-    /// </summary>
     public static CustomerRequirement GenerateRandomRequirement(int day)
     {
-        var requirement = new CustomerRequirement();
-        requirement.requirementId = day;
+        var requirement = new CustomerRequirement { requirementId = day };
 
-        // 50% 확률로 색상 또는 꽃 기반 선택
         bool isColorBased = Random.value > 0.5f;
-
-        if (isColorBased)
-        {
-            GenerateColorRequirement(ref requirement);
-        }
-        else
-        {
-            GenerateFlowerRequirement(ref requirement);
-        }
+        if (isColorBased) GenerateColorRequirement(ref requirement);
+        else GenerateFlowerRequirement(ref requirement);
 
         Debug.Log($"[CustomerRequirementGenerator] Day {day} 요구사항: {requirement.description} (보너스: {requirement.bonusAmount})");
         return requirement;
     }
 
-    /// <summary>
-    /// 색상 기반 요구사항 생성
-    /// </summary>
     private static void GenerateColorRequirement(ref CustomerRequirement requirement)
     {
         requirement.type = RequirementType.Color;
@@ -59,22 +41,17 @@ public class CustomerRequirementGenerator : MonoBehaviour
         requirement.minCount = Random.Range(2, 5);  // 2~4개
         requirement.bonusAmount = Random.Range(100, 301);  // 100~300
 
-        string colorName = GetColorName(requirement.targetId);
+        string colorName = ColorPalette.ToKoreanName((BlockData.Color)requirement.targetId);
         requirement.description = $"<b>{colorName}</b>색 꽃을 <b>{requirement.minCount}개</b> 이상 사용하세요";
     }
 
-    /// <summary>
-    /// 꽃 기반 요구사항 생성
-    /// </summary>
     private static void GenerateFlowerRequirement(ref CustomerRequirement requirement)
     {
         requirement.type = RequirementType.Flower;
 
-        // 획득한 꽃 중에서 랜덤 선택
-        var obtainedFlowers = CurrencyManager.Instance.GetObtainedFlowerIds();
+        var obtainedFlowers = CurrencyManager.Instance != null ? CurrencyManager.Instance.GetObtainedFlowerIds() : new System.Collections.Generic.List<int>();
         if (obtainedFlowers.Count == 0)
         {
-            // 획득한 꽃이 없으면 색상 기반으로 대체
             GenerateColorRequirement(ref requirement);
             return;
         }
@@ -87,40 +64,14 @@ public class CustomerRequirementGenerator : MonoBehaviour
     }
 
     /// <summary>
-    /// 요구사항 충족 여부 확인
+    /// 요구사항 충족 여부 확인. PuzzleValidationResult의 전체 색상/꽃별 개수를 사용해 minCount까지 정확히 검사한다.
     /// </summary>
     public static bool IsRequirementMet(CustomerRequirement requirement, PuzzleValidationResult result)
     {
-        if (requirement.type == RequirementType.Color)
-        {
-            // 색상 기반: 검증 결과의 색상별 개수를 알 수 없으므로 (현재 PuzzleValidationResult에 없음)
-            // TODO: Phase 4에서 색상별 개수를 PuzzleValidationResult에 추가하면 정확히 확인 가능
-            // 임시로: 가장 많이 사용된 색상이 targetId이고 minCount 이상이면 충족
-            return result.mostUsedColorId == requirement.targetId;
-        }
-        else // Flower
-        {
-            // 꽃 기반: 검증 결과의 꽃별 개수를 알 수 없으므로 (현재 PuzzleValidationResult에 없음)
-            // 임시로: 가장 많이 사용된 꽃이 targetId이고 minCount 이상이면 충족
-            return result.mostUsedFlowerId == requirement.targetId;
-        }
-    }
+        var counts = requirement.type == RequirementType.Color ? result.colorCounts : result.flowerCounts;
+        if (counts == null) return false;
 
-    /// <summary>
-    /// 색상 ID를 한글 이름으로 변환
-    /// </summary>
-    private static string GetColorName(int colorId)
-    {
-        return colorId switch
-        {
-            0 => "빨간",
-            1 => "파란",
-            2 => "노란",
-            3 => "검은",
-            4 => "초록",
-            5 => "흰",
-            6 => "보라",
-            _ => "알 수 없는"
-        };
+        counts.TryGetValue(requirement.targetId, out int used);
+        return used >= requirement.minCount;
     }
 }

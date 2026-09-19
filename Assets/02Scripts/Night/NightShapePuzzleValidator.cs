@@ -1,45 +1,43 @@
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 
 /// <summary>
-/// ÀÏ¹İ/À×¿© ¹ã ÆÛÁñ¿ë ºí·° ¸ğ¾ç ÆÇÁ¤±â.
-/// BlockDataÀÇ shapeGrid¿¡¼­ ¿øº», È¸Àü, ÁÂ¿ì ¹İÀü ÇüÅÂ¸¦ ¸¸µé°í,
-/// ÇÃ·¹ÀÌ¾î°¡ µå·¡±×ÇÑ ¼¿ ÁıÇÕÀÌ ±×Áß ÇÑ ÇüÅÂ°¡ µÉ ¼ö ÀÖ´ÂÁö/Á¤È®È÷ ÀÏÄ¡ÇÏ´ÂÁö ÆÇÁ¤ÇÑ´Ù.
-/// À§Ä¡´Â Áß¿äÇÏÁö ¾Ê´Ù. ºñ±³ Àü¿¡ °¢ ¼¿ ÁıÇÕÀ» ÁÂ»ó´Ü (0, 0) ±âÁØÀ¸·Î Á¤±ÔÈ­ÇÑ´Ù.
+/// ì¼ë°˜/ì‰ì—¬ ë°¤ í¼ì¦ìš© íŒì •ê¸°. í•˜ë‚˜ ì´ìƒì˜ BlockData(ê½ƒ) ê°ê°ì˜ shapeGridì—ì„œ
+/// íšŒì „, ì¢Œìš° ë°˜ì „ ë° ê·¸ ì¡°í•©ìœ¼ë¡œ ë‚˜ì˜¤ëŠ” ëª¨ë“  ê³ ìœ í•œ í˜•íƒœë¥¼ ë¯¸ë¦¬ ê³„ì‚°í•´ ë‘ê³ ,
+/// í”Œë ˆì´ì–´ê°€ ë“œë˜ê·¸ë¡œ ì„ íƒí•œ ì¹¸ ì§‘í•©ì´ ê·¸ ì¤‘ ì–´ë–¤ ê²ƒê³¼ ìœ„ì¹˜ ë¬´ê´€í•˜ê²Œ(shape-only) ì¼ì¹˜í•˜ëŠ”ì§€ íŒì •í•œë‹¤.
+/// ìœ„ì¹˜ëŠ” ì¤‘ìš”í•˜ì§€ ì•Šë‹¤. ë§¤ ë³€í˜•ì€ ì…€ ì§‘í•©ì„ ì¢Œìƒë‹¨ì´ (0,0)ì´ ë˜ë„ë¡ ì •ê·œí™”í•œë‹¤.
+/// ì—¬ëŸ¬ ê½ƒì´ ë™ì‹œì— í›„ë³´ë¡œ ì£¼ì–´ì§ˆ ìˆ˜ ìˆë‹¤(ì‰ì—¬/ì¡°í•© ìŠ¤í…Œì´ì§€).
 /// </summary>
 public class NightShapePuzzleValidator : INightPuzzleValidator
 {
-    private readonly List<HashSet<Vector2Int>> shapeVariants = new();
+    private readonly List<(BlockData block, List<HashSet<Vector2Int>> variants)> entries = new();
+    private readonly bool[,] wallGrid;
 
-    public NightShapePuzzleValidator(BlockData blockData)
+    public NightShapePuzzleValidator(IEnumerable<BlockData> blocks, bool[,] wallGrid = null)
     {
-        if (blockData == null) return;
+        this.wallGrid = wallGrid;
 
-        HashSet<Vector2Int> original = ReadShape(blockData);
-        AddAllUniqueVariants(original);
+        foreach (BlockData block in blocks)
+        {
+            if (block == null) continue;
+            entries.Add((block, PolyominoUtil.GetUniqueVariants(block)));
+        }
     }
 
-    /// <summary>
-    /// ÇÁ·ÎÅäÅ¸ÀÔ¿¡¼­´Â º®À» »ç¿ëÇÏÁö ¾Ê´Â´Ù.
-    /// TODO: º® ÁÂÇ¥ ÁıÇÕÀ» »ı¼ºÀÚ·Î ¹Şµµ·Ï È®ÀåÇÑ´Ù.
-    /// </summary>
+    /// <summary>í¼ì¦ ìƒì„±ê¸°ê°€ í•„ëŸ¬ë¡œ ë²½ ì²˜ë¦¬í•œ ì¹¸ì¸ì§€ ì—¬ë¶€. ë²½ ì¹¸ì€ ê·¸ë¦´ ìˆ˜ ì—†ê³  ì™„ë£Œ íŒì •ì—ì„œë„ ì œì™¸í•œë‹¤.</summary>
     public bool IsWallCell(Vector2Int coord)
     {
-        return false;
+        if (wallGrid == null) return false;
+        if (coord.y < 0 || coord.y >= wallGrid.GetLength(0)) return false;
+        if (coord.x < 0 || coord.x >= wallGrid.GetLength(1)) return false;
+        return wallGrid[coord.y, coord.x];
     }
 
-    /// <summary>
-    /// ÀÌ ÀÏ¹İ ÆÛÁñÀº °íÁ¤µÈ ¸ñÇ¥ ¿µ¿ªÀÌ ¾ø´Ù.
-    /// µå·¡±× ÀüÃ¼ ¸ğ¾çÀ» º¸°í CanStillMatch/IsExactMatch·Î ÆÇÁ¤ÇÑ´Ù.
-    /// </summary>
-    public bool IsCellInTarget(Vector2Int coord)
-    {
-        return true;
-    }
+    /// <summary>ì¼ë°˜ ìŠ¤í…Œì´ì§€ëŠ” ë²½ì„ ì œì™¸í•œ ë³´ë“œ ì „ì²´ê°€ ëª©í‘œ ë²”ìœ„ë‹¤.</summary>
+    public bool IsCellInTarget(Vector2Int coord) => !IsWallCell(coord);
 
-    /// <summary>
-    /// ÀÏ¹İ ÆÛÁñ ¿Ï·á Á¶°Ç: º®À» Á¦¿ÜÇÑ º¸µåÀÇ ¸ğµç Ä­ÀÌ Ã¤¿öÁ³´Â°¡.
-    /// </summary>
+    /// <summary>ë²½ì„ ì œì™¸í•œ ëª¨ë“  ì¹¸ì´ ì±„ì›Œì¡ŒëŠ”ê°€.</summary>
     public bool IsPuzzleComplete(bool[,] filled)
     {
         int rows = filled.GetLength(0);
@@ -49,7 +47,8 @@ public class NightShapePuzzleValidator : INightPuzzleValidator
         {
             for (int col = 0; col < cols; col++)
             {
-                if (IsWallCell(new Vector2Int(col, row))) continue;
+                Vector2Int coord = new Vector2Int(col, row);
+                if (IsWallCell(coord)) continue;
                 if (!filled[row, col]) return false;
             }
         }
@@ -58,138 +57,44 @@ public class NightShapePuzzleValidator : INightPuzzleValidator
     }
 
     /// <summary>
-    /// ÇöÀç ¼±ÅÃµÈ ¼¿µéÀÌ, ¾î¶² È¸Àü/¹İÀü º¯ÇüÀ» º¸µåÀÇ ¾î´À À§Ä¡¿¡ ³õ¾ÒÀ» ¶§
-    /// ±× ¾È¿¡ Æ÷ÇÔµÉ ¼ö ÀÖ´ÂÁö ÆÇÁ¤ÇÑ´Ù.
+    /// ì§€ê¸ˆê¹Œì§€ ì„ íƒëœ ì…€ ì§‘í•©ì´, ì–´ë–¤ ê½ƒì˜ ì–´ë–¤ íšŒì „/ë°˜ì „ ë³€í˜•ìœ¼ë¡œë„ ì´ì–´ì„œ ì™„ì„±ë  ê°€ëŠ¥ì„±ì´ ìˆëŠ”ì§€.
     /// </summary>
     public bool CanStillMatch(IReadOnlyCollection<Vector2Int> selectedCells)
     {
         if (selectedCells == null || selectedCells.Count == 0) return false;
 
-        foreach (HashSet<Vector2Int> variant in shapeVariants)
+        foreach (var entry in entries)
         {
-            if (selectedCells.Count > variant.Count) continue;
-            if (CanFitInsideVariant(selectedCells, variant)) return true;
-        }
-
-        return false;
-    }
-
-    /// <summary>
-    /// ÇöÀç ¼±ÅÃµÈ ¼¿µéÀÌ, ¾î¶² È¸Àü/¹İÀü º¯Çü°ú À§Ä¡±îÁö Æ÷ÇÔÇÏ¿© ¿ÏÀüÈ÷ ÀÏÄ¡ÇÏ´ÂÁö ÆÇÁ¤ÇÑ´Ù.
-    /// </summary>
-    public bool IsExactMatch(IReadOnlyCollection<Vector2Int> selectedCells)
-    {
-        if (selectedCells == null || selectedCells.Count == 0) return false;
-
-        foreach (HashSet<Vector2Int> variant in shapeVariants)
-        {
-            if (selectedCells.Count != variant.Count) continue;
-            if (CanFitInsideVariant(selectedCells, variant)) return true;
-        }
-
-        return false;
-    }
-
-    private static HashSet<Vector2Int> ReadShape(BlockData blockData)
-    {
-        HashSet<Vector2Int> result = new();
-
-        if (blockData.shapeGrid == null) return result;
-
-        for (int row = 0; row < blockData.shapeGrid.Length; row++)
-        {
-            bool[] cols = blockData.shapeGrid[row].cols;
-            if (cols == null) continue;
-
-            for (int col = 0; col < cols.Length; col++)
+            foreach (HashSet<Vector2Int> variant in entry.variants)
             {
-                if (cols[col])
-                {
-                    result.Add(new Vector2Int(col, row));
-                }
+                if (selectedCells.Count <= variant.Count && CanFitInsideVariant(selectedCells, variant))
+                    return true;
             }
         }
 
-        return Normalize(result);
+        return false;
     }
 
-    private void AddAllUniqueVariants(HashSet<Vector2Int> original)
+    /// <summary>ì„ íƒëœ ì…€ ì§‘í•©ê³¼ ì •í™•íˆ ì¼ì¹˜í•˜ëŠ” ë³€í˜•ì„ ê°€ì§„ ê½ƒ(BlockData)ì„ ì°¾ëŠ”ë‹¤. ì—†ìœ¼ë©´ null.</summary>
+    public BlockData GetExactMatchBlock(IReadOnlyCollection<Vector2Int> selectedCells)
     {
-        HashSet<Vector2Int> current = original;
+        if (selectedCells == null || selectedCells.Count == 0) return null;
 
-        for (int i = 0; i < 4; i++)
+        foreach (var entry in entries)
         {
-            AddVariantIfUnique(current);
-            AddVariantIfUnique(FlipHorizontal(current));
-            current = RotateClockwise(current);
+            foreach (HashSet<Vector2Int> variant in entry.variants)
+            {
+                if (selectedCells.Count == variant.Count && CanFitInsideVariant(selectedCells, variant))
+                    return entry.block;
+            }
         }
+
+        return null;
     }
 
-    private void AddVariantIfUnique(HashSet<Vector2Int> candidate)
-    {
-        HashSet<Vector2Int> normalized = Normalize(candidate);
+    public bool IsExactMatch(IReadOnlyCollection<Vector2Int> selectedCells) => GetExactMatchBlock(selectedCells) != null;
 
-        foreach (HashSet<Vector2Int> existing in shapeVariants)
-        {
-            if (existing.SetEquals(normalized)) return;
-        }
-
-        shapeVariants.Add(normalized);
-    }
-
-    private static HashSet<Vector2Int> RotateClockwise(HashSet<Vector2Int> cells)
-    {
-        HashSet<Vector2Int> rotated = new();
-
-        foreach (Vector2Int cell in cells)
-        {
-            // (x, y)¸¦ ¿øÁ¡ ±âÁØ ½Ã°è¹æÇâ 90µµ È¸Àü: (x, y) -> (-y, x)
-            rotated.Add(new Vector2Int(-cell.y, cell.x));
-        }
-
-        return Normalize(rotated);
-    }
-
-    private static HashSet<Vector2Int> FlipHorizontal(HashSet<Vector2Int> cells)
-    {
-        HashSet<Vector2Int> flipped = new();
-
-        foreach (Vector2Int cell in cells)
-        {
-            // yÃà ´ëÄª: (x, y) -> (-x, y)
-            flipped.Add(new Vector2Int(-cell.x, cell.y));
-        }
-
-        return Normalize(flipped);
-    }
-
-    private static HashSet<Vector2Int> Normalize(IEnumerable<Vector2Int> cells)
-    {
-        int minX = int.MaxValue;
-        int minY = int.MaxValue;
-        List<Vector2Int> copied = new();
-
-        foreach (Vector2Int cell in cells)
-        {
-            copied.Add(cell);
-            minX = Mathf.Min(minX, cell.x);
-            minY = Mathf.Min(minY, cell.y);
-        }
-
-        HashSet<Vector2Int> normalized = new();
-
-        foreach (Vector2Int cell in copied)
-        {
-            normalized.Add(new Vector2Int(cell.x - minX, cell.y - minY));
-        }
-
-        return normalized;
-    }
-
-    /// <summary>
-    /// selectedCells°¡ variant¸¦ ÆòÇàÀÌµ¿ÇÑ µµÇü ¾È¿¡ Æ÷ÇÔµÉ ¼ö ÀÖ´ÂÁö È®ÀÎÇÑ´Ù.
-    /// ¼±ÅÃ ¼¿ ÇÏ³ª¸¦ variantÀÇ °¢ Ä­¿¡ ¸ÂÃç º¸´Â ¹æ½ÄÀ¸·Î ¸ğµç °¡´ÉÇÑ À§Ä¡¸¦ °Ë»çÇÑ´Ù.
-    /// </summary>
+    /// <summary>selectedCellsê°€ variant ë‚´ë¶€ì— ìœ„ì¹˜ ì´ë™ë§Œìœ¼ë¡œ ì •í™•íˆ í¬í•¨ë  ìˆ˜ ìˆëŠ”ì§€ í™•ì¸í•œë‹¤.</summary>
     private static bool CanFitInsideVariant(IReadOnlyCollection<Vector2Int> selectedCells, HashSet<Vector2Int> variant)
     {
         foreach (Vector2Int selectedAnchor in selectedCells)

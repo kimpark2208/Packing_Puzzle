@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
@@ -7,49 +8,45 @@ using UnityEngine.UI;
 /// <summary>
 /// 일반/잉여 밤 퍼즐 보드.
 /// 한 번의 드래그로 하나의 블럭을 배치한다. 드래그 도중 같은 칸을 재통과해도 취소하지 않으며,
-/// 처음 방문한 고유 셀의 집합만 BlockData의 회전/반전 변형과 비교한다.
+/// 처음 방문한 고유 셀의 집합만 후보 BlockData들의 회전/반전 변형과 비교한다.
+/// GameFlowController가 밤 시간대에 생성된 퍼즐 큐를 순서대로 이 컨트롤러에 넘겨준다.
 /// </summary>
 public class NightBoardController : MonoBehaviour
 {
     [Header("References")]
     [SerializeField] private NightCellView cellPrefab;
-    [SerializeField] private Sprite curFlowerCellSprite;
-    [SerializeField] private Color curFlowerColor = Color.white;
 
-    [Header("Test Only")]
-    [SerializeField] private int gridSize = 5; // TODO: 실제 게임에서는 스테이지 데이터에서 받아와야 함.
-    [SerializeField] private BlockData testTargetBlock;
+    [Header("Test Only (인스펙터에서 직접 테스트할 때)")]
+    [SerializeField] private int testGridSize = 5;
+    [SerializeField] private List<BlockData> testAllowedBlocks = new();
 
     private bool[,] filled;
     private int[,] placedBlockIds;
+    private Dictionary<int, int> placedBlockFlowerId = new(); // placedBlockId -> flowerId(blockID)
     private int nextPlacedBlockId;
+    private int gridSize;
 
     private NightCellView[,] cells;
     private GridLayoutGroup gridLayout;
     private GraphicRaycaster graphicRaycaster;
     private NightShapePuzzleValidator shapeValidator;
 
-    // 이번 드래그에서 처음 방문한 고유 셀들.
-    // 순서는 필요 없으며, 같은 셀을 다시 지나가도 이 집합은 유지한다.
     private readonly HashSet<Vector2Int> currentPathSet = new();
-
-    // 프리뷰가 표시된 셀들. 드래그 실패 시 한 번에 원상복구하기 위해 별도로 보관한다.
     private readonly List<Vector2Int> previewCells = new();
-
-    // 점유된 칸에서 시작한 입력은 블럭 삭제 모드다.
     private bool isErasing;
-
-    // 한 번의 삭제 드래그에서 이미 삭제한 블럭 ID들.
-    // 같은 블럭의 다른 칸을 다시 지나가도 중복 삭제하지 않는다.
     private readonly HashSet<int> erasedBlockIds = new();
-
     private bool isDrawing;
     private bool currentDrawIsInvalid;
 
     public INightPuzzleValidator Validator { get; set; }
 
-    private void Start()
+    /// <summary>이번 퍼즐이 완료되어 획득한 꽃 ID 목록과 함께 발생.</summary>
+    public event System.Action<List<int>> OnStagePuzzleCompleted;
+
+    private void Awake()
     {
+        // GameFlowController.OnSceneLoaded(SceneManager.sceneLoaded)는 이 씬 오브젝트들의 Start()보다
+        // 먼저 발생하므로, LoadPuzzle 호출에 필요한 참조들은 반드시 Awake에서 준비해 둔다.
         if (!TryGetComponent(out gridLayout))
         {
             Debug.LogWarning("GridLayoutGroup 컴포넌트가 없어서 NightBoardController가 정상 동작하지 않을 수 있습니다.");
@@ -61,24 +58,31 @@ public class NightBoardController : MonoBehaviour
         {
             Debug.LogWarning("GraphicRaycaster가 부모 Canvas에 없습니다. UI 이벤트 레이캐스트가 동작하지 않을 수 있습니다.");
         }
+    }
 
-        if (testTargetBlock == null)
+    private void Start()
+    {
+        // 인스펙터에 테스트용 블록이 세팅되어 있으면 바로 시작 (에디터 단독 테스트용).
+        if (testAllowedBlocks != null && testAllowedBlocks.Count > 0)
         {
-            Debug.LogWarning("Test Target Block이 비어 있습니다. BlockData SO를 NightBoardController Inspector에 할당하세요.");
-            return;
-        }
-
-        // TODO: 실제 게임에서는 스테이지 데이터가 BlockData를 전달하고, 여기서 Validator를 생성/주입한다.
-        shapeValidator = new NightShapePuzzleValidator(testTargetBlock);
-        Validator = shapeValidator;
-
-        if (gridSize > 0)
-        {
-            CreateBoard(gridSize);
+            LoadPuzzle(testGridSize, testAllowedBlocks, new bool[testGridSize, testGridSize]);
         }
     }
 
-    public void CreateBoard(int size)
+    /// <summary>GameFlowController가 절차적으로 생성한 퍼즐 하나를 이 보드에 로드한다.</summary>
+    public void LoadPuzzle(int size, List<BlockData> allowedBlocks, bool[,] wallGrid)
+    {
+        shapeValidator = new NightShapePuzzleValidator(allowedBlocks, wallGrid);
+        Validator = shapeValidator;
+        CreateBoard(size, wallGrid);
+    }
+
+    public void LoadPuzzle(NightPuzzleData data, List<BlockData> allowedBlocks)
+    {
+        LoadPuzzle(data.gridSize, allowedBlocks, data.wallGrid ?? new bool[data.gridSize, data.gridSize]);
+    }
+
+    private void CreateBoard(int size, bool[,] wallGrid)
     {
         ClearBoardObjects();
         gridLayout.enabled = true;
@@ -87,16 +91,12 @@ public class NightBoardController : MonoBehaviour
         cells = new NightCellView[size, size];
         filled = new bool[size, size];
         placedBlockIds = new int[size, size];
+        placedBlockFlowerId.Clear();
         nextPlacedBlockId = 0;
 
-        // 빈 칸은 -1. 0 이상은 확정된 블럭 배치 ID다.
         for (int row = 0; row < size; row++)
-        {
             for (int col = 0; col < size; col++)
-            {
                 placedBlockIds[row, col] = -1;
-            }
-        }
 
         gridLayout.constraint = GridLayoutGroup.Constraint.FixedColumnCount;
         gridLayout.constraintCount = size;
@@ -109,7 +109,18 @@ public class NightBoardController : MonoBehaviour
                 Vector2Int coord = new Vector2Int(col, row);
 
                 cell.Initialize(coord);
-                AttachInputHandlers(cell);
+
+                bool isWall = wallGrid != null &&
+                    row < wallGrid.GetLength(0) && col < wallGrid.GetLength(1) && wallGrid[row, col];
+                if (isWall)
+                {
+                    cell.SetAsWall();
+                    filled[row, col] = true; // 벽은 채워진 것으로 취급해 완료 판정에서 자연히 제외되게 한다
+                }
+                else
+                {
+                    AttachInputHandlers(cell);
+                }
 
                 cells[row, col] = cell;
             }
@@ -122,49 +133,25 @@ public class NightBoardController : MonoBehaviour
     {
         yield return null;
         yield return new WaitForEndOfFrame();
-
-        if (gridLayout != null)
-        {
-            gridLayout.enabled = false;
-        }
+        if (gridLayout != null) gridLayout.enabled = false;
     }
 
     private void AttachInputHandlers(NightCellView cell)
     {
-        // CellBox 루트의 투명 Image가 반드시 입력을 받는다.
         Image inputImage = cell.GetComponent<Image>();
-
         if (inputImage == null)
         {
-            Debug.LogError(
-                $"{cell.name}: CellBox 루트에 Image가 없습니다. " +
-                "투명 Image를 추가하고 Raycast Target을 켜세요.");
-
+            Debug.LogError($"{cell.name}: CellBox 루트에 Image가 없습니다. 투명 Image를 추가하고 Raycast Target을 켜세요.");
             return;
         }
-
         inputImage.raycastTarget = true;
 
         EventTrigger trigger = cell.GetComponent<EventTrigger>();
+        if (trigger == null) trigger = cell.gameObject.AddComponent<EventTrigger>();
+        else trigger.triggers.Clear();
 
-        if (trigger == null)
-        {
-            trigger = cell.gameObject.AddComponent<EventTrigger>();
-        }
-        else
-        {
-            trigger.triggers.Clear();
-        }
-
-        AddTrigger(
-            trigger,
-            EventTriggerType.PointerDown,
-            _ => OnCellPointerDown(cell));
-
-        AddTrigger(
-            trigger,
-            EventTriggerType.PointerEnter,
-            _ => OnCellPointerEnter(cell));
+        AddTrigger(trigger, EventTriggerType.PointerDown, _ => OnCellPointerDown(cell));
+        AddTrigger(trigger, EventTriggerType.PointerEnter, _ => OnCellPointerEnter(cell));
     }
 
     private void AddTrigger(EventTrigger trigger, EventTriggerType type, System.Action<BaseEventData> action)
@@ -189,11 +176,7 @@ public class NightBoardController : MonoBehaviour
 
     private void TryStartDrawingFromPointer()
     {
-        PointerEventData pointerEvent = new PointerEventData(EventSystem.current)
-        {
-            position = Input.mousePosition
-        };
-
+        PointerEventData pointerEvent = new PointerEventData(EventSystem.current) { position = Input.mousePosition };
         List<RaycastResult> results = new List<RaycastResult>();
         graphicRaycaster.Raycast(pointerEvent, results);
 
@@ -219,8 +202,6 @@ public class NightBoardController : MonoBehaviour
         erasedBlockIds.Clear();
 
         Vector2Int coord = cell.Coord;
-
-        // 이미 점유된 셀에서 시작하면 이 입력 전체는 블럭 삭제 모드다.
         isErasing = filled[coord.y, coord.x];
 
         if (isErasing)
@@ -239,28 +220,22 @@ public class NightBoardController : MonoBehaviour
 
         if (isErasing)
         {
-            // 삭제 모드에서는 지나간 점유 칸이 속한 블럭 전체를 지운다.
             ErasePlacedBlockAt(cell.Coord);
             return;
         }
 
-        // 같은 칸 재통과는 한 붓으로 못 그리는 도형을 허용하기 위해 무시한다.
         if (currentPathSet.Contains(cell.Coord)) return;
-
         TryAddToCurrentBlock(cell);
     }
 
     private void TryAddToCurrentBlock(NightCellView cell)
     {
         Vector2Int coord = cell.Coord;
-
         if (currentPathSet.Contains(coord)) return;
 
-        // 이미 확정된 블럭에 겹치면 현재 스트로크는 즉시 무효다.
         if (filled[coord.y, coord.x])
         {
             currentDrawIsInvalid = true;
-            cell.ShowPreview(false, curFlowerCellSprite, curFlowerColor);
             previewCells.Add(coord);
             ShowCurrentPreviewAsInvalid();
             return;
@@ -269,7 +244,6 @@ public class NightBoardController : MonoBehaviour
         currentPathSet.Add(coord);
         previewCells.Add(coord);
 
-        // 새로 추가된 칸까지 포함했을 때 어떤 회전/반전 블럭으로도 완성될 수 없으면 무효.
         if (!shapeValidator.CanStillMatch(currentPathSet))
         {
             currentDrawIsInvalid = true;
@@ -277,7 +251,7 @@ public class NightBoardController : MonoBehaviour
             return;
         }
 
-        cell.ShowPreview(true, curFlowerCellSprite, curFlowerColor);
+        cell.ShowPreview(true, null, Color.white);
     }
 
     private void ShowCurrentPreviewAsInvalid()
@@ -286,23 +260,18 @@ public class NightBoardController : MonoBehaviour
         {
             if (!filled[coord.y, coord.x])
             {
-                cells[coord.y, coord.x].ShowPreview(false, curFlowerCellSprite, curFlowerColor);
+                cells[coord.y, coord.x].ShowPreview(false, null, Color.white);
             }
         }
     }
 
-    /// <summary>
-    /// 클릭/드래그가 닿은 점유 칸이 속한 블럭 하나를 통째로 삭제한다.
-    /// 같은 blockId를 가진 모든 셀을 찾아 Empty로 되돌린다.
-    /// </summary>
     private void ErasePlacedBlockAt(Vector2Int clickedCoord)
     {
         int blockId = placedBlockIds[clickedCoord.y, clickedCoord.x];
-
-        // 빈 칸이거나 이미 이번 드래그에서 삭제한 블럭이면 무시한다.
         if (blockId < 0 || erasedBlockIds.Contains(blockId)) return;
 
         erasedBlockIds.Add(blockId);
+        placedBlockFlowerId.Remove(blockId);
 
         int rowCount = placedBlockIds.GetLength(0);
         int colCount = placedBlockIds.GetLength(1);
@@ -312,6 +281,7 @@ public class NightBoardController : MonoBehaviour
             for (int col = 0; col < colCount; col++)
             {
                 if (placedBlockIds[row, col] != blockId) continue;
+                if (cells[row, col].IsWall) continue;
 
                 cells[row, col].ResetToEmpty();
                 filled[row, col] = false;
@@ -324,9 +294,6 @@ public class NightBoardController : MonoBehaviour
     {
         isDrawing = false;
 
-        // 점유 칸에서 시작한 클릭/드래그는 블럭 삭제만 하고 종료한다.
-        // 클릭만 해도 PointerDown에서 해당 블럭 전체가 즉시 지워지고,
-        // 손을 떼는 시점에는 상태만 정리한다.
         if (isErasing)
         {
             isErasing = false;
@@ -335,26 +302,27 @@ public class NightBoardController : MonoBehaviour
             return;
         }
 
-        bool isExactBlock = !currentDrawIsInvalid && shapeValidator.IsExactMatch(currentPathSet);
+        BlockData matched = currentDrawIsInvalid ? null : shapeValidator.GetExactMatchBlock(currentPathSet);
 
-        if (isExactBlock)
+        if (matched != null)
         {
-            // 이번 드래그로 확정되는 모든 칸에 동일한 배치 ID를 기록한다.
             int placedBlockId = nextPlacedBlockId++;
+            Sprite finalSprite = matched.flowerIcon;
+            Color finalColor = ColorPalette.ToUnityColor(matched.color);
 
             foreach (Vector2Int coord in currentPathSet)
             {
                 NightCellView cell = cells[coord.y, coord.x];
-                cell.Confirm();
+                cell.Confirm(finalSprite, finalColor);
                 filled[coord.y, coord.x] = true;
                 placedBlockIds[coord.y, coord.x] = placedBlockId;
             }
 
+            placedBlockFlowerId[placedBlockId] = matched.blockID;
             CheckCompletion();
         }
         else
         {
-            // 틀린 모양은 드래그 중 빨갛게 보이고, 손을 떼면 이번 프리뷰만 전부 취소한다.
             foreach (Vector2Int coord in previewCells)
             {
                 if (!filled[coord.y, coord.x])
@@ -379,14 +347,21 @@ public class NightBoardController : MonoBehaviour
 
     private void OnPuzzleCompleted()
     {
-        // TODO: 완성 연출 및 보상 지급 연결
-        Debug.Log("Night puzzle complete");
+        List<int> obtainedFlowerIds = placedBlockFlowerId.Values.Distinct().ToList();
+
+        foreach (int flowerId in obtainedFlowerIds)
+        {
+            CurrencyManager.Instance.ObtainFlower(flowerId);
+            EventBus.RaiseNightPuzzleComplete(flowerId);
+        }
+
+        Debug.Log($"[NightBoardController] 퍼즐 완료. 획득한 꽃: {string.Join(",", obtainedFlowerIds)}");
+        OnStagePuzzleCompleted?.Invoke(obtainedFlowerIds);
     }
 
     private void ClearBoardObjects()
     {
         if (gridLayout == null) return;
-
         for (int i = gridLayout.transform.childCount - 1; i >= 0; i--)
         {
             Destroy(gridLayout.transform.GetChild(i).gameObject);

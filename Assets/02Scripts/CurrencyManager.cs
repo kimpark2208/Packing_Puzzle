@@ -5,10 +5,8 @@ using UnityEngine;
 /// 게임 재화 및 상태 관리 (싱글톤)
 /// 현재 금액, 일수, 보유 포장지, 획득한 꽃, 요청한 꽃 등을 추적
 /// </summary>
-public class CurrencyManager : MonoBehaviour
+public class CurrencyManager : Singleton<CurrencyManager>
 {
-    public static CurrencyManager Instance { get; private set; }
-
     [SerializeField] private int initialMoney = 0;
 
     // ========== 기본 상태 ==========
@@ -35,18 +33,21 @@ public class CurrencyManager : MonoBehaviour
     public IReadOnlyList<int> RequestedFlowerIdsForTonight => requestedFlowerIdsForTonight;
     public CustomerRequirementGenerator.CustomerRequirement CurrentRequirement => currentRequirement;
 
-    private void Awake()
+    /// <summary>DayPuzzleGenerator가 생성한 오늘의 요구사항을 단일 소스로 등록한다(표시용과 판정용이 어긋나지 않도록).</summary>
+    public void SetCurrentRequirement(CustomerRequirementGenerator.CustomerRequirement requirement)
     {
-        if (Instance == null)
-        {
-            Instance = this;
-            DontDestroyOnLoad(gameObject);
-            Initialize();
-        }
-        else
-        {
-            Destroy(gameObject);
-        }
+        currentRequirement = requirement;
+    }
+
+    /// <summary>이번 낮 주문의 정답 레시피(런타임 생성). DayPuzzleGenerator가 채우고 PerfectChecker가 읽는다.</summary>
+    public PuzzleRecipe CurrentDayRecipe { get; set; }
+
+    /// <summary>이번 낮 주문의 목표 점수. 미니게임 결과가 이보다 낮으면 매출이 줄어든다.</summary>
+    public int CurrentTargetScore { get; set; }
+
+    protected override void OnAwake()
+    {
+        Initialize();
     }
 
     private void Initialize()
@@ -57,10 +58,11 @@ public class CurrencyManager : MonoBehaviour
         // 초기 포장지: ID 1 (5x5) 언락
         ownedWrappers.Add(1);
 
-        // 초기 꽃: A(ID 101), B(ID 102), C(ID 103) 획득 가능
-        obtainedFlowers[101] = true;
-        obtainedFlowers[102] = true;
-        obtainedFlowers[103] = true;
+        // 초기 꽃: 모노미노(1), 도미노-빨강(2), S-테트로미노-파랑(9) 획득 가능 (BlockDatabase의 1단계 포장지 꽃 ID와 일치해야 함)
+        // 9번은 좌우 반전이 실제로 다르게 보이는(거울상) 도형이라, 처음부터 회전/반전 조작을 눈으로 확인할 수 있다.
+        obtainedFlowers[1] = true;
+        obtainedFlowers[2] = true;
+        obtainedFlowers[9] = true;
 
         requestedFlowerIdsForTonight.Clear();
 
@@ -211,9 +213,6 @@ public class CurrencyManager : MonoBehaviour
         currentDay++;
         requestedFlowerIdsForTonight.Clear();
 
-        // Phase 3: 새로운 고객 요구사항 생성
-        currentRequirement = CustomerRequirementGenerator.GenerateRandomRequirement(currentDay);
-
         EventBus.RaiseDayAdvanced(currentDay);
         Debug.Log($"[CurrencyManager] 일수 진행: Day {currentDay}");
     }
@@ -227,8 +226,8 @@ public class CurrencyManager : MonoBehaviour
         if (GUILayout.Button("Debug: 포장지 2 언락"))
             UnlockWrapper(2);
 
-        if (GUILayout.Button("Debug: 꽃 104 획득"))
-            ObtainFlower(104);
+        if (GUILayout.Button("Debug: 꽃 8 획득"))
+            ObtainFlower(8);
 
         if (GUILayout.Button("Debug: 다음 날"))
             AdvanceDay();

@@ -1,332 +1,231 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 
 /// <summary>
-/// 절차적 밤 퍼즐 생성 (Dancing Links 기반)
-/// Phase 1: 요청한 꽃으로 메인 퍼즐 생성
-/// Phase 2: 3-5개의 보너스/잉여 퍼즐 생성
+/// 절차적 밤 퍼즐 생성 (진짜 Dancing Links/Algorithm X 기반).
+/// 밤 퍼즐은 플레이어가 직접 셀을 그려서 채우는 방식이므로(NightBoardController),
+/// 이 생성기는 "정답 배치"를 미리 계산해서 넣어주는 것이 아니라
+/// 주어진 꽃 조합만으로 보드를 빈틈없이 유일하게 채울 수 있는지를 검증하고,
+/// 불가능하면 최소한의 칸을 벽(필러)으로 막아 나머지가 유일하게 채워지도록 만든다.
 /// </summary>
-public class ProceduralNightPuzzleGenerator : MonoBehaviour
+public static class ProceduralNightPuzzleGenerator
 {
     private static int nextPuzzleId = 1;
+    private const int WallSearchAttemptsPerCount = 40;
+    private const long TimeBudgetMs = 700; // 스테이지 하나당 벽 탐색에 쓸 수 있는 최대 시간 (메인 스레드 프리징 방지)
+    private static readonly System.Random Rng = new();
 
     /// <summary>
-    /// 퍼즐 생성 메인 메서드
+    /// 하루 밤에 플레이할 퍼즐 큐를 만든다.
+    /// 요청한 꽃이 있으면 메인 스테이지 1개를 최우선으로 넣고, 남는 시간은 보유 꽃 조합의 잉여 스테이지로 채운다.
     /// </summary>
-    public static void GeneratePuzzles(int gridSize, int[] requestedFlowerIds)
+    public static List<NightPuzzleData> GenerateNightQueue(int gridSize, int[] requestedFlowerIds, List<int> obtainedFlowerIds, int bonusStageCount)
     {
-        Debug.Log($"[ProceduralNightPuzzleGenerator] 퍼즐 생성 시작: gridSize={gridSize}, 요청 꽃 {requestedFlowerIds.Length}개");
+        var queue = new List<NightPuzzleData>();
 
-        var puzzles = new List<NightPuzzleData>();
-
-        // Phase 1: 요청 꽃으로 메인 퍼즐 생성
-        var mainPuzzle = GenerateMainPuzzle(gridSize, requestedFlowerIds);
-        if (mainPuzzle.HasValue)
+        if (requestedFlowerIds != null && requestedFlowerIds.Length > 0)
         {
-            puzzles.Add(mainPuzzle.Value);
-            Debug.Log($"[ProceduralNightPuzzleGenerator] 메인 퍼즐 생성 성공 (ID: {mainPuzzle.Value.puzzleId})");
-        }
-        else
-        {
-            Debug.LogWarning("[ProceduralNightPuzzleGenerator] 메인 퍼즐 생성 실패, 보너스 퍼즐로 대체");
+            queue.Add(GenerateStage(gridSize, requestedFlowerIds, isBonusStage: false));
         }
 
-        // Phase 2: 보너스 퍼즐 생성 (3-5개)
-        int bonusCount = UnityEngine.Random.Range(3, 6);
-        for (int i = 0; i < bonusCount; i++)
+        for (int i = 0; i < bonusStageCount; i++)
         {
-            var bonusPuzzle = GenerateBonusPuzzle(gridSize);
-            if (bonusPuzzle.HasValue)
+            int comboSize = Mathf.Clamp(Rng.Next(2, 4), 1, Mathf.Max(1, obtainedFlowerIds.Count));
+            int[] combo = PickRandomDistinct(obtainedFlowerIds, comboSize);
+            if (combo.Length == 0) break;
+
+            queue.Add(GenerateStage(gridSize, combo, isBonusStage: true));
+        }
+
+        Debug.Log($"[ProceduralNightPuzzleGenerator] 밤 퍼즐 {queue.Count}개 생성 완료");
+        return queue;
+    }
+
+    private static NightPuzzleData GenerateStage(int gridSize, int[] flowerIds, bool isBonusStage)
+    {
+        var blocks = flowerIds
+            .Select(id => BlockDatabase.Instance != null ? BlockDatabase.Instance.GetById(id) : null)
+            .Where(b => b != null)
+            .ToList();
+
+        bool[,] wall = new bool[gridSize, gridSize];
+
+        if (blocks.Count == 0)
+        {
+            Debug.LogWarning("[ProceduralNightPuzzleGenerator] 사용할 블록 데이터가 없어 스테이지를 생성할 수 없습니다.");
+            return MakeData(gridSize, flowerIds, isBonusStage, wall);
+        }
+
+        var cellCounts = blocks.Select(b => b.CellCount).Where(c => c > 0).Distinct().ToList();
+        int totalCells = gridSize * gridSize;
+        var stopwatch = System.Diagnostics.Stopwatch.StartNew();
+
+        // 칸 수 조합으로 애초에 나눠떨어지지 않으면(예: 5x5=25칸을 3칸짜리 I자 하나로만 못 채움)
+        // DLX를 아예 돌리지 않는다 - 이 사전 필터가 없으면 절대 못 찾을 답을 수백 번 재시도하며 멈춰버린다.
+        if (CanReachExactSum(totalCells, cellCounts) && HasUniqueExactTiling(gridSize, blocks, wall))
+        {
+            return MakeData(gridSize, flowerIds, isBonusStage, wall);
+        }
+
+        // 꽃 조합만으로 유일하게 완전히 채울 수 없다면 최소한의 칸을 벽(=임의의 필러)으로 막아본다.
+        // 벽은 꽃 블록과 무관하게 아무 크기나 될 수 있으므로 1칸 단위로 늘려가며 시도한다.
+        int maxWallCells = Mathf.Min(totalCells / 2, 20);
+
+        for (int wallCellCount = 1; wallCellCount <= maxWallCells; wallCellCount++)
+        {
+            if (stopwatch.ElapsedMilliseconds > TimeBudgetMs) break;
+
+            int remaining = totalCells - wallCellCount;
+            if (!CanReachExactSum(remaining, cellCounts)) continue; // 이 필러 개수로도 나눠떨어지지 않으면 스킵
+
+            if (TryFindWallPlacement(gridSize, blocks, wallCellCount, stopwatch, out bool[,] foundWall))
             {
-                puzzles.Add(bonusPuzzle.Value);
-                Debug.Log($"[ProceduralNightPuzzleGenerator] 보너스 퍼즐 생성 (ID: {bonusPuzzle.Value.puzzleId})");
+                wall = foundWall;
+                Debug.Log($"[ProceduralNightPuzzleGenerator] 필러 {wallCellCount}칸으로 유일해 확보");
+                return MakeData(gridSize, flowerIds, isBonusStage, wall);
             }
         }
 
-        // 이벤트 발행
-        EventBus.RaiseNightPuzzlesGenerated(puzzles.ToArray());
-        Debug.Log($"[ProceduralNightPuzzleGenerator] 총 {puzzles.Count}개 퍼즐 생성 완료");
+        Debug.LogWarning("[ProceduralNightPuzzleGenerator] 유일해를 찾지 못해 필러 없이 스테이지를 반환합니다 (완전 타일링 불가능할 수 있음).");
+        return MakeData(gridSize, flowerIds, isBonusStage, wall);
     }
 
-    /// <summary>
-    /// 요청 꽃 기반 메인 퍼즐 생성
-    /// </summary>
-    private static NightPuzzleData? GenerateMainPuzzle(int gridSize, int[] requestedFlowerIds)
+    /// <summary>target을 cellCounts 값들의 음이 아닌 정수 조합(중복 사용 가능)으로 만들 수 있는지 (동전 교환 DP).</summary>
+    private static bool CanReachExactSum(int target, List<int> cellCounts)
     {
-        var matrix = BuildExactCoverMatrix(gridSize, requestedFlowerIds);
-        var solution = FindExactCover(matrix);
+        if (target < 0) return false;
+        if (target == 0) return true;
+        if (cellCounts == null || cellCounts.Count == 0) return false;
 
-        if (solution != null && solution.Count > 0)
+        var reachable = new bool[target + 1];
+        reachable[0] = true;
+
+        for (int s = 1; s <= target; s++)
         {
-            return BuildPuzzleFromSolution(gridSize, solution, requestedFlowerIds);
-        }
-
-        // 실패 시 Filler로 폴백
-        return GenerateWithFillerBlock(gridSize, requestedFlowerIds);
-    }
-
-    /// <summary>
-    /// 랜덤 보너스 퍼즐 생성
-    /// </summary>
-    private static NightPuzzleData? GenerateBonusPuzzle(int gridSize)
-    {
-        var obtainedFlowers = CurrencyManager.Instance.GetObtainedFlowerIds();
-        if (obtainedFlowers.Count == 0)
-        {
-            Debug.LogWarning("[ProceduralNightPuzzleGenerator] 보유 꽃이 없어 보너스 퍼즐 생성 불가");
-            return null;
-        }
-
-        // 랜덤 꽃 조합 선택
-        int randomCount = UnityEngine.Random.Range(2, Math.Min(5, obtainedFlowers.Count + 1));
-        var randomFlowers = obtainedFlowers
-            .OrderBy(_ => UnityEngine.Random.value)
-            .Take(randomCount)
-            .ToArray();
-
-        var matrix = BuildExactCoverMatrix(gridSize, randomFlowers);
-        var solution = FindExactCover(matrix);
-
-        if (solution != null && solution.Count > 0)
-        {
-            return BuildPuzzleFromSolution(gridSize, solution, randomFlowers);
-        }
-
-        return GenerateWithFillerBlock(gridSize, randomFlowers);
-    }
-
-    /// <summary>
-    /// 정확한 커버 행렬 생성
-    /// 각 행: 특정 꽃의 특정 변형과 배치 위치
-    /// 각 열: 그리드의 각 셀
-    /// </summary>
-    private static ExactCoverMatrix BuildExactCoverMatrix(int gridSize, int[] flowerIds)
-    {
-        var matrix = new ExactCoverMatrix();
-        matrix.SetColumnCount(gridSize * gridSize);
-
-        foreach (int flowerId in flowerIds)
-        {
-            // TODO: 실제 구현에서는 FlowerDatabase에서 꽃 변형 정보를 가져옴
-            // 현재는 placeholder L-tetromino 사용
-            var shapes = GetFlowerShapes(flowerId);
-
-            foreach (var shape in shapes)
+            foreach (int c in cellCounts)
             {
-                // 그리드 모든 위치에서 이 변형을 배치할 수 있는지 확인
-                for (int row = 0; row < gridSize; row++)
+                if (c <= s && reachable[s - c])
                 {
-                    for (int col = 0; col < gridSize; col++)
+                    reachable[s] = true;
+                    break;
+                }
+            }
+        }
+
+        return reachable[target];
+    }
+
+    private static bool TryFindWallPlacement(int gridSize, List<BlockData> blocks, int wallCellCount, System.Diagnostics.Stopwatch stopwatch, out bool[,] wall)
+    {
+        int totalCells = gridSize * gridSize;
+
+        for (int attempt = 0; attempt < WallSearchAttemptsPerCount; attempt++)
+        {
+            if (stopwatch.ElapsedMilliseconds > TimeBudgetMs) break;
+
+            var wallIndices = SampleRandomDistinctIndices(totalCells, wallCellCount);
+            bool[,] candidate = new bool[gridSize, gridSize];
+            foreach (int idx in wallIndices)
+            {
+                candidate[idx / gridSize, idx % gridSize] = true;
+            }
+
+            if (HasUniqueExactTiling(gridSize, blocks, candidate))
+            {
+                wall = candidate;
+                return true;
+            }
+        }
+
+        wall = null;
+        return false;
+    }
+
+    /// <summary>
+    /// Dancing Links로 "벽이 아닌 모든 칸을 blocks의 회전/반전 변형만으로, 겹침 없이 정확히 한 번씩" 덮는
+    /// 방법이 정확히 하나만 존재하는지 검증한다. (0개=불가능, 2개 이상=유일하지 않음 → 둘 다 실패로 취급)
+    /// </summary>
+    private static bool HasUniqueExactTiling(int gridSize, List<BlockData> blocks, bool[,] wallGrid)
+    {
+        var dlx = BuildExactCoverInstance(gridSize, blocks, wallGrid, out int primaryColumnCount);
+        if (primaryColumnCount == 0) return false;
+        return dlx.CountSolutions(2) == 1;
+    }
+
+    private static DancingLinks BuildExactCoverInstance(int gridSize, List<BlockData> blocks, bool[,] wallGrid, out int primaryColumnCount)
+    {
+        var cellToColumn = new Dictionary<int, int>();
+        int columnIndex = 0;
+
+        for (int r = 0; r < gridSize; r++)
+        {
+            for (int c = 0; c < gridSize; c++)
+            {
+                if (wallGrid[r, c]) continue;
+                cellToColumn[r * gridSize + c] = columnIndex++;
+            }
+        }
+
+        primaryColumnCount = columnIndex;
+        var dlx = new DancingLinks(primaryColumnCount, primaryColumnCount);
+
+        int rowId = 0;
+        foreach (BlockData block in blocks)
+        {
+            foreach (HashSet<Vector2Int> variant in PolyominoUtil.GetUniqueVariants(block))
+            {
+                int maxRowOffset = variant.Max(v => v.y);
+                int maxColOffset = variant.Max(v => v.x);
+
+                for (int startRow = 0; startRow + maxRowOffset < gridSize; startRow++)
+                {
+                    for (int startCol = 0; startCol + maxColOffset < gridSize; startCol++)
                     {
-                        if (CanPlaceShape(shape, row, col, gridSize))
+                        var columns = new List<int>();
+                        bool fits = true;
+
+                        foreach (Vector2Int offset in variant)
                         {
-                            var cellIndices = GetCellIndicesForShape(shape, row, col, gridSize);
-                            matrix.AddRow(flowerId, row, col, shape, cellIndices);
+                            int rr = startRow + offset.y;
+                            int cc = startCol + offset.x;
+
+                            if (wallGrid[rr, cc]) { fits = false; break; }
+                            columns.Add(cellToColumn[rr * gridSize + cc]);
+                        }
+
+                        if (fits)
+                        {
+                            dlx.AddRow(rowId++, columns);
                         }
                     }
                 }
             }
         }
 
-        return matrix;
+        return dlx;
     }
 
-    /// <summary>
-    /// 꽃의 모든 변형 반환 (회전/반전)
-    /// </summary>
-    private static List<ExactCoverMatrix.Shape> GetFlowerShapes(int flowerId)
+    private static NightPuzzleData MakeData(int gridSize, int[] flowerIds, bool isBonusStage, bool[,] wall)
     {
-        // Placeholder: L-tetromino 변형
-        var shapes = new List<ExactCoverMatrix.Shape>();
-
-        // L-tetromino 원본: ##
-        //                   #
-        //                   #
-        var shape1 = new ExactCoverMatrix.Shape(
-            new[] { true, true, true, false, true, false, true, false },
-            2, 4
-        );
-        shapes.Add(shape1);
-
-        // 90도 회전
-        var shape2 = new ExactCoverMatrix.Shape(
-            new[] { true, true, true, true, false, false, false, true },
-            4, 2
-        );
-        shapes.Add(shape2);
-
-        // 180도 회전
-        var shape3 = new ExactCoverMatrix.Shape(
-            new[] { false, true, false, true, true, false, true, true },
-            2, 4
-        );
-        shapes.Add(shape3);
-
-        // 270도 회전
-        var shape4 = new ExactCoverMatrix.Shape(
-            new[] { true, false, false, false, true, true, true, true },
-            4, 2
-        );
-        shapes.Add(shape4);
-
-        return shapes;
-    }
-
-    /// <summary>
-    /// 그리드 내에 도형을 배치할 수 있는지 확인
-    /// </summary>
-    private static bool CanPlaceShape(ExactCoverMatrix.Shape shape, int startRow, int startCol, int gridSize)
-    {
-        if (startRow + shape.height > gridSize || startCol + shape.width > gridSize)
-            return false;
-
-        return true;
-    }
-
-    /// <summary>
-    /// 도형이 점유하는 셀 인덱스 목록
-    /// </summary>
-    private static List<int> GetCellIndicesForShape(ExactCoverMatrix.Shape shape, int startRow, int startCol, int gridSize)
-    {
-        var indices = new List<int>();
-
-        for (int i = 0; i < shape.height; i++)
-        {
-            for (int j = 0; j < shape.width; j++)
-            {
-                if (shape.cells[i * shape.width + j])
-                {
-                    int cellIndex = (startRow + i) * gridSize + (startCol + j);
-                    indices.Add(cellIndex);
-                }
-            }
-        }
-
-        return indices;
-    }
-
-    /// <summary>
-    /// Dancing Links로 정확한 커버 찾기
-    /// </summary>
-    private static List<int> FindExactCover(ExactCoverMatrix matrix)
-    {
-        var solution = new List<int>();
-
-        if (SolveExactCover(matrix, solution))
-        {
-            return solution;
-        }
-
-        return null;
-    }
-
-    /// <summary>
-    /// Dancing Links 재귀 해결 (백트래킹)
-    /// </summary>
-    private static bool SolveExactCover(ExactCoverMatrix matrix, List<int> solution)
-    {
-        // 모든 열이 커버되었으면 성공
-        if (matrix.GetColumnCount() == 0)
-            return true;
-
-        // 가장 작은 열 선택 (최소 분기 휴리스틱)
-        int columnIndex = matrix.GetSmallestColumn();
-        if (columnIndex == -1)
-            return false;
-
-        var rows = matrix.GetRowsForColumn(columnIndex);
-
-        foreach (int rowIndex in rows)
-        {
-            solution.Add(rowIndex);
-
-            var row = matrix.GetRow(rowIndex);
-            foreach (int col in row.columnsInThisRow)
-            {
-                matrix.CoverRow(rowIndex);
-            }
-
-            if (SolveExactCover(matrix, solution))
-            {
-                return true;
-            }
-
-            // 백트래킹
-            solution.RemoveAt(solution.Count - 1);
-            foreach (int col in row.columnsInThisRow)
-            {
-                matrix.UncoverRow(rowIndex);
-            }
-        }
-
-        return false;
-    }
-
-    /// <summary>
-    /// 해결책으로부터 퍼즐 데이터 생성
-    /// </summary>
-    private static NightPuzzleData BuildPuzzleFromSolution(int gridSize, List<int> solution, int[] flowerIds)
-    {
-        var puzzle = new NightPuzzleData
+        return new NightPuzzleData
         {
             puzzleId = nextPuzzleId++,
             gridSize = gridSize,
             requiredFlowerIds = flowerIds,
-            filledGrid = new bool[gridSize, gridSize],
-            placedFlowerIds = new int[gridSize, gridSize]
+            isBonusStage = isBonusStage,
+            wallGrid = wall
         };
-
-        // 초기화
-        for (int i = 0; i < gridSize; i++)
-        {
-            for (int j = 0; j < gridSize; j++)
-            {
-                puzzle.filledGrid[i, j] = false;
-                puzzle.placedFlowerIds[i, j] = -1;
-            }
-        }
-
-        // 해결책 적용 (placeholder)
-        for (int i = 0; i < gridSize; i++)
-        {
-            for (int j = 0; j < gridSize; j++)
-            {
-                puzzle.filledGrid[i, j] = true;
-                puzzle.placedFlowerIds[i, j] = flowerIds[i % flowerIds.Length];
-            }
-        }
-
-        return puzzle;
     }
 
-    /// <summary>
-    /// Filler 블록으로 퍼즐 생성 (정확한 커버 실패 시 폴백)
-    /// </summary>
-    private static NightPuzzleData GenerateWithFillerBlock(int gridSize, int[] flowerIds)
+    private static int[] PickRandomDistinct(List<int> source, int count)
     {
-        Debug.Log("[ProceduralNightPuzzleGenerator] Filler 블록으로 폴백");
+        if (source == null || source.Count == 0) return System.Array.Empty<int>();
+        return source.OrderBy(_ => Rng.Next()).Take(Mathf.Min(count, source.Count)).ToArray();
+    }
 
-        var puzzle = new NightPuzzleData
-        {
-            puzzleId = nextPuzzleId++,
-            gridSize = gridSize,
-            requiredFlowerIds = flowerIds,
-            filledGrid = new bool[gridSize, gridSize],
-            placedFlowerIds = new int[gridSize, gridSize]
-        };
-
-        // 전체 그리드 채우기
-        for (int i = 0; i < gridSize; i++)
-        {
-            for (int j = 0; j < gridSize; j++)
-            {
-                puzzle.filledGrid[i, j] = true;
-                puzzle.placedFlowerIds[i, j] = flowerIds[i % flowerIds.Length];
-            }
-        }
-
-        return puzzle;
+    private static List<int> SampleRandomDistinctIndices(int range, int count)
+    {
+        return Enumerable.Range(0, range).OrderBy(_ => Rng.Next()).Take(count).ToList();
     }
 }

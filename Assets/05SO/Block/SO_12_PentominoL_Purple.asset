@@ -1,0 +1,27 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 74a634c29bfedc144ae03bdc4755ce48, type: 3}
+  m_Name: SO_12_PentominoL_Purple
+  m_EditorClassIdentifier: Assembly-CSharp::BlockData
+  blockID: 12
+  blockScore: 5
+  color: 6
+  unlockWrapperTier: 2
+  shapeGrid:
+  - cols: 0100
+  - cols: 0100
+  - cols: 0100
+  - cols: 0101
+  anchorCoord: {x: 0, y: 1}
+  flowerIcon: {fileID: 21300000, guid: 5d2ff3ff139201c408154e4df1f0d0dd, type: 3}
+  blockImage: {fileID: 21300000, guid: ed365f0e415fc22498fa235257065829, type: 3}
+  flowerWholeImage: {fileID: 0}
