@@ -18,7 +18,26 @@ public class DayNightTransition : MonoBehaviour
     private void Awake()
     {
         if (confirmButton != null)
+        {
             confirmButton.onClick.AddListener(OnConfirmRequests);
+
+            // Confirm 버튼 모바일 친화적 설정
+            var confirmLayout = confirmButton.gameObject.GetComponent<LayoutElement>();
+            if (confirmLayout == null)
+                confirmLayout = confirmButton.gameObject.AddComponent<LayoutElement>();
+            confirmLayout.preferredHeight = 56;
+
+            var confirmText = confirmButton.GetComponentInChildren<Text>();
+            if (confirmText != null)
+                confirmText.fontSize = 20;
+        }
+
+        // 모바일 친화적 레이아웃 설정
+        if (flowerButtonContainer != null)
+        {
+            flowerButtonContainer.padding = new RectOffset(10, 10, 10, 10);
+            flowerButtonContainer.spacing = 10;
+        }
     }
 
     /// <summary>
@@ -59,7 +78,8 @@ public class DayNightTransition : MonoBehaviour
 
         var button = buttonGo.AddComponent<Button>();
         var layoutElement = buttonGo.AddComponent<LayoutElement>();
-        layoutElement.preferredHeight = 60;
+        layoutElement.preferredHeight = 56;
+        layoutElement.flexibleWidth = 1f;
 
         // 버튼 텍스트
         var text = buttonGo.AddComponent<Text>();
@@ -67,7 +87,7 @@ public class DayNightTransition : MonoBehaviour
         text.text = $"꽃 {flowerId}";
         text.alignment = TextAnchor.MiddleCenter;
         text.color = Color.black;
-        text.fontSize = 18;
+        text.fontSize = 20;
 
         // 버튼 배경
         var image = buttonGo.AddComponent<Image>();

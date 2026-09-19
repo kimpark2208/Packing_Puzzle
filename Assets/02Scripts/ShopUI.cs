@@ -29,6 +29,20 @@ public class ShopUI : MonoBehaviour
             return;
         }
 
+        // 모바일 친화적 레이아웃 설정
+        if (tabButtonContainer != null)
+        {
+            tabButtonContainer.padding = new RectOffset(10, 10, 10, 10);
+            tabButtonContainer.spacing = 8;
+            tabButtonContainer.childForceExpandHeight = true;
+        }
+
+        if (itemContainer != null)
+        {
+            itemContainer.padding = new RectOffset(10, 10, 10, 10);
+            itemContainer.spacing = 10;
+        }
+
         CreateTabButtons();
     }
 
@@ -67,15 +81,16 @@ public class ShopUI : MonoBehaviour
 
             var button = buttonGo.AddComponent<Button>();
             var layoutElement = buttonGo.AddComponent<LayoutElement>();
-            layoutElement.preferredWidth = 80;
-            layoutElement.preferredHeight = 40;
+            layoutElement.preferredWidth = 100;
+            layoutElement.preferredHeight = 54;
+            layoutElement.flexibleWidth = 1f;
 
             var text = buttonGo.AddComponent<Text>();
             text.font = Resources.GetBuiltinResource<Font>("Arial.ttf");
             text.text = tabName;
             text.alignment = TextAnchor.MiddleCenter;
             text.color = Color.black;
-            text.fontSize = 16;
+            text.fontSize = 18;
 
             var image = buttonGo.AddComponent<Image>();
             image.color = new Color(0.9f, 0.9f, 0.9f);
@@ -119,7 +134,8 @@ public class ShopUI : MonoBehaviour
         itemGo.transform.SetParent(itemContainer.transform, false);
 
         var layoutElement = itemGo.AddComponent<LayoutElement>();
-        layoutElement.preferredHeight = 80;
+        layoutElement.preferredHeight = 110;
+        layoutElement.flexibleHeight = 0;
 
         // 아이템 정보 텍스트
         var infoGo = new GameObject("ItemInfo");
@@ -130,11 +146,11 @@ public class ShopUI : MonoBehaviour
         infoText.text = $"{item.itemName}\n{item.description}\n가격: {item.price}원";
         infoText.alignment = TextAnchor.MiddleLeft;
         infoText.color = Color.black;
-        infoText.fontSize = 14;
+        infoText.fontSize = 16;
 
         var infoRect = infoGo.GetComponent<RectTransform>();
-        infoRect.offsetMin = new Vector2(10, 0);
-        infoRect.offsetMax = new Vector2(-100, 0);
+        infoRect.offsetMin = new Vector2(15, 5);
+        infoRect.offsetMax = new Vector2(-105, -5);
 
         // 구매/보유 버튼
         var buttonGo = new GameObject("BuyButton");
@@ -142,21 +158,22 @@ public class ShopUI : MonoBehaviour
 
         var button = buttonGo.AddComponent<Button>();
         var buttonLayout = buttonGo.AddComponent<LayoutElement>();
-        buttonLayout.preferredWidth = 80;
+        buttonLayout.preferredWidth = 90;
+        buttonLayout.preferredHeight = 54;
 
         var buttonText = buttonGo.AddComponent<Text>();
         buttonText.font = Resources.GetBuiltinResource<Font>("Arial.ttf");
         buttonText.text = item.price == 0 ? "보유 중" : "구매";
         buttonText.alignment = TextAnchor.MiddleCenter;
         buttonText.color = Color.black;
-        buttonText.fontSize = 12;
+        buttonText.fontSize = 16;
 
         var buttonImage = buttonGo.AddComponent<Image>();
         buttonImage.color = item.price == 0 ? new Color(0.7f, 0.7f, 0.7f) : new Color(0.8f, 0.9f, 0.8f);
 
         var buttonRect = buttonGo.GetComponent<RectTransform>();
-        buttonRect.offsetMin = new Vector2(-90, 10);
-        buttonRect.offsetMax = new Vector2(-10, -10);
+        buttonRect.offsetMin = new Vector2(-100, 5);
+        buttonRect.offsetMax = new Vector2(-5, -5);
 
         // 배경
         var bgGo = new GameObject("Background");
