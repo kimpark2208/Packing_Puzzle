@@ -23,10 +23,16 @@ public class ExactCoverMatrix
     /// <summary>
     /// 열 데이터: 각 그리드 셀 또는 꽃 필수 조건을 나타낸다
     /// </summary>
-    public struct ColumnData
+    public class ColumnData
     {
         public List<int> rowIndices;        // 이 열을 포함하는 행들의 인덱스
         public int coverCount;              // 선택된 행의 개수
+
+        public ColumnData()
+        {
+            rowIndices = new List<int>();
+            coverCount = 0;
+        }
     }
 
     /// <summary>
