@@ -177,4 +177,17 @@ public class GridManager : MonoBehaviour
                 if (cellOwners[r, c].Count == 0) return false;
         return true;
     }
+
+    /// <summary>
+    /// 그리드에 배치된 모든 블록 반환 (중복 제거)
+    /// </summary>
+    public HashSet<BlockDrag> GetAllPlacedBlocks()
+    {
+        var blocks = new HashSet<BlockDrag>();
+        for (int r = 0; r < rows; r++)
+            for (int c = 0; c < cols; c++)
+                foreach (var block in cellOwners[r, c])
+                    blocks.Add(block);
+        return blocks;
+    }
 }

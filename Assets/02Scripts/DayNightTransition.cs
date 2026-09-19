@@ -26,6 +26,9 @@ public class DayNightTransition : MonoBehaviour
     /// </summary>
     public void ShowFlowerRequestUI()
     {
+        // Phase 2: 낮 퍼즐 검증 (색상/꽃 추출, 매출 계산)
+        PuzzleValidator.ValidatePuzzle();
+
         selectedFlowerIds.Clear();
 
         if (titleText != null)
