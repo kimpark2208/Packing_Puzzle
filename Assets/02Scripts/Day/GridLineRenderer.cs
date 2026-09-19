@@ -19,6 +19,14 @@ public class GridLineRenderer : MaskableGraphic
     public float borderThickness = 4f;
     public Color borderColor = new Color(0.55f, 0.5f, 0.45f, 1f);
 
+    protected override void Awake()
+    {
+        base.Awake();
+        // 순수 장식용 격자선이라 절대 클릭/터치를 가로채면 안 된다.
+        // (모서리 칸 경계에 정확히 손가락이 닿으면 이 격자선이 대신 히트되어 드래그가 끊길 수 있었음)
+        raycastTarget = false;
+    }
+
     protected override void OnPopulateMesh(VertexHelper vh)
     {
         vh.Clear();

@@ -50,7 +50,9 @@ public static class UIFactory
         return t;
     }
 
-    public static Button CreateButton(Transform parent, string label, Color bgColor, Color textColor)
+    public const int DefaultButtonFontSize = 42;
+
+    public static Button CreateButton(Transform parent, string label, Color bgColor, Color textColor, int fontSize = DefaultButtonFontSize)
     {
         var go = new GameObject($"Button_{label}", typeof(RectTransform), typeof(Image), typeof(Button));
         var rt = (RectTransform)go.transform;
@@ -61,10 +63,15 @@ public static class UIFactory
 
         var btn = go.GetComponent<Button>();
 
-        CreateText(rt.transform, label, 24, textColor);
+        CreateText(rt.transform, label, fontSize, textColor);
 
         return btn;
     }
+
+    // 프로젝트의 기존 씬(01DayMain/03DayPuzzle/02NightPuzzle) Canvas들이 이미 이 기준으로 세팅되어 있다.
+    // 새로 Canvas를 만드는 씬(02FlowerSellect, 01NightMain)도 동일한 기준이어야 글자/버튼 크기가 일관된다.
+    private static readonly Vector2 ReferenceResolution = new(2960f, 1440f);
+    private const float MatchWidthOrHeight = 1f;
 
     /// <summary>씬에 Canvas가 아직 없을 때 프로젝트의 Input System 설정에 맞는 Canvas+EventSystem을 만든다.</summary>
     public static Canvas EnsureCanvas()
@@ -75,6 +82,11 @@ public static class UIFactory
         var canvasGo = new GameObject("Canvas", typeof(Canvas), typeof(CanvasScaler), typeof(GraphicRaycaster));
         canvas = canvasGo.GetComponent<Canvas>();
         canvas.renderMode = RenderMode.ScreenSpaceOverlay;
+
+        var scaler = canvasGo.GetComponent<CanvasScaler>();
+        scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
+        scaler.referenceResolution = ReferenceResolution;
+        scaler.matchWidthOrHeight = MatchWidthOrHeight;
 
         EnsureEventSystem();
         return canvas;

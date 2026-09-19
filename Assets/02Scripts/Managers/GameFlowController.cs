@@ -172,7 +172,15 @@ public class GameFlowController : Singleton<GameFlowController>
 
     private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
     {
-        if (scene.name == SceneNightPuzzle)
+        if (scene.name == SceneDayMain)
+        {
+            var dayMainUI = FindFirstObjectByType<DayMainUI>();
+            if (dayMainUI != null)
+            {
+                dayMainUI.Initialize(CurrentDayOrder);
+            }
+        }
+        else if (scene.name == SceneNightPuzzle)
         {
             var board = FindFirstObjectByType<NightBoardController>();
             if (board != null)

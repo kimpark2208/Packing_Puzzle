@@ -20,6 +20,10 @@ public class NightBoardController : MonoBehaviour
     [SerializeField] private int testGridSize = 5;
     [SerializeField] private List<BlockData> testAllowedBlocks = new();
 
+    [Header("모바일 터치 오차 허용")]
+    [Tooltip("각 칸의 터치 판정 영역을 시각적 경계보다 이만큼(px) 더 넓힌다. 특히 그리드 가장자리 칸은 바깥쪽으로 여유가 없어 손가락이 살짝 벗어나면 아예 아무 칸도 감지되지 않는데, 이를 완화한다.")]
+    [SerializeField] private float cellHitAreaInflate = 10f;
+
     private bool[,] filled;
     private int[,] placedBlockIds;
     private Dictionary<int, int> placedBlockFlowerId = new(); // placedBlockId -> flowerId(blockID)
@@ -60,10 +64,15 @@ public class NightBoardController : MonoBehaviour
         }
     }
 
+    // GameFlowController.OnSceneLoaded(SceneManager.sceneLoaded)는 이 씬 오브젝트들의 Start()보다 먼저 실행된다.
+    // 그래서 GameFlowController가 실제 퍼즐로 LoadPuzzle을 이미 호출한 뒤에 Start()가 실행되는데,
+    // 이 플래그가 없으면 인스펙터에 남아있는 테스트용 블록 설정이 실제 퍼즐 보드를 덮어써버린다.
+    private bool loadedExternally;
+
     private void Start()
     {
-        // 인스펙터에 테스트용 블록이 세팅되어 있으면 바로 시작 (에디터 단독 테스트용).
-        if (testAllowedBlocks != null && testAllowedBlocks.Count > 0)
+        // 인스펙터에 테스트용 블록이 세팅되어 있어도, 이미 실제 퍼즐이 로드된 상태라면 건드리지 않는다.
+        if (!loadedExternally && testAllowedBlocks != null && testAllowedBlocks.Count > 0)
         {
             LoadPuzzle(testGridSize, testAllowedBlocks, new bool[testGridSize, testGridSize]);
         }
@@ -72,6 +81,7 @@ public class NightBoardController : MonoBehaviour
     /// <summary>GameFlowController가 절차적으로 생성한 퍼즐 하나를 이 보드에 로드한다.</summary>
     public void LoadPuzzle(int size, List<BlockData> allowedBlocks, bool[,] wallGrid)
     {
+        loadedExternally = true;
         shapeValidator = new NightShapePuzzleValidator(allowedBlocks, wallGrid);
         Validator = shapeValidator;
         CreateBoard(size, wallGrid);
@@ -134,7 +144,31 @@ public class NightBoardController : MonoBehaviour
         yield return null;
         yield return new WaitForEndOfFrame();
         if (gridLayout != null) gridLayout.enabled = false;
+
+        InflateCellHitAreas();
     }
+
+    // GridLayoutGroup이 칸을 딱 맞닿게 배치하고 나면, 각 칸의 터치 판정 영역을 살짝 더 넓혀서
+    // 손가락이 경계에서 몇 픽셀 벗어나도 인접 칸(가장자리는 그 칸 자체)이 계속 인식되게 한다.
+    private void InflateCellHitAreas()
+    {
+        if (cells == null || cellHitAreaInflate <= 0f) return;
+
+        foreach (NightCellView cell in cells)
+        {
+            if (cell == null) continue;
+            var rt = (RectTransform)cell.transform;
+            rt.offsetMin -= new Vector2(cellHitAreaInflate, cellHitAreaInflate);
+            rt.offsetMax += new Vector2(cellHitAreaInflate, cellHitAreaInflate);
+        }
+    }
+
+    // 이전엔 Unity EventSystem의 EventTrigger(PointerEnter)로 드래그 연속 진행을 감지했는데,
+    // 이는 Unity 자체의 호버 갱신 주기에 의존한다. 빠른 스와이프에서 EventSystem의 호버 갱신이
+    // 한 프레임을 건너뛰면 그 사이 지나간 칸(특히 그리드 가장자리 - 넘어가면 더 이상 잡아줄 칸이 없는 마지막 줄/칸)이
+    // 통째로 인식되지 않는 문제가 있었다. 대신 매 프레임 직접 레이캐스트하고, 이전 칸과 이어지지 않으면
+    // 그 사이 칸들까지 보간해서 채워, 프레임을 건너뛰어도 놓치지 않게 한다.
+    private Vector2Int? lastProcessedCoord;
 
     private void AttachInputHandlers(NightCellView cell)
     {
@@ -145,20 +179,6 @@ public class NightBoardController : MonoBehaviour
             return;
         }
         inputImage.raycastTarget = true;
-
-        EventTrigger trigger = cell.GetComponent<EventTrigger>();
-        if (trigger == null) trigger = cell.gameObject.AddComponent<EventTrigger>();
-        else trigger.triggers.Clear();
-
-        AddTrigger(trigger, EventTriggerType.PointerDown, _ => OnCellPointerDown(cell));
-        AddTrigger(trigger, EventTriggerType.PointerEnter, _ => OnCellPointerEnter(cell));
-    }
-
-    private void AddTrigger(EventTrigger trigger, EventTriggerType type, System.Action<BaseEventData> action)
-    {
-        EventTrigger.Entry entry = new EventTrigger.Entry { eventID = type };
-        entry.callback.AddListener(data => action(data));
-        trigger.triggers.Add(entry);
     }
 
     private void Update()
@@ -167,27 +187,97 @@ public class NightBoardController : MonoBehaviour
         {
             TryStartDrawingFromPointer();
         }
-
-        if (isDrawing && Input.GetMouseButtonUp(0))
+        else if (isDrawing)
         {
-            EndDrawing();
+            UpdateDrawingFromPointer();
+
+            if (Input.GetMouseButtonUp(0))
+            {
+                EndDrawing();
+            }
         }
     }
 
-    private void TryStartDrawingFromPointer()
+    private NightCellView RaycastCellAt(Vector2 screenPosition)
     {
-        PointerEventData pointerEvent = new PointerEventData(EventSystem.current) { position = Input.mousePosition };
+        if (graphicRaycaster == null || EventSystem.current == null) return null;
+
+        PointerEventData pointerEvent = new PointerEventData(EventSystem.current) { position = screenPosition };
         List<RaycastResult> results = new List<RaycastResult>();
         graphicRaycaster.Raycast(pointerEvent, results);
 
         foreach (RaycastResult result in results)
         {
             NightCellView cell = result.gameObject.GetComponentInParent<NightCellView>();
-            if (cell != null && !cell.IsWall)
+            if (cell != null) return cell;
+        }
+
+        return null;
+    }
+
+    private void TryStartDrawingFromPointer()
+    {
+        NightCellView cell = RaycastCellAt(Input.mousePosition);
+        if (cell == null || cell.IsWall) return;
+
+        lastProcessedCoord = null;
+        OnCellPointerDown(cell);
+    }
+
+    private void UpdateDrawingFromPointer()
+    {
+        NightCellView cell = RaycastCellAt(Input.mousePosition);
+        if (cell == null || cell.IsWall) return;
+        if (cell.Coord == lastProcessedCoord) return;
+
+        if (isErasing)
+        {
+            ErasePlacedBlockAt(cell.Coord);
+            lastProcessedCoord = cell.Coord;
+            return;
+        }
+
+        if (lastProcessedCoord.HasValue)
+        {
+            // 한 프레임 사이 여러 칸을 건너뛰었으면 그 경로상의 칸들도 순서대로 채워 넣는다.
+            foreach (Vector2Int step in GetLineCoords(lastProcessedCoord.Value, cell.Coord))
             {
-                OnCellPointerDown(cell);
-                break;
+                if (currentPathSet.Contains(step)) continue;
+                if (step.y < 0 || step.y >= gridSize || step.x < 0 || step.x >= gridSize) continue;
+
+                NightCellView stepCell = cells[step.y, step.x];
+                if (stepCell == null || stepCell.IsWall) continue;
+
+                TryAddToCurrentBlock(stepCell);
             }
+        }
+        else if (!currentPathSet.Contains(cell.Coord))
+        {
+            TryAddToCurrentBlock(cell);
+        }
+
+        lastProcessedCoord = cell.Coord;
+    }
+
+    // 두 좌표 사이를 잇는 격자 칸들을 Bresenham 알고리즘으로 순서대로 반환한다 (시작점 제외, 끝점 포함).
+    private static IEnumerable<Vector2Int> GetLineCoords(Vector2Int from, Vector2Int to)
+    {
+        int x0 = from.x, y0 = from.y, x1 = to.x, y1 = to.y;
+        int dx = Mathf.Abs(x1 - x0), sx = x0 < x1 ? 1 : -1;
+        int dy = -Mathf.Abs(y1 - y0), sy = y0 < y1 ? 1 : -1;
+        int err = dx + dy;
+
+        bool first = true;
+        while (true)
+        {
+            if (!first) yield return new Vector2Int(x0, y0);
+            first = false;
+
+            if (x0 == x1 && y0 == y1) yield break;
+
+            int e2 = 2 * err;
+            if (e2 >= dy) { err += dy; x0 += sx; }
+            if (e2 <= dx) { err += dx; y0 += sy; }
         }
     }
 
@@ -210,21 +300,6 @@ public class NightBoardController : MonoBehaviour
             return;
         }
 
-        TryAddToCurrentBlock(cell);
-    }
-
-    private void OnCellPointerEnter(NightCellView cell)
-    {
-        if (!isDrawing) return;
-        if (cell.IsWall) return;
-
-        if (isErasing)
-        {
-            ErasePlacedBlockAt(cell.Coord);
-            return;
-        }
-
-        if (currentPathSet.Contains(cell.Coord)) return;
         TryAddToCurrentBlock(cell);
     }
 
@@ -293,6 +368,7 @@ public class NightBoardController : MonoBehaviour
     private void EndDrawing()
     {
         isDrawing = false;
+        lastProcessedCoord = null;
 
         if (isErasing)
         {
