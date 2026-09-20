@@ -39,10 +39,13 @@ public class DayMainUI : MonoBehaviour
         var currency = CurrencyManager.Instance;
         string dayText = currency != null ? $"{currency.CurrentDay}일째" : "1일째";
         string moneyText = currency != null ? $"{currency.CurrentMoney}원" : "0원";
-        topBarText.text = $"{dayText}        소지금 {moneyText}";
+        if (topBarText != null) topBarText.text = $"{dayText}        소지금 {moneyText}";
 
-        askButton.onClick.AddListener(OnAskAgainClicked);
-        acceptButton.onClick.AddListener(() => GameFlowController.Instance.GoToFlowerSelect());
+        if (askButton != null) askButton.onClick.AddListener(OnAskAgainClicked);
+        if (acceptButton != null) acceptButton.onClick.AddListener(() =>
+        {
+            if (GameFlowController.Instance != null) GameFlowController.Instance.GoToFlowerSelect();
+        });
 
         RefreshBubbleText();
     }
@@ -68,7 +71,7 @@ public class DayMainUI : MonoBehaviour
     {
         if (order == null)
         {
-            bubbleText.text = "손님이 아직 정하지 못한 것 같아요...";
+            if (bubbleText != null) bubbleText.text = "손님이 아직 정하지 못한 것 같아요...";
             return;
         }
 
@@ -79,9 +82,9 @@ public class DayMainUI : MonoBehaviour
             _ => order.hintColorName + "색 "
         };
 
-        bubbleText.text = $"{wrapperPhrase}포장지에 {order.requirement.description}";
+        if (bubbleText != null) bubbleText.text = $"{wrapperPhrase}포장지에 {order.requirement.description}";
 
         bool canAskMore = asksUsed < MaxAsks && hintLevel < 2;
-        askButton.interactable = canAskMore;
+        if (askButton != null) askButton.interactable = canAskMore;
     }
 }

@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -21,29 +22,40 @@ public class NightRequestUI : MonoBehaviour
 
     private void Start()
     {
-        itemTemplate.gameObject.SetActive(false);
+        if (itemTemplate != null) itemTemplate.gameObject.SetActive(false);
 
-        var obtainedIds = CurrencyManager.Instance.GetObtainedFlowerIds();
-        foreach (int id in obtainedIds)
+        if (CurrencyManager.Instance != null && listArea != null && itemTemplate != null)
         {
-            CreateFlowerItem(id);
+            var obtainedIds = CurrencyManager.Instance.GetObtainedFlowerIds();
+            foreach (int id in obtainedIds)
+            {
+                CreateFlowerItem(id);
+            }
         }
 
-        confirmButton.onClick.AddListener(OnConfirm);
+        if (confirmButton != null) confirmButton.onClick.AddListener(OnConfirm);
     }
 
     private void CreateFlowerItem(int flowerId)
     {
+        if (itemTemplate == null || listArea == null) return;
+
         RectTransform itemRT = Instantiate(itemTemplate, listArea);
         itemRT.gameObject.SetActive(true);
         itemRT.name = $"Flower_{flowerId}";
 
         var img = itemRT.GetComponent<Image>();
-        img.color = ItemColor;
-        itemImages[flowerId] = img;
+        if (img != null)
+        {
+            img.color = ItemColor;
+            itemImages[flowerId] = img;
+        }
 
-        itemRT.GetComponentInChildren<Text>().text = $"꽃 #{flowerId}";
-        itemRT.GetComponent<Button>().onClick.AddListener(() => ToggleSelect(flowerId));
+        var label = itemRT.GetComponentInChildren<TMP_Text>();
+        if (label != null) label.text = $"꽃 #{flowerId}";
+
+        var btn = itemRT.GetComponent<Button>();
+        if (btn != null) btn.onClick.AddListener(() => ToggleSelect(flowerId));
     }
 
     private void ToggleSelect(int flowerId)
@@ -51,17 +63,18 @@ public class NightRequestUI : MonoBehaviour
         if (selected.Contains(flowerId))
         {
             selected.Remove(flowerId);
-            itemImages[flowerId].color = ItemColor;
+            if (itemImages.TryGetValue(flowerId, out var img1)) img1.color = ItemColor;
         }
         else
         {
             selected.Add(flowerId);
-            itemImages[flowerId].color = SelectedColor;
+            if (itemImages.TryGetValue(flowerId, out var img2)) img2.color = SelectedColor;
         }
     }
 
     private void OnConfirm()
     {
+        if (GameFlowController.Instance == null) return;
         GameFlowController.Instance.ConfirmNightRequests(new List<int>(selected));
     }
 }

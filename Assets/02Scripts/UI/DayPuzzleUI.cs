@@ -1,3 +1,4 @@
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -11,7 +12,7 @@ public class DayPuzzleUI : MonoBehaviour
 {
     [SerializeField] private Button submitButton;
     [SerializeField] private GameObject resultPopup;
-    [SerializeField] private Text resultBodyText;
+    [SerializeField] private TMP_Text resultBodyText;
     [SerializeField] private Button resultConfirmButton;
 
     private void Start()
@@ -22,9 +23,9 @@ public class DayPuzzleUI : MonoBehaviour
             gacha.SetPool(GameFlowController.Instance.ChosenGachaPool);
         }
 
-        resultPopup.SetActive(false);
-        submitButton.onClick.AddListener(OnSubmitClicked);
-        resultConfirmButton.onClick.AddListener(OnResultConfirmed);
+        if (resultPopup != null) resultPopup.SetActive(false);
+        if (submitButton != null) submitButton.onClick.AddListener(OnSubmitClicked);
+        if (resultConfirmButton != null) resultConfirmButton.onClick.AddListener(OnResultConfirmed);
 
         EventBus.OnDayPuzzleComplete += ShowResultPopup;
     }
@@ -36,6 +37,7 @@ public class DayPuzzleUI : MonoBehaviour
 
     private void OnSubmitClicked()
     {
+        if (GameFlowController.Instance == null) return;
         GameFlowController.Instance.SubmitDayPuzzle();
     }
 
@@ -47,13 +49,14 @@ public class DayPuzzleUI : MonoBehaviour
             $"점수: {result.scoreBeforePenalty} / 목표 {result.targetScore} {(result.targetScoreMet ? "달성!" : "미달성...")}\n\n" +
             $"매출: {result.totalEarnings}원";
 
-        resultBodyText.text = body;
-        resultPopup.SetActive(true);
+        if (resultBodyText != null) resultBodyText.text = body;
+        if (resultPopup != null) resultPopup.SetActive(true);
     }
 
     private void OnResultConfirmed()
     {
-        resultPopup.SetActive(false);
+        if (resultPopup != null) resultPopup.SetActive(false);
+        if (GameFlowController.Instance == null) return;
         GameFlowController.Instance.ProceedToNightMain();
     }
 }

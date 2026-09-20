@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -17,7 +18,7 @@ public class FlowerSelectUI : MonoBehaviour
     private static readonly Color WrapperColor = new(0.85f, 0.80f, 0.95f);
     private static readonly Color WrapperSelectedColor = new(0.55f, 0.45f, 0.85f);
 
-    [SerializeField] private Text headerText;
+    [SerializeField] private TMP_Text headerText;
     [SerializeField] private RectTransform wrapperArea;
     [SerializeField] private RectTransform wrapperItemTemplate;
     [SerializeField] private RectTransform flowerArea;
@@ -31,18 +32,24 @@ public class FlowerSelectUI : MonoBehaviour
 
     private void Start()
     {
-        wrapperItemTemplate.gameObject.SetActive(false);
-        flowerItemTemplate.gameObject.SetActive(false);
-        flowerArea.gameObject.SetActive(true);
+        if (wrapperItemTemplate != null) wrapperItemTemplate.gameObject.SetActive(false);
+        if (flowerItemTemplate != null) flowerItemTemplate.gameObject.SetActive(false);
+        if (flowerArea != null) flowerArea.gameObject.SetActive(true);
 
-        confirmButton.interactable = false;
-        confirmButton.onClick.AddListener(OnConfirm);
+        if (confirmButton != null)
+        {
+            confirmButton.interactable = false;
+            confirmButton.onClick.AddListener(OnConfirm);
+        }
 
         BuildWrapperChoices();
     }
 
     private void BuildWrapperChoices()
     {
+        if (CurrencyManager.Instance == null || ShopManager.Instance == null) return;
+        if (wrapperArea == null || wrapperItemTemplate == null) return;
+
         var owned = CurrencyManager.Instance.OwnedWrappers;
         foreach (int wrapperId in owned)
         {
@@ -54,40 +61,58 @@ public class FlowerSelectUI : MonoBehaviour
             itemRT.name = $"Wrapper_{wrapperId}";
 
             var img = itemRT.GetComponent<Image>();
-            img.color = WrapperColor;
-            wrapperImages[wrapperId] = img;
+            if (img != null)
+            {
+                img.color = WrapperColor;
+                wrapperImages[wrapperId] = img;
+            }
 
-            itemRT.GetComponentInChildren<Text>().text = label;
+            var label_ = itemRT.GetComponentInChildren<TMP_Text>();
+            if (label_ != null) label_.text = label;
 
             int capturedId = wrapperId;
-            itemRT.GetComponent<Button>().onClick.AddListener(() => OnWrapperChosen(capturedId));
+            var btn = itemRT.GetComponent<Button>();
+            if (btn != null) btn.onClick.AddListener(() => OnWrapperChosen(capturedId));
         }
     }
 
     private void OnWrapperChosen(int wrapperId)
     {
+        if (GameFlowController.Instance == null) return;
+
         foreach (var kvp in wrapperImages) kvp.Value.color = WrapperColor;
-        wrapperImages[wrapperId].color = WrapperSelectedColor;
+        if (wrapperImages.TryGetValue(wrapperId, out var chosenImg)) chosenImg.color = WrapperSelectedColor;
 
         GameFlowController.Instance.ChooseWrapper(wrapperId);
         wrapperChosen = true;
 
         var order = GameFlowController.Instance.CurrentDayOrder;
-        headerText.text = $"{order.gridSize}x{order.gridSize} 포장지 확정! 목표 점수: {order.targetScore}\n오늘 사용할 꽃을 최대 {MaxSelectable}종 고르세요";
+        if (order == null) return;
+
+        if (headerText != null)
+        {
+            headerText.text = $"{order.gridSize}x{order.gridSize} 포장지 확정! 목표 점수: {order.targetScore}\n오늘 사용할 꽃을 최대 {MaxSelectable}종 고르세요";
+        }
 
         BuildFlowerChoices(order);
     }
 
     private void BuildFlowerChoices(DayPuzzleGenerator.DayOrder order)
     {
-        foreach (Transform child in flowerArea)
+        if (flowerArea != null)
         {
-            if (child == flowerItemTemplate.transform) continue;
-            Destroy(child.gameObject);
+            foreach (Transform child in flowerArea)
+            {
+                if (flowerItemTemplate != null && child == flowerItemTemplate.transform) continue;
+                Destroy(child.gameObject);
+            }
         }
         itemImages.Clear();
         selected.Clear();
-        confirmButton.interactable = false;
+        if (confirmButton != null) confirmButton.interactable = false;
+
+        if (ShopManager.Instance == null || CurrencyManager.Instance == null || BlockDatabase.Instance == null) return;
+        if (flowerArea == null || flowerItemTemplate == null) return;
 
         int tier = ShopManager.Instance.GetTier(order.wrapperId);
         var obtainedIds = CurrencyManager.Instance.GetObtainedFlowerIds();
@@ -101,18 +126,25 @@ public class FlowerSelectUI : MonoBehaviour
 
     private void CreateFlowerItem(BlockData block)
     {
+        if (flowerArea == null || flowerItemTemplate == null) return;
+
         RectTransform itemRT = Instantiate(flowerItemTemplate, flowerArea);
         itemRT.gameObject.SetActive(true);
         itemRT.name = $"Flower_{block.blockID}";
 
         var img = itemRT.GetComponent<Image>();
-        img.color = ItemColor;
-        itemImages[block] = img;
+        if (img != null)
+        {
+            img.color = ItemColor;
+            itemImages[block] = img;
+        }
 
         string colorName = ColorPalette.ToKoreanName(block.color);
-        itemRT.GetComponentInChildren<Text>().text = $"꽃 #{block.blockID}\n{colorName} / {block.CellCount}칸";
+        var label = itemRT.GetComponentInChildren<TMP_Text>();
+        if (label != null) label.text = $"꽃 #{block.blockID}\n{colorName} / {block.CellCount}칸";
 
-        itemRT.GetComponent<Button>().onClick.AddListener(() => ToggleSelect(block));
+        var btn = itemRT.GetComponent<Button>();
+        if (btn != null) btn.onClick.AddListener(() => ToggleSelect(block));
     }
 
     private void ToggleSelect(BlockData block)
@@ -120,21 +152,21 @@ public class FlowerSelectUI : MonoBehaviour
         if (selected.Contains(block))
         {
             selected.Remove(block);
-            itemImages[block].color = ItemColor;
+            if (itemImages.TryGetValue(block, out var img1)) img1.color = ItemColor;
         }
         else
         {
             if (selected.Count >= MaxSelectable) return;
             selected.Add(block);
-            itemImages[block].color = SelectedColor;
+            if (itemImages.TryGetValue(block, out var img2)) img2.color = SelectedColor;
         }
 
-        confirmButton.interactable = wrapperChosen && selected.Count > 0;
+        if (confirmButton != null) confirmButton.interactable = wrapperChosen && selected.Count > 0;
     }
 
     private void OnConfirm()
     {
-        if (!wrapperChosen) return;
+        if (!wrapperChosen || GameFlowController.Instance == null) return;
         GameFlowController.Instance.ConfirmFlowerSelection(new List<BlockData>(selected));
     }
 }
