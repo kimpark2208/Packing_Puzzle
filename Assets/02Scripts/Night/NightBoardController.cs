@@ -15,6 +15,8 @@ public class NightBoardController : MonoBehaviour
 {
     [Header("References")]
     [SerializeField] private NightCellView cellPrefab;
+    [SerializeField] private RectTransform flowerBlockContainer;
+    [SerializeField] private float flowerBlockPreviewSize = 220f;
 
     [Header("Test Only (인스펙터에서 직접 테스트할 때)")]
     [SerializeField] private int testGridSize = 5;
@@ -85,11 +87,68 @@ public class NightBoardController : MonoBehaviour
         shapeValidator = new NightShapePuzzleValidator(allowedBlocks, wallGrid);
         Validator = shapeValidator;
         CreateBoard(size, wallGrid);
+        UpdateFlowerBlockPreview(allowedBlocks);
     }
 
     public void LoadPuzzle(NightPuzzleData data, List<BlockData> allowedBlocks)
     {
         LoadPuzzle(data.gridSize, allowedBlocks, data.wallGrid ?? new bool[data.gridSize, data.gridSize]);
+    }
+
+    /// <summary>
+    /// 이번 스테이지에서 그려야 할 꽃 블록 모양(들)을 FlowerBlock 영역에 미리보기로 채운다.
+    /// LayoutGroup + AspectRatioFitter 조합은 FitInParent가 셀 크기가 아니라 컨테이너 전체 크기를
+    /// 기준으로 맞춰버려서 컨테이너가 커지면 미리보기도 같이 커지는 문제가 있었다. 그래서 크기/위치를
+    /// 직접 계산해서 배치한다(컨테이너 크기와 무관하게 항상 flowerBlockPreviewSize 기준 크기로 보임).
+    /// </summary>
+    private void UpdateFlowerBlockPreview(List<BlockData> allowedBlocks)
+    {
+        if (flowerBlockContainer == null) return;
+
+        for (int i = flowerBlockContainer.childCount - 1; i >= 0; i--)
+        {
+            Destroy(flowerBlockContainer.GetChild(i).gameObject);
+        }
+
+        if (allowedBlocks == null) return;
+
+        var validBlocks = allowedBlocks.Where(b => b != null && b.blockImage != null).ToList();
+        if (validBlocks.Count == 0) return;
+
+        const float spacing = 12f;
+        var sizes = new List<Vector2>();
+        foreach (BlockData block in validBlocks)
+        {
+            float aspect = block.blockImage.rect.width / block.blockImage.rect.height;
+            float w = flowerBlockPreviewSize;
+            float h = flowerBlockPreviewSize;
+            if (aspect >= 1f) h = w / aspect; else w = h * aspect;
+            sizes.Add(new Vector2(w, h));
+        }
+
+        float totalWidth = sizes.Sum(s => s.x) + spacing * (sizes.Count - 1);
+        float x = -totalWidth / 2f;
+
+        for (int i = 0; i < validBlocks.Count; i++)
+        {
+            BlockData block = validBlocks[i];
+            Vector2 size = sizes[i];
+
+            GameObject previewGO = new GameObject($"BlockPreview_{block.blockID}", typeof(RectTransform), typeof(Image));
+            previewGO.transform.SetParent(flowerBlockContainer, false);
+
+            var rt = (RectTransform)previewGO.transform;
+            rt.anchorMin = new Vector2(0.5f, 0.5f);
+            rt.anchorMax = new Vector2(0.5f, 0.5f);
+            rt.sizeDelta = size;
+            rt.anchoredPosition = new Vector2(x + size.x / 2f, 0f);
+
+            var image = previewGO.GetComponent<Image>();
+            image.sprite = block.blockImage;
+            image.preserveAspect = true;
+
+            x += size.x + spacing;
+        }
     }
 
     private void CreateBoard(int size, bool[,] wallGrid)

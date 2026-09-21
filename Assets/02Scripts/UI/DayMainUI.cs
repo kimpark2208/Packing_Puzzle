@@ -1,10 +1,10 @@
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
 /// <summary>
-/// 낮 메인(손님 주문) 화면. 좋은피자 위대한피자 스타일의 대사창 UI를 참고했다:
-/// 손님 캐릭터 자리 + 말풍선(주문 힌트) + 응답 버튼 2개("다시 여쭤볼게요" / "포장 시작할게요").
-/// 포장지 힌트가 모호하게 나온 날은 최대 2번까지 되물어서 점점 구체적인 힌트로 바꿀 수 있다.
+/// 낮 메인(손님 주문) 화면. 손님 캐릭터 자리 + 말풍선(주문 힌트) + 응답 버튼 2개
+/// ("다시 여쭤볼게요" / "포장 시작할게요") + 설정 팝업 + 카탈로그 팝업(전화 버튼으로 열림).
 /// UI 요소는 전부 씬 하이라키에 미리 배치되어 있고, 이 스크립트는 참조만 들고 로직을 수행한다.
 ///
 /// 첫째 날은 GameFlowController.Start()가 BeginNewDay()를 호출하면서 씬 로드까지 같은 프레임에
@@ -15,17 +15,33 @@ using UnityEngine.UI;
 /// </summary>
 public class DayMainUI : MonoBehaviour
 {
-    private const int MaxAsks = 2;
+    private enum CatalogTab { Artifacts, Wrapper, Furniture }
 
-    [SerializeField] private Text topBarText;
-    [SerializeField] private Text bubbleText;
+    private const string RejectLine = "거절할순없으세요";
+
+    [SerializeField] private TMP_Text moneyText;
+    [SerializeField] private TMP_Text bubbleText;
     [SerializeField] private Button askButton;
     [SerializeField] private Button acceptButton;
 
+    [Header("설정 팝업")]
+    [SerializeField] private Button preferencesButton;
+    [SerializeField] private GameObject preferencesPopup;
+    [SerializeField] private Button preferencesCloseButton;
+
+    [Header("카탈로그 팝업 (전화 버튼으로 열고 닫기)")]
+    [SerializeField] private Button telephoneButton;
+    [SerializeField] private GameObject catalogPopup;
+    [SerializeField] private GameObject artifactsPage;
+    [SerializeField] private GameObject wrapperPage;
+    [SerializeField] private GameObject furniturePage;
+    [SerializeField] private Button artifactsIndexButton;
+    [SerializeField] private Button wrapperIndexButton;
+    [SerializeField] private Button furnitureIndexButton;
+
     private DayPuzzleGenerator.DayOrder order;
-    private int hintLevel;
-    private int asksUsed;
     private bool initialized;
+    private bool catalogOpen;
 
     public void Initialize(DayPuzzleGenerator.DayOrder dayOrder)
     {
@@ -33,19 +49,27 @@ public class DayMainUI : MonoBehaviour
         initialized = true;
 
         order = dayOrder;
-        hintLevel = (order != null && order.hintStartsVague) ? 0 : 2;
-        asksUsed = 0;
 
         var currency = CurrencyManager.Instance;
-        string dayText = currency != null ? $"{currency.CurrentDay}일째" : "1일째";
-        string moneyText = currency != null ? $"{currency.CurrentMoney}원" : "0원";
-        if (topBarText != null) topBarText.text = $"{dayText}        소지금 {moneyText}";
+        if (moneyText != null) moneyText.text = currency != null ? $"{currency.CurrentMoney}원" : "0원";
 
-        if (askButton != null) askButton.onClick.AddListener(OnAskAgainClicked);
+        if (askButton != null) askButton.onClick.AddListener(OnRejectClicked);
         if (acceptButton != null) acceptButton.onClick.AddListener(() =>
         {
             if (GameFlowController.Instance != null) GameFlowController.Instance.GoToFlowerSelect();
         });
+
+        if (preferencesButton != null) preferencesButton.onClick.AddListener(OpenPreferences);
+        if (preferencesCloseButton != null) preferencesCloseButton.onClick.AddListener(ClosePreferences);
+        if (preferencesPopup != null) preferencesPopup.SetActive(false);
+
+        if (telephoneButton != null) telephoneButton.onClick.AddListener(ToggleCatalog);
+        if (artifactsIndexButton != null) artifactsIndexButton.onClick.AddListener(() => SwitchCatalogTab(CatalogTab.Artifacts));
+        if (wrapperIndexButton != null) wrapperIndexButton.onClick.AddListener(() => SwitchCatalogTab(CatalogTab.Wrapper));
+        if (furnitureIndexButton != null) furnitureIndexButton.onClick.AddListener(() => SwitchCatalogTab(CatalogTab.Furniture));
+        catalogOpen = false;
+        if (catalogPopup != null) catalogPopup.SetActive(false);
+        SwitchCatalogTab(CatalogTab.Wrapper);
 
         RefreshBubbleText();
     }
@@ -58,33 +82,44 @@ public class DayMainUI : MonoBehaviour
         }
     }
 
-    private void OnAskAgainClicked()
+    private void OnRejectClicked()
     {
-        if (asksUsed >= MaxAsks || hintLevel >= 2) return;
-
-        asksUsed++;
-        hintLevel = Mathf.Min(2, hintLevel + 1);
-        RefreshBubbleText();
+        if (bubbleText != null) bubbleText.text = RejectLine;
     }
 
     private void RefreshBubbleText()
     {
+        if (bubbleText == null) return;
+
         if (order == null)
         {
-            if (bubbleText != null) bubbleText.text = "손님이 아직 정하지 못한 것 같아요...";
+            bubbleText.text = "손님이 아직 정하지 못한 것 같아요...";
             return;
         }
 
-        string wrapperPhrase = hintLevel switch
-        {
-            0 => "",
-            1 => order.hintSizeWord + " ",
-            _ => order.hintColorName + "색 "
-        };
+        bubbleText.text = $"{order.hintColorName}색 포장지에 {order.requirement.description}";
+    }
 
-        if (bubbleText != null) bubbleText.text = $"{wrapperPhrase}포장지에 {order.requirement.description}";
+    private void OpenPreferences()
+    {
+        if (preferencesPopup != null) preferencesPopup.SetActive(true);
+    }
 
-        bool canAskMore = asksUsed < MaxAsks && hintLevel < 2;
-        if (askButton != null) askButton.interactable = canAskMore;
+    private void ClosePreferences()
+    {
+        if (preferencesPopup != null) preferencesPopup.SetActive(false);
+    }
+
+    private void ToggleCatalog()
+    {
+        catalogOpen = !catalogOpen;
+        if (catalogPopup != null) catalogPopup.SetActive(catalogOpen);
+    }
+
+    private void SwitchCatalogTab(CatalogTab tab)
+    {
+        if (artifactsPage != null) artifactsPage.SetActive(tab == CatalogTab.Artifacts);
+        if (wrapperPage != null) wrapperPage.SetActive(tab == CatalogTab.Wrapper);
+        if (furniturePage != null) furniturePage.SetActive(tab == CatalogTab.Furniture);
     }
 }

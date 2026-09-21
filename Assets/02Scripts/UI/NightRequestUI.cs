@@ -16,6 +16,7 @@ public class NightRequestUI : MonoBehaviour
     [SerializeField] private RectTransform listArea;
     [SerializeField] private RectTransform itemTemplate;
     [SerializeField] private Button confirmButton;
+    [SerializeField] private Button goToNightMainButton;
 
     private readonly HashSet<int> selected = new();
     private readonly Dictionary<int, Image> itemImages = new();
@@ -34,6 +35,13 @@ public class NightRequestUI : MonoBehaviour
         }
 
         if (confirmButton != null) confirmButton.onClick.AddListener(OnConfirm);
+        if (goToNightMainButton != null) goToNightMainButton.onClick.AddListener(OnGoToNightMain);
+    }
+
+    private void OnGoToNightMain()
+    {
+        if (GameFlowController.Instance == null) return;
+        GameFlowController.Instance.GoToNightMainScene();
     }
 
     private void CreateFlowerItem(int flowerId)

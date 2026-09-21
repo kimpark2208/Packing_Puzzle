@@ -18,6 +18,9 @@ EditorBuildSettings:
     path: Assets/01Scenes/01Day/03DayPuzzle.unity
     guid: 8c9cfa26abfee488c85f1582747f6a02
   - enabled: 1
+    path: Assets/01Scenes/01Day/04DayToNight.unity
+    guid: 9d36da6b06af56445a396a4f25a2fd03
+  - enabled: 1
     path: Assets/01Scenes/02Night/01NightMain.unity
     guid: 327921893f678f7428ac2035337addd9
   - enabled: 1

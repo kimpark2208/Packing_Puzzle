@@ -12,7 +12,7 @@ using UnityEngine;
 public static class ProceduralNightPuzzleGenerator
 {
     private static int nextPuzzleId = 1;
-    private const int WallSearchAttemptsPerCount = 40;
+    private const int WallSearchAttemptsPerCount = 3000;
     private const long TimeBudgetMs = 700; // 스테이지 하나당 벽 탐색에 쓸 수 있는 최대 시간 (메인 스레드 프리징 방지)
     private static readonly System.Random Rng = new();
 
@@ -79,7 +79,7 @@ public static class ProceduralNightPuzzleGenerator
             int remaining = totalCells - wallCellCount;
             if (!CanReachExactSum(remaining, cellCounts)) continue; // 이 필러 개수로도 나눠떨어지지 않으면 스킵
 
-            if (TryFindWallPlacement(gridSize, blocks, wallCellCount, stopwatch, out bool[,] foundWall))
+            if (TryFindWallPlacement(gridSize, blocks, wallCellCount, stopwatch, requireUnique: true, out bool[,] foundWall))
             {
                 wall = foundWall;
                 Debug.Log($"[ProceduralNightPuzzleGenerator] 필러 {wallCellCount}칸으로 유일해 확보");
@@ -87,8 +87,93 @@ public static class ProceduralNightPuzzleGenerator
             }
         }
 
-        Debug.LogWarning("[ProceduralNightPuzzleGenerator] 유일해를 찾지 못해 필러 없이 스테이지를 반환합니다 (완전 타일링 불가능할 수 있음).");
+        // S-테트로미노처럼 모양이 빡빡한 조각은 "유일한" 타일링을 만드는 벽 배치를 찾기가 매우 어렵다.
+        // 유일성을 못 찾았다고 필러 없이 반환하면, 칸 수가 안 나눠떨어지는 경우(예: 25칸/4칸) 절대 완성 불가능한
+        // 퍼즐이 되어버린다. 그래서 유일성을 포기하고 "풀리기만 하는" 벽 배치라도 다시 찾는다.
+        // 위 유일해 탐색이 시간예산을 이미 다 써버렸을 수 있으니, 이 2차 탐색은 별도의 시간예산을 새로 받는다.
+        stopwatch = System.Diagnostics.Stopwatch.StartNew();
+
+        for (int wallCellCount = 1; wallCellCount <= maxWallCells; wallCellCount++)
+        {
+            if (stopwatch.ElapsedMilliseconds > TimeBudgetMs) break;
+
+            int remaining = totalCells - wallCellCount;
+            if (!CanReachExactSum(remaining, cellCounts)) continue;
+
+            if (TryFindWallPlacement(gridSize, blocks, wallCellCount, stopwatch, requireUnique: false, out bool[,] foundWall))
+            {
+                wall = foundWall;
+                Debug.Log($"[ProceduralNightPuzzleGenerator] 유일해는 못 찾았지만 필러 {wallCellCount}칸으로 풀리는 배치 확보 (정답이 여러 개일 수 있음)");
+                return MakeData(gridSize, flowerIds, isBonusStage, wall);
+            }
+        }
+
+        // 무작위 탐색이 시간예산 안에 못 찾을 수도 있으니(특히 꽃 하나만 선택한 일반 퍼즐처럼 모양이 빡빡한 경우),
+        // 마지막 예비 수단으로 블록을 실제로 하나씩 그리디하게 놓아서 만드는 배치를 쓴다.
+        // 이건 "실제로 놓아본" 배치라 반드시 풀 수 있음이 보장된다(운에 의존하지 않음).
+        wall = BuildGuaranteedWallFallback(gridSize, blocks);
+        Debug.LogWarning("[ProceduralNightPuzzleGenerator] 무작위 탐색 실패, 예비(그리디) 배치로 대체합니다.");
         return MakeData(gridSize, flowerIds, isBonusStage, wall);
+    }
+
+    /// <summary>
+    /// blocks의 변형들을 왼쪽 위부터 순서대로 실제로 하나씩 놓아서 그리드를 채운다.
+    /// 어떤 변형도 들어맞지 않는 칸만 필러(벽)로 남긴다. 직접 놓아본 배치이므로 항상 풀 수 있음이 보장된다.
+    /// </summary>
+    private static bool[,] BuildGuaranteedWallFallback(int gridSize, List<BlockData> blocks)
+    {
+        bool[,] covered = new bool[gridSize, gridSize];
+
+        var variants = new List<List<Vector2Int>>();
+        foreach (BlockData block in blocks)
+        {
+            foreach (HashSet<Vector2Int> variant in PolyominoUtil.GetUniqueVariants(block))
+            {
+                variants.Add(variant.OrderBy(v => v.y).ThenBy(v => v.x).ToList());
+            }
+        }
+
+        for (int row = 0; row < gridSize; row++)
+        {
+            for (int col = 0; col < gridSize; col++)
+            {
+                if (covered[row, col]) continue;
+
+                foreach (var variant in variants)
+                {
+                    Vector2Int anchor = variant[0]; // 읽는 순서상 이 변형의 첫 칸
+                    var targetCells = new List<Vector2Int>();
+                    bool fits = true;
+
+                    foreach (Vector2Int offset in variant)
+                    {
+                        int r = row + (offset.y - anchor.y);
+                        int c = col + (offset.x - anchor.x);
+
+                        if (r < 0 || r >= gridSize || c < 0 || c >= gridSize || covered[r, c])
+                        {
+                            fits = false;
+                            break;
+                        }
+                        targetCells.Add(new Vector2Int(c, r));
+                    }
+
+                    if (fits)
+                    {
+                        foreach (Vector2Int cell in targetCells) covered[cell.y, cell.x] = true;
+                        break;
+                    }
+                }
+                // 어떤 변형도 안 맞으면 이 칸은 그냥 필러로 남는다(covered[row, col]가 false로 유지됨).
+            }
+        }
+
+        bool[,] wall = new bool[gridSize, gridSize];
+        for (int r = 0; r < gridSize; r++)
+            for (int c = 0; c < gridSize; c++)
+                wall[r, c] = !covered[r, c];
+
+        return wall;
     }
 
     /// <summary>target을 cellCounts 값들의 음이 아닌 정수 조합(중복 사용 가능)으로 만들 수 있는지 (동전 교환 DP).</summary>
@@ -116,7 +201,7 @@ public static class ProceduralNightPuzzleGenerator
         return reachable[target];
     }
 
-    private static bool TryFindWallPlacement(int gridSize, List<BlockData> blocks, int wallCellCount, System.Diagnostics.Stopwatch stopwatch, out bool[,] wall)
+    private static bool TryFindWallPlacement(int gridSize, List<BlockData> blocks, int wallCellCount, System.Diagnostics.Stopwatch stopwatch, bool requireUnique, out bool[,] wall)
     {
         int totalCells = gridSize * gridSize;
 
@@ -131,7 +216,11 @@ public static class ProceduralNightPuzzleGenerator
                 candidate[idx / gridSize, idx % gridSize] = true;
             }
 
-            if (HasUniqueExactTiling(gridSize, blocks, candidate))
+            bool valid = requireUnique
+                ? HasUniqueExactTiling(gridSize, blocks, candidate)
+                : HasAtLeastOneExactTiling(gridSize, blocks, candidate);
+
+            if (valid)
             {
                 wall = candidate;
                 return true;
@@ -151,6 +240,14 @@ public static class ProceduralNightPuzzleGenerator
         var dlx = BuildExactCoverInstance(gridSize, blocks, wallGrid, out int primaryColumnCount);
         if (primaryColumnCount == 0) return false;
         return dlx.CountSolutions(2) == 1;
+    }
+
+    /// <summary>유일성은 따지지 않고, 이 벽 배치로 그냥 완전히 채울 수 있는 방법이 하나라도 있는지만 검사한다.</summary>
+    private static bool HasAtLeastOneExactTiling(int gridSize, List<BlockData> blocks, bool[,] wallGrid)
+    {
+        var dlx = BuildExactCoverInstance(gridSize, blocks, wallGrid, out int primaryColumnCount);
+        if (primaryColumnCount == 0) return false;
+        return dlx.CountSolutions(1) >= 1;
     }
 
     private static DancingLinks BuildExactCoverInstance(int gridSize, List<BlockData> blocks, bool[,] wallGrid, out int primaryColumnCount)

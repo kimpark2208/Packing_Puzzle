@@ -15,6 +15,7 @@ public class GameFlowController : Singleton<GameFlowController>
     public const string SceneDayMain = "01DayMain";
     public const string SceneFlowerSelect = "02FlowerSellect";
     public const string SceneDayPuzzle = "03DayPuzzle";
+    public const string SceneDayToNight = "04DayToNight";
     public const string SceneNightMain = "01NightMain";
     public const string SceneNightPuzzle = "02NightPuzzle";
 
@@ -81,13 +82,19 @@ public class GameFlowController : Singleton<GameFlowController>
         PuzzleValidator.ValidatePuzzle();
     }
 
-    /// <summary>결과 팝업에서 확인을 누르면 밤 메인(요청 선택) 화면으로 이동한다.</summary>
+    /// <summary>결과 팝업에서 확인을 누르면 밤 요청(꽃 선택) 화면으로 이동한다.</summary>
     public void ProceedToNightMain()
     {
-        SceneManager.LoadScene(SceneNightMain);
+        SceneManager.LoadScene(SceneDayToNight);
     }
 
     // ========== 밤 ==========
+
+    /// <summary>DayToNight 화면에서 밤 메인 허브로 넘어갈 때 호출. 지금은 단순 씬 이동만 한다.</summary>
+    public void GoToNightMainScene()
+    {
+        SceneManager.LoadScene(SceneNightMain);
+    }
 
     /// <summary>밤 메인(요청 선택) 화면에서 확인을 눌렀을 때. requestedFlowerIds는 오늘 밤 최우선으로 만들 꽃들.</summary>
     public void ConfirmNightRequests(List<int> requestedFlowerIds)
