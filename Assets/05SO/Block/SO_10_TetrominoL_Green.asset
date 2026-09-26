@@ -13,8 +13,8 @@ MonoBehaviour:
   m_Name: SO_10_TetrominoL_Green
   m_EditorClassIdentifier: Assembly-CSharp::BlockData
   blockID: 10
-  blockScore: 4
   color: 4
+  flowerTag: 1
   unlockWrapperTier: 2
   shapeGrid:
   - cols: 0100

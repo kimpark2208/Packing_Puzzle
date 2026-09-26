@@ -82,6 +82,62 @@ public class ShopManager : Singleton<ShopManager>
             sizeHintWord = "가장 큰"
         });
 
+        allItems.Add(new ShopItem
+        {
+            itemId = 4,
+            itemName = "포장지 (품 등장)",
+            price = 4000,
+            category = ShopCategory.Wrapper,
+            description = "라인/매스/필러 요구 개수가 늘어난 포장지",
+            gridSize = "12x12",
+            gridSizeInt = 12,
+            tier = 4,
+            colorHintName = "초록",
+            sizeHintWord = "더 화려한"
+        });
+
+        allItems.Add(new ShopItem
+        {
+            itemId = 5,
+            itemName = "포장지 (5단계)",
+            price = 6000,
+            category = ShopCategory.Wrapper,
+            description = "라인/매스/품/필러를 모두 요구하는 포장지",
+            gridSize = "14x14",
+            gridSizeInt = 14,
+            tier = 5,
+            colorHintName = "주황",
+            sizeHintWord = "한층 더 화려한"
+        });
+
+        allItems.Add(new ShopItem
+        {
+            itemId = 6,
+            itemName = "포장지 (6단계)",
+            price = 8500,
+            category = ShopCategory.Wrapper,
+            description = "요구 개수가 더 늘어난 고난도 포장지",
+            gridSize = "16x16",
+            gridSizeInt = 16,
+            tier = 6,
+            colorHintName = "청록",
+            sizeHintWord = "매우 화려한"
+        });
+
+        allItems.Add(new ShopItem
+        {
+            itemId = 7,
+            itemName = "포장지 (최종)",
+            price = 12000,
+            category = ShopCategory.Wrapper,
+            description = "가장 많은 꽃을 요구하는 최종 단계 포장지",
+            gridSize = "18x18",
+            gridSizeInt = 18,
+            tier = 7,
+            colorHintName = "금빛",
+            sizeHintWord = "가장 화려한"
+        });
+
         // ========== 가구 (Furniture) ==========
         allItems.Add(new ShopItem
         {

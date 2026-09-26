@@ -13,8 +13,8 @@ MonoBehaviour:
   m_Name: SO_15_PentominoZ_Red
   m_EditorClassIdentifier: Assembly-CSharp::BlockData
   blockID: 15
-  blockScore: 5
   color: 0
+  flowerTag: 1
   unlockWrapperTier: 3
   shapeGrid:
   - cols: 010100

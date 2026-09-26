@@ -13,8 +13,8 @@ MonoBehaviour:
   m_Name: SO_13_PentominoT_Black
   m_EditorClassIdentifier: Assembly-CSharp::BlockData
   blockID: 13
-  blockScore: 5
   color: 3
+  flowerTag: 2
   unlockWrapperTier: 3
   shapeGrid:
   - cols: 010101

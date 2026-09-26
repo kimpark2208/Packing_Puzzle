@@ -3,7 +3,8 @@ using UnityEngine;
 /// <summary>
 /// BlockData.shapeGrid로부터 "칸을 색으로 채우고 검은 테두리/격자선을 그리는" 스타일의 텍스처를 만든다.
 /// Assets/03Images/Block의 기존 I_Three.png / O_Four.png / T_Four.png와 같은 스타일을 코드로 재현한 것.
-/// BlockImageGenerator(에디터 툴, 실제 PNG 파일로 저장)와 BlockSpriteBaker(런타임 폴백)가 공유한다.
+/// BlockImageGenerator(에디터 툴, 실제 PNG 파일로 저장)가 사용한다. blockImage는 밤 퍼즐의
+/// FlowerBlock 미리보기(NightBoardController)에서 읽는 셀 단위 블록 이미지다.
 /// </summary>
 public static class BlockTextureUtil
 {

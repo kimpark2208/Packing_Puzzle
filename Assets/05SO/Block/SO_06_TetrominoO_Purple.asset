@@ -13,8 +13,8 @@ MonoBehaviour:
   m_Name: SO_06_TetrominoO_Purple
   m_EditorClassIdentifier: Assembly-CSharp::BlockData
   blockID: 6
-  blockScore: 4
   color: 6
+  flowerTag: 1
   unlockWrapperTier: 1
   shapeGrid:
   - cols: 0101

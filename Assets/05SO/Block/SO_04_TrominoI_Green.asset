@@ -13,8 +13,8 @@ MonoBehaviour:
   m_Name: SO_04_TrominoI_Green
   m_EditorClassIdentifier: Assembly-CSharp::BlockData
   blockID: 4
-  blockScore: 3
   color: 4
+  flowerTag: 3
   unlockWrapperTier: 1
   shapeGrid:
   - cols: 01

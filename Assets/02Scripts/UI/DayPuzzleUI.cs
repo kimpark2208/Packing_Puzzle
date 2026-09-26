@@ -3,54 +3,97 @@ using UnityEngine;
 using UnityEngine.UI;
 
 /// <summary>
-/// 낮 퍼즐(포장) 화면의 오버레이 UI.
-/// - 씬 시작 시 GameFlowController가 들고 있는 선택된 꽃 풀을 GachaManager에 주입한다.
-/// - "포장 완료" 버튼으로 제출하면 PuzzleValidator 결과를 팝업으로 보여준다.
+/// 낮 퍼즐(포장) 화면의 흐름 담당.
+/// - 씬 시작 시 오늘의 포장지 레벨로 보드를 만든다.
+/// - 꽃이 놓일 때마다 완성/붕괴/실패(리롤 소진) 여부를 판정한다.
+/// - 완성/실패 결과는 결과 팝업으로, 붕괴는 붕괴 팝업으로 보여준다.
 /// 팝업은 하이라키에 미리 배치되어 있고 평소엔 비활성 상태다.
 /// </summary>
 public class DayPuzzleUI : MonoBehaviour
 {
-    [SerializeField] private Button submitButton;
     [SerializeField] private GameObject resultPopup;
     [SerializeField] private TMP_Text resultBodyText;
     [SerializeField] private Button resultConfirmButton;
 
+    [Header("붕괴 팝업")]
+    [SerializeField] private GameObject collapsePopup;
+    [SerializeField] private TMP_Text collapseBodyText;
+    [SerializeField] private Button collapseConfirmButton;
+
+    private WrapperBoardController board;
+    private GachaManager gacha;
+    private bool roundEnded;
+
     private void Start()
     {
-        var gacha = FindFirstObjectByType<GachaManager>();
-        if (gacha != null && GameFlowController.Instance != null)
+        board = WrapperBoardController.Instance;
+        gacha = FindFirstObjectByType<GachaManager>();
+
+        var order = GameFlowController.Instance != null ? GameFlowController.Instance.CurrentDayOrder : null;
+        if (board != null && order?.level != null)
         {
-            gacha.SetPool(GameFlowController.Instance.ChosenGachaPool);
+            board.BuildLevel(order.level);
+            board.OnFlowerPlaced += HandleFlowerPlaced;
         }
 
         if (resultPopup != null) resultPopup.SetActive(false);
-        if (submitButton != null) submitButton.onClick.AddListener(OnSubmitClicked);
         if (resultConfirmButton != null) resultConfirmButton.onClick.AddListener(OnResultConfirmed);
 
-        EventBus.OnDayPuzzleComplete += ShowResultPopup;
+        if (collapsePopup != null) collapsePopup.SetActive(false);
+        if (collapseConfirmButton != null) collapseConfirmButton.onClick.AddListener(OnCollapseConfirmed);
     }
 
     private void OnDestroy()
     {
-        EventBus.OnDayPuzzleComplete -= ShowResultPopup;
+        if (board != null) board.OnFlowerPlaced -= HandleFlowerPlaced;
     }
 
-    private void OnSubmitClicked()
+    private void HandleFlowerPlaced()
     {
-        if (GameFlowController.Instance == null) return;
-        GameFlowController.Instance.SubmitDayPuzzle();
+        if (roundEnded || board == null) return;
+
+        if (board.IsComplete)
+        {
+            roundEnded = true;
+            ShowResultPopup(PuzzleValidator.ValidateSuccess());
+            return;
+        }
+
+        if (board.IsCollapsed())
+        {
+            ShowCollapsePopup();
+            return;
+        }
+
+        if (gacha != null && gacha.RerollExhausted && gacha.IsTrayEmpty)
+        {
+            roundEnded = true;
+            ShowResultPopup(PuzzleValidator.ValidateFailure());
+        }
     }
 
     private void ShowResultPopup(PuzzleValidationResult result)
     {
-        string body =
-            $"{(result.isPerfect ? "빈틈없이 포장했어요!" : "포장에 빈틈이 있어요")}\n" +
-            $"{(result.isPerfectBouquet ? "완벽한 꽃다발 보너스!" : "")}\n" +
-            $"점수: {result.scoreBeforePenalty} / 목표 {result.targetScore} {(result.targetScoreMet ? "달성!" : "미달성...")}\n\n" +
-            $"매출: {result.totalEarnings}원";
+        string body = result.success
+            ? $"꽃다발을 완성했어요!\n색 조합 보너스: {result.colorBonus}\n{(result.requirementMet ? $"고객 요구사항 달성! +{result.requirementBonus}" : "고객 요구사항 미달성")}\n\n매출: {result.totalEarnings}원"
+            : "리롤을 모두 사용했지만 꽃다발을 완성하지 못했어요...\n\n매출: 0원";
 
         if (resultBodyText != null) resultBodyText.text = body;
         if (resultPopup != null) resultPopup.SetActive(true);
+    }
+
+    private void ShowCollapsePopup()
+    {
+        if (collapseBodyText != null) collapseBodyText.text = "꽃다발이 한쪽으로 기울며 무너졌어요!\n손님이 크게 실망합니다...";
+        if (collapsePopup != null) collapsePopup.SetActive(true);
+    }
+
+    private void OnCollapseConfirmed()
+    {
+        if (collapsePopup != null) collapsePopup.SetActive(false);
+
+        board?.ClearAllPlacements();
+        gacha?.RestartAttempt();
     }
 
     private void OnResultConfirmed()

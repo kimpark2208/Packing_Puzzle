@@ -63,15 +63,13 @@ public class EventBus : Singleton<EventBus>
 /// <summary>낮 퍼즐 검증 결과</summary>
 public struct PuzzleValidationResult
 {
-    public int mostUsedColorId;                 // 가장 많이 사용된 색상 ID
+    public bool success;                         // 모든 태그 영역을 알맞게 채워 꽃다발을 완성했는가
+    public int mostUsedColorId;                  // 가장 많이 사용된 색상 ID
     public int mostUsedFlowerId;                 // 가장 많이 사용된 꽃 ID
-    public bool isPerfect;                       // 모든 칸이 채워졌는가 (겹침 없이)
-    public bool isPerfectBouquet;                // 배치한 블록 구성이 정답 레시피와 정확히 일치하는가
-    public int baseScore;                        // 기본 점수 (완벽: 1000, 불완벽: 500)
-    public int scoreBeforePenalty;                // 목표 점수 판정 전 매출 (기본점수+완벽꽃다발+요구사항 보너스)
-    public int targetScore;                      // 이번 주문의 목표 점수
-    public bool targetScoreMet;                  // scoreBeforePenalty가 targetScore 이상인가
-    public int totalEarnings;                    // 목표 점수 미달 페널티까지 반영한 최종 매출
+    public int colorBonus;                       // 인접 슬롯 색 조합 보너스 합계
+    public bool requirementMet;                  // 고객 요구사항 충족 여부
+    public int requirementBonus;                 // 고객 요구사항 보너스
+    public int totalEarnings;                    // 색 조합 보너스 + 요구사항 보너스 (실패 시 0)
     public Dictionary<int, int> colorCounts;     // 색상ID -> 사용 개수 (전체)
     public Dictionary<int, int> flowerCounts;    // 꽃(blockID) -> 사용 개수 (전체)
 }

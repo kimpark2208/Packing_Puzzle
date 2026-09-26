@@ -20,10 +20,21 @@ public class BlockData : ScriptableObject
         Purple
     }
 
+    /// <summary>낮 퍼즐(포장) 태그. 부케 디자인에서의 역할을 나타낸다.</summary>
+    public enum FlowerTag
+    {
+        Line,   // 라인: 골격, 긴 막대 형태
+        Mass,   // 매스: 부피감, 덩어리 형태
+        Form,   // 품: 포인트, 독특한 형태
+        Filler  // 필러: 빈 공간, 소형 형태
+    }
+
     [Header("블록 정보")]
     public int blockID;
-    public int blockScore;
     public Color color;
+
+    [Header("낮 퍼즐 - 부케 디자인 태그 (라인/매스/품/필러)")]
+    public FlowerTag flowerTag;
 
     [Header("이 꽃을 사용하려면 필요한 최소 포장지 단계 (1부터 시작, 누적 해금)")]
     public int unlockWrapperTier = 1;

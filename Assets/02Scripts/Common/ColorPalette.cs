@@ -2,7 +2,7 @@ using UnityEngine;
 
 /// <summary>
 /// BlockData.Color enum을 실제 렌더링 색상 및 한글 이름으로 변환하는 공용 팔레트.
-/// 색상 관련 매핑이 여러 스크립트(BlockView, CustomerRequirementGenerator 등)에 흩어지는 것을 방지한다.
+/// 색상 관련 매핑이 여러 스크립트(BlockDrag, WrapperSlot, CustomerRequirementGenerator 등)에 흩어지는 것을 방지한다.
 /// </summary>
 public static class ColorPalette
 {

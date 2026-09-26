@@ -15,7 +15,8 @@ public class FlowerSelectUI : MonoBehaviour
 {
     private enum SortMode { Color, Size, Name }
 
-    private const int MaxSelectable = 3;
+    // 포장지 레벨이 올라가면 라인/매스/품/필러 4태그가 모두 필요해질 수 있어 3에서 5로 상향.
+    private const int MaxSelectable = 5;
 
     private static readonly Color ItemColor = Color.white;
     private static readonly Color SelectedColor = new(0.65f, 0.85f, 0.70f);
@@ -111,7 +112,7 @@ public class FlowerSelectUI : MonoBehaviour
 
         if (headerText != null)
         {
-            headerText.text = $"{order.gridSize}x{order.gridSize} 포장지 확정! 목표 점수: {order.targetScore}\n오늘 사용할 꽃을 최대 {MaxSelectable}종 고르세요";
+            headerText.text = $"포장지 확정! 오늘 사용할 꽃을 최대 {MaxSelectable}종 고르세요";
         }
 
         if (wrapperPopup != null) wrapperPopup.SetActive(false);

@@ -57,12 +57,10 @@ public class GameFlowController : Singleton<GameFlowController>
         SceneManager.LoadScene(SceneDayMain);
     }
 
-    /// <summary>플레이어가 포장지를 골랐을 때(꽃 선택 화면 상단). 정답 레시피/목표점수를 확정한다.</summary>
+    /// <summary>플레이어가 포장지를 골랐을 때(꽃 선택 화면 상단). 포장지 단계의 태그 요구 레벨을 확정한다.</summary>
     public void ChooseWrapper(int wrapperId)
     {
         DayPuzzleGenerator.FinalizeForWrapper(CurrentDayOrder, wrapperId);
-        CurrencyManager.Instance.CurrentDayRecipe = CurrentDayOrder.recipe;
-        CurrencyManager.Instance.CurrentTargetScore = CurrentDayOrder.targetScore;
     }
 
     public void GoToFlowerSelect()
@@ -74,12 +72,6 @@ public class GameFlowController : Singleton<GameFlowController>
     {
         ChosenGachaPool = new List<BlockData>(chosen);
         SceneManager.LoadScene(SceneDayPuzzle);
-    }
-
-    /// <summary>낮 퍼즐 화면에서 "포장 완료" 버튼이 눌렸을 때. 결과는 DayResultPopup이 이벤트로 받아 보여준다.</summary>
-    public void SubmitDayPuzzle()
-    {
-        PuzzleValidator.ValidatePuzzle();
     }
 
     /// <summary>결과 팝업에서 확인을 누르면 밤 요청(꽃 선택) 화면으로 이동한다.</summary>

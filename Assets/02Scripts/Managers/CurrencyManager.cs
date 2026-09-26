@@ -39,12 +39,6 @@ public class CurrencyManager : Singleton<CurrencyManager>
         currentRequirement = requirement;
     }
 
-    /// <summary>이번 낮 주문의 정답 레시피(런타임 생성). DayPuzzleGenerator가 채우고 PerfectChecker가 읽는다.</summary>
-    public PuzzleRecipe CurrentDayRecipe { get; set; }
-
-    /// <summary>이번 낮 주문의 목표 점수. 미니게임 결과가 이보다 낮으면 매출이 줄어든다.</summary>
-    public int CurrentTargetScore { get; set; }
-
     protected override void OnAwake()
     {
         Initialize();
