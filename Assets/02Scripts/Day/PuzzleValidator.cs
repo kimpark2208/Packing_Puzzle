@@ -55,15 +55,16 @@ public static class PuzzleValidator
 
         foreach (var slot in board.AllSlots)
         {
-            if (slot.PlacedFlower == null) continue;
+            foreach (var flower in slot.PlacedFlowers)
+            {
+                int colorId = (int)flower.color;
+                result.colorCounts.TryGetValue(colorId, out int c);
+                result.colorCounts[colorId] = c + 1;
 
-            int colorId = (int)slot.PlacedFlower.color;
-            result.colorCounts.TryGetValue(colorId, out int c);
-            result.colorCounts[colorId] = c + 1;
-
-            int flowerId = slot.PlacedFlower.blockID;
-            result.flowerCounts.TryGetValue(flowerId, out int f);
-            result.flowerCounts[flowerId] = f + 1;
+                int flowerId = flower.blockID;
+                result.flowerCounts.TryGetValue(flowerId, out int f);
+                result.flowerCounts[flowerId] = f + 1;
+            }
         }
 
         result.mostUsedColorId = GetMostUsedId(result.colorCounts);

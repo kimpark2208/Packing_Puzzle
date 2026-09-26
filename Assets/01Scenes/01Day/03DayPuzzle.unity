@@ -382,9 +382,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::WrapperBoardController
   slotArea: {fileID: 1462744562}
-  slotSize: 110
-  slotGapX: 20
-  rowGapY: 140
+  slotSize: 100
+  baseRadius: 90
+  ringSpacing: 110
+  backgroundSprite: {fileID: 21300000, guid: 6757d2c82fb31b84aa45f9abe47c4bdb, type: 3}
 --- !u!1 &294202328
 GameObject:
   m_ObjectHideFlags: 0

@@ -1,8 +1,11 @@
+using System.Collections.Generic;
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
 /// <summary>
-/// 포장지 템플릿 안의 꽃 슬롯 하나. 정해진 태그의 꽃만 받을 수 있다.
+/// 포장지 템플릿 안의 꽃 영역 하나(태그+면 조합당 1칸). 정해진 태그의 꽃만 받을 수 있고,
+/// 필요한 개수(requiredCount)만큼 반복해서 놓을 수 있다(마지막에 놓은 꽃의 아이콘 + "채운 개수/필요 개수" 표시).
 /// WrapperBoardController가 런타임에 절차적으로 생성하고 배치한다.
 /// </summary>
 public class WrapperSlot : MonoBehaviour
@@ -11,13 +14,18 @@ public class WrapperSlot : MonoBehaviour
 
     [HideInInspector] public BlockData.FlowerTag flowerTag;
     [HideInInspector] public Side side;
-    [HideInInspector] public int ringIndex;   // 태그 영역(라인/매스/품/필러) 순서
-    [HideInInspector] public int orderInRing; // 같은 영역 안에서 배치 순서 (색 조합 인접 판정용)
+    [HideInInspector] public int requiredCount = 1;
 
-    public BlockData PlacedFlower { get; private set; }
+    private readonly List<BlockData> placed = new();
+
+    public IReadOnlyList<BlockData> PlacedFlowers => placed;
+    public int FilledCount => placed.Count;
+    public bool IsFull => placed.Count >= requiredCount;
+    public BlockData LastPlaced => placed.Count > 0 ? placed[^1] : null;
 
     private Image background;
     private Image icon;
+    private TMP_Text countLabel;
 
     private void Awake()
     {
@@ -38,34 +46,61 @@ public class WrapperSlot : MonoBehaviour
         icon = iconT.GetComponent<Image>();
         icon.enabled = false;
         icon.preserveAspect = true;
+
+        Transform labelT = transform.Find("CountLabel");
+        if (labelT == null)
+        {
+            var labelGO = new GameObject("CountLabel", typeof(RectTransform), typeof(TextMeshProUGUI));
+            labelGO.transform.SetParent(transform, false);
+            var rt = (RectTransform)labelGO.transform;
+            rt.anchorMin = new Vector2(1f, 0f);
+            rt.anchorMax = new Vector2(1f, 0f);
+            rt.pivot = new Vector2(1f, 0f);
+            rt.sizeDelta = new Vector2(40f, 24f);
+            rt.anchoredPosition = new Vector2(-2f, 2f);
+            labelT = labelGO.transform;
+        }
+        countLabel = labelT.GetComponent<TextMeshProUGUI>();
+        countLabel.fontSize = 20f;
+        countLabel.alignment = TextAlignmentOptions.BottomRight;
+        countLabel.color = Color.black;
     }
 
     public void SetEmptyVisual(Color tagColor)
     {
         if (background != null) background.color = tagColor;
         if (icon != null) icon.enabled = false;
+        RefreshCountLabel();
     }
 
     /// <summary>드래그해온 꽃이 이 슬롯에 들어갈 수 있는지 확인.</summary>
     public bool CanAccept(BlockData flower)
     {
-        return PlacedFlower == null && flower != null && flower.flowerTag == flowerTag;
+        return !IsFull && flower != null && flower.flowerTag == flowerTag;
     }
 
     public void Place(BlockData flower)
     {
-        PlacedFlower = flower;
+        placed.Add(flower);
         if (icon != null)
         {
             icon.sprite = flower.flowerIcon != null ? flower.flowerIcon : flower.blockImage;
             icon.color = ColorPalette.ToUnityColor(flower.color);
             icon.enabled = true;
         }
+        RefreshCountLabel();
     }
 
     public void Clear()
     {
-        PlacedFlower = null;
+        placed.Clear();
         if (icon != null) icon.enabled = false;
+        RefreshCountLabel();
+    }
+
+    private void RefreshCountLabel()
+    {
+        if (countLabel == null) return;
+        countLabel.text = requiredCount > 1 ? $"{FilledCount}/{requiredCount}" : "";
     }
 }
