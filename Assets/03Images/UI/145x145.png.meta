@@ -1,10 +1,10 @@
 fileFormatVersion: 2
-guid: 48ce1ba7993f2d5419e5b7a433da0618
+guid: bef8feec2e2df0f44b9ea64c5ebfa596
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: -9191700344516733671
-    second: HambugerIcon_0
+      213: -5634462399241585150
+    second: 145x145_0
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -126,23 +126,23 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: HambugerIcon_0
+      name: 145x145_0
       rect:
         serializedVersion: 2
         x: 0
         y: 0
-        width: 85
-        height: 90
+        width: 145
+        height: 144
       alignment: 0
-      pivot: {x: 0.5, y: 0.5}
-      border: {x: 18, y: 17, z: 17, w: 18}
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 9159e338c35807080800000000000000
-      internalID: -9191700344516733671
+      spriteID: 20ef8e0fc4e5ec1b0800000000000000
+      internalID: -5634462399241585150
       vertices: []
       indices: 
       edges: []
@@ -151,7 +151,7 @@ TextureImporter:
     customData: 
     physicsShape: []
     bones: []
-    spriteID: b7897f5ada661b64c98bdab0f55e8a05
+    spriteID: 
     internalID: 0
     vertices: []
     indices: 
@@ -161,7 +161,7 @@ TextureImporter:
     spriteCustomMetadata:
       entries: []
     nameFileIdTable:
-      HambugerIcon_0: -9191700344516733671
+      145x145_0: -5634462399241585150
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 
