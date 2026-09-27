@@ -13,8 +13,8 @@ MonoBehaviour:
   m_Name: SO_05_TrominoL_Yellow
   m_EditorClassIdentifier: Assembly-CSharp::BlockData
   blockID: 5
+  flowerName: "\uD574\uBC14\uB77C\uAE30"
   color: 2
-  flowerTag: 1
   unlockWrapperTier: 1
   shapeGrid:
   - cols: 0100

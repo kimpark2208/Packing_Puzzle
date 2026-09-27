@@ -3,7 +3,7 @@ using UnityEngine;
 /// <summary>
 /// 낮 퍼즐(손님 주문) 절차적 생성.
 /// 손님 등장 시 힌트(포장지 색/크기 표현)만 준비하고, 플레이어가 포장지를 고르면
-/// 그 포장지의 단계(tier)에 맞는 태그 요구 레벨(WrapperLevelDatabase)을 확정한다.
+/// 그 포장지의 단계(tier)를 확정한다.
 /// </summary>
 public static class DayPuzzleGenerator
 {
@@ -23,7 +23,6 @@ public static class DayPuzzleGenerator
         public bool isFinalized;
         public int wrapperId;
         public int tier;
-        public WrapperLevelDatabase.LevelDef level;
     }
 
     /// <summary>손님이 막 등장했을 때 호출. 아직 포장지는 정하지 않고 힌트만 준비한다.</summary>
@@ -42,12 +41,11 @@ public static class DayPuzzleGenerator
         };
     }
 
-    /// <summary>플레이어가 포장지를 골랐을 때 호출. 그 포장지 단계의 태그 요구 레벨을 확정한다.</summary>
+    /// <summary>플레이어가 포장지를 골랐을 때 호출. 그 포장지의 단계(tier)를 확정한다.</summary>
     public static void FinalizeForWrapper(DayOrder order, int chosenWrapperId)
     {
         order.wrapperId = chosenWrapperId;
         order.tier = ShopManager.Instance.GetTier(chosenWrapperId);
-        order.level = WrapperLevelDatabase.GetLevel(order.tier);
         order.isFinalized = true;
     }
 }

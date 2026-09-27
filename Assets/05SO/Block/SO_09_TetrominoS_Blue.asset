@@ -13,8 +13,8 @@ MonoBehaviour:
   m_Name: SO_09_TetrominoS_Blue
   m_EditorClassIdentifier: Assembly-CSharp::BlockData
   blockID: 9
+  flowerName: "\uD504\uB9AC\uC9C0\uC544"
   color: 1
-  flowerTag: 3
   unlockWrapperTier: 1
   shapeGrid:
   - cols: 000101

@@ -177,6 +177,14 @@ public class FlowerSelectUI : MonoBehaviour
         img.color = selected.Contains(block) ? SelectedColor : ItemColor;
         itemImages[block] = img;
 
+        Transform nameT = slot.Find("NameBack/FlowerName");
+        var nameText = nameT != null ? nameT.GetComponent<TMP_Text>() : null;
+        if (nameText != null) nameText.text = block.flowerName;
+
+        Transform colorMarkerT = slot.Find("ColorMarker_temp");
+        var colorMarker = colorMarkerT != null ? colorMarkerT.GetComponent<Image>() : null;
+        if (colorMarker != null) colorMarker.color = ColorPalette.ToUnityColor(block.color);
+
         var btn = imgT.GetComponent<Button>();
         if (btn != null)
         {
@@ -208,7 +216,7 @@ public class FlowerSelectUI : MonoBehaviour
         if (flowerCurSelectedText == null) return;
         flowerCurSelectedText.text = selected.Count == 0
             ? "선택된 꽃 없음"
-            : string.Join(", ", selected.Select(b => $"#{b.blockID}"));
+            : string.Join(", ", selected.Select(b => b.flowerName));
     }
 
     private void OnConfirm()

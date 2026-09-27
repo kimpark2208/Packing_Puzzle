@@ -50,17 +50,21 @@ public class GachaManager : MonoBehaviour
 
     private void Start()
     {
+        // pieceViewPrefab이 트레이 안에 미리 배치된 하이라키 템플릿이면(하이라키 안에 그대로 보이던 것),
+        // 평소엔 숨겨두고 뽑을 때마다 복제해서 쓴다.
+        if (pieceViewPrefab != null && pieceViewPrefab.transform.IsChildOf(tray))
+        {
+            pieceViewPrefab.SetActive(false);
+        }
+
         if (gachaButton != null) gachaButton.onClick.AddListener(Gacha);
 
-        // 낮 퍼즐 씬 진입 시, 꽃 선택 화면에서 고른 풀과 포장지 레벨의 리롤 횟수를 스스로 가져온다.
+        // 낮 퍼즐 씬 진입 시, 꽃 선택 화면에서 고른 풀을 스스로 가져온다.
         // (DayPuzzleUI 등 다른 스크립트의 Start 순서에 의존하지 않기 위함)
         if (GameFlowController.Instance != null && GameFlowController.Instance.ChosenGachaPool.Count > 0)
         {
             SetPool(GameFlowController.Instance.ChosenGachaPool);
         }
-
-        var level = GameFlowController.Instance != null ? GameFlowController.Instance.CurrentDayOrder?.level : null;
-        if (level != null) SetMaxRerolls(level.maxRerolls);
     }
 
     /// <summary>FlowerSelect 화면에서 플레이어가 고른 3종(가변 개수)의 꽃으로 가챠 풀을 세팅한다.</summary>
@@ -91,17 +95,19 @@ public class GachaManager : MonoBehaviour
         {
             BlockData picked = pool[Random.Range(0, pool.Count)];
             GameObject block = Instantiate(pieceViewPrefab, tray, false);
+            block.SetActive(true); // pieceViewPrefab이 숨겨진 템플릿이어도 복제본은 보이게
 
+            // FlowerTemplate 자체엔 BlockDrag가 없으므로(선택 화면에서도 같이 쓰는 공용 템플릿) 트레이 조각에서만 붙여준다.
             BlockDrag draggable = block.GetComponent<BlockDrag>();
-            if (draggable != null)
-            {
-                draggable.blockData = picked;
-                draggable.OnPlaced += HandleBlockPlaced;
-            }
-            else
-            {
-                Debug.LogWarning("[GachaManager] pieceViewPrefab에 BlockDrag 컴포넌트가 없습니다.");
-            }
+            if (draggable == null) draggable = block.AddComponent<BlockDrag>();
+
+            draggable.blockData = picked;
+            draggable.OnPlaced += HandleBlockPlaced;
+
+            // FlowerImage의 Button은 선택 화면(클릭으로 고르기)용이라 드래그로 놓는 트레이에서는 꺼둔다.
+            Transform flowerImageT = block.transform.Find("FlowerImage");
+            var flowerButton = flowerImageT != null ? flowerImageT.GetComponent<Button>() : null;
+            if (flowerButton != null) flowerButton.enabled = false;
 
             curSpawned.Add(block);
         }

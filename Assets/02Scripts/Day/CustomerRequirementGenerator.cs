@@ -60,7 +60,9 @@ public static class CustomerRequirementGenerator
         requirement.minCount = Random.Range(1, 4);  // 1~3개
         requirement.bonusAmount = Random.Range(150, 351);  // 150~350
 
-        requirement.description = $"<b>꽃 ID {requirement.targetId}</b>을(를) <b>{requirement.minCount}개</b> 사용하세요";
+        var flower = BlockDatabase.Instance != null ? BlockDatabase.Instance.GetById(requirement.targetId) : null;
+        string flowerName = flower != null && !string.IsNullOrEmpty(flower.flowerName) ? flower.flowerName : $"꽃 ID {requirement.targetId}";
+        requirement.description = $"<b>{flowerName}</b>을(를) <b>{requirement.minCount}개</b> 사용하세요";
     }
 
     /// <summary>

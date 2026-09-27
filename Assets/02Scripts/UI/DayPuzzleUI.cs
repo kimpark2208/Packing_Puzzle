@@ -20,19 +20,21 @@ public class DayPuzzleUI : MonoBehaviour
     [SerializeField] private TMP_Text collapseBodyText;
     [SerializeField] private Button collapseConfirmButton;
 
+    private const float CollapseAutoProceedDelay = 1.2f;
+
     private WrapperBoardController board;
     private GachaManager gacha;
     private bool roundEnded;
+    private bool collapseHandled;
 
     private void Start()
     {
         board = WrapperBoardController.Instance;
         gacha = FindFirstObjectByType<GachaManager>();
 
-        var order = GameFlowController.Instance != null ? GameFlowController.Instance.CurrentDayOrder : null;
-        if (board != null && order?.level != null)
+        if (board != null)
         {
-            board.BuildLevel(order.level);
+            board.BuildLevel();
             board.OnFlowerPlaced += HandleFlowerPlaced;
         }
 
@@ -61,6 +63,7 @@ public class DayPuzzleUI : MonoBehaviour
 
         if (board.IsCollapsed())
         {
+            roundEnded = true;
             ShowCollapsePopup();
             return;
         }
@@ -84,22 +87,33 @@ public class DayPuzzleUI : MonoBehaviour
 
     private void ShowCollapsePopup()
     {
+        collapseHandled = false;
         if (collapseBodyText != null) collapseBodyText.text = "꽃다발이 한쪽으로 기울며 무너졌어요!\n손님이 크게 실망합니다...";
         if (collapsePopup != null) collapsePopup.SetActive(true);
+        StartCoroutine(AutoProceedAfterCollapse());
+    }
+
+    /// <summary>붕괴는 확인 버튼을 누를 때까지 기다리지 않고, 잠깐 보여준 뒤 바로 다음 손님으로 넘어간다.</summary>
+    private System.Collections.IEnumerator AutoProceedAfterCollapse()
+    {
+        yield return new WaitForSeconds(CollapseAutoProceedDelay);
+        OnCollapseConfirmed();
     }
 
     private void OnCollapseConfirmed()
     {
-        if (collapsePopup != null) collapsePopup.SetActive(false);
+        if (collapseHandled) return;
+        collapseHandled = true;
 
-        board?.ClearAllPlacements();
-        gacha?.RestartAttempt();
+        if (collapsePopup != null) collapsePopup.SetActive(false);
+        if (GameFlowController.Instance == null) return;
+        GameFlowController.Instance.ReturnToDayMainAngry("장사접으세요");
     }
 
     private void OnResultConfirmed()
     {
         if (resultPopup != null) resultPopup.SetActive(false);
         if (GameFlowController.Instance == null) return;
-        GameFlowController.Instance.ProceedToNightMain();
+        GameFlowController.Instance.BeginNewDay();
     }
 }

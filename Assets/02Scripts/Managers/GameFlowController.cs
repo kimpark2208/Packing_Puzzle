@@ -25,6 +25,8 @@ public class GameFlowController : Singleton<GameFlowController>
     public DayPuzzleGenerator.DayOrder CurrentDayOrder { get; private set; }
     public List<BlockData> ChosenGachaPool { get; private set; } = new();
 
+    private string pendingCustomerLine;
+
     private List<NightPuzzleData> nightQueue = new();
     private int nightIndex;
 
@@ -78,6 +80,21 @@ public class GameFlowController : Singleton<GameFlowController>
     public void ProceedToNightMain()
     {
         SceneManager.LoadScene(SceneDayToNight);
+    }
+
+    /// <summary>꽃다발 붕괴처럼 손님이 화나서 돌아갈 때. 데이메인으로 돌아가면 손님이 이 대사를 말한다.</summary>
+    public void ReturnToDayMainAngry(string customerLine)
+    {
+        pendingCustomerLine = customerLine;
+        BeginNewDay();
+    }
+
+    /// <summary>데이메인 진입 시 화난 손님 대사가 예약되어 있으면 한 번 꺼내 쓰고 지운다.</summary>
+    public string ConsumePendingCustomerLine()
+    {
+        string line = pendingCustomerLine;
+        pendingCustomerLine = null;
+        return line;
     }
 
     // ========== 밤 ==========

@@ -1,25 +1,10 @@
 fileFormatVersion: 2
-guid: 25fb3f7352556054085b3bdb4e386f5f
+guid: 7e274df733ef5274ba1284f52faacc37
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: 8432595143152712025
-    second: Light_Night_0
-  - first:
-      213: 5868427812930968069
-    second: Light_Night_1
-  - first:
-      213: -902837106195479615
-    second: Light_Night_2
-  - first:
-      213: -8399267075024870001
-    second: Light_Night_3
-  - first:
-      213: 2485663160323328755
-    second: Light_Night_4
-  - first:
-      213: 6723223054753081659
-    second: Light_Night_5
+      213: 8456872963467847136
+    second: Light_Day 1_0
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -141,13 +126,13 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: Light_Night_0
+      name: Light_Day 1_0
       rect:
         serializedVersion: 2
         x: 0
         y: 0
-        width: 511
-        height: 367
+        width: 500
+        height: 300
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -156,8 +141,8 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 9593d4ada98960570800000000000000
-      internalID: 8432595143152712025
+      spriteID: 0e52b126729dc5570800000000000000
+      internalID: 8456872963467847136
       vertices: []
       indices: 
       edges: []
@@ -166,7 +151,7 @@ TextureImporter:
     customData: 
     physicsShape: []
     bones: []
-    spriteID: a6b2f1117c266e5429b6a176869334da
+    spriteID: dd100e3136d348b4a94bf7c8ceed3d14
     internalID: 0
     vertices: []
     indices: 
@@ -174,11 +159,9 @@ TextureImporter:
     weights: []
     secondaryTextures: []
     spriteCustomMetadata:
-      entries:
-      - key: SpriteEditor.SliceSettings
-        value: '{"sliceOnImport":false,"gridCellCount":{"x":1.0,"y":1.0},"gridSpriteSize":{"x":511.0,"y":367.0},"gridSpriteOffset":{"x":0.0,"y":0.0},"gridSpritePadding":{"x":0.0,"y":0.0},"pivot":{"x":0.5,"y":0.5},"pivotPixels":{"x":0.0,"y":0.0},"autoSlicingMethod":0,"spriteAlignment":0,"pivotUnitMode":0,"slicingType":2,"keepEmptyRects":false,"isAlternate":false}'
+      entries: []
     nameFileIdTable:
-      Light_Night_0: 8432595143152712025
+      Light_Day 1_0: 8456872963467847136
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

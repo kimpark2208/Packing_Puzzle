@@ -18,11 +18,13 @@ public class DayMainUI : MonoBehaviour
     private enum CatalogTab { Artifacts, Wrapper, Furniture }
 
     private const string RejectLine = "거절할순없으세요";
+    private const string ForceAcceptLine = "그래요라고 하세요";
 
     [SerializeField] private TMP_Text moneyText;
     [SerializeField] private TMP_Text bubbleText;
     [SerializeField] private Button askButton;
     [SerializeField] private Button acceptButton;
+    [SerializeField] private Button lanternButton;
 
     [Header("설정 팝업")]
     [SerializeField] private Button preferencesButton;
@@ -42,6 +44,7 @@ public class DayMainUI : MonoBehaviour
     private DayPuzzleGenerator.DayOrder order;
     private bool initialized;
     private bool catalogOpen;
+    private bool showingAngryLine;
 
     public void Initialize(DayPuzzleGenerator.DayOrder dayOrder)
     {
@@ -54,9 +57,11 @@ public class DayMainUI : MonoBehaviour
         if (moneyText != null) moneyText.text = currency != null ? $"{currency.CurrentMoney}원" : "0원";
 
         if (askButton != null) askButton.onClick.AddListener(OnRejectClicked);
-        if (acceptButton != null) acceptButton.onClick.AddListener(() =>
+        if (acceptButton != null) acceptButton.onClick.AddListener(OnAcceptClicked);
+
+        if (lanternButton != null) lanternButton.onClick.AddListener(() =>
         {
-            if (GameFlowController.Instance != null) GameFlowController.Instance.GoToFlowerSelect();
+            if (GameFlowController.Instance != null) GameFlowController.Instance.ProceedToNightMain();
         });
 
         if (preferencesButton != null) preferencesButton.onClick.AddListener(OpenPreferences);
@@ -71,7 +76,12 @@ public class DayMainUI : MonoBehaviour
         if (catalogPopup != null) catalogPopup.SetActive(false);
         SwitchCatalogTab(CatalogTab.Wrapper);
 
-        RefreshBubbleText();
+        string angryLine = GameFlowController.Instance != null ? GameFlowController.Instance.ConsumePendingCustomerLine() : null;
+        showingAngryLine = !string.IsNullOrEmpty(angryLine);
+        if (showingAngryLine && bubbleText != null)
+            bubbleText.text = angryLine;
+        else
+            RefreshBubbleText();
     }
 
     private void Start()
@@ -84,7 +94,20 @@ public class DayMainUI : MonoBehaviour
 
     private void OnRejectClicked()
     {
-        if (bubbleText != null) bubbleText.text = RejectLine;
+        if (bubbleText == null) return;
+        bubbleText.text = showingAngryLine ? ForceAcceptLine : RejectLine;
+    }
+
+    private void OnAcceptClicked()
+    {
+        if (showingAngryLine)
+        {
+            showingAngryLine = false;
+            RefreshBubbleText();
+            return;
+        }
+
+        if (GameFlowController.Instance != null) GameFlowController.Instance.GoToFlowerSelect();
     }
 
     private void RefreshBubbleText()
