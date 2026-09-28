@@ -15,6 +15,7 @@ MonoBehaviour:
   blockID: 5
   flowerName: "\uD574\uBC14\uB77C\uAE30"
   color: 2
+  flowerRole: 2
   unlockWrapperTier: 1
   shapeGrid:
   - cols: 0100

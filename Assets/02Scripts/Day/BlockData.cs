@@ -20,10 +20,20 @@ public class BlockData : ScriptableObject
         Purple
     }
 
+    /// <summary>꽃꽂이 디자인 역할(라인/매스/폼/필러).</summary>
+    public enum FlowerRole
+    {
+        Line,
+        Mass,
+        Form,
+        Filler
+    }
+
     [Header("블록 정보")]
     public int blockID;
     public string flowerName;
     public Color color;
+    public FlowerRole flowerRole;
 
     [Header("이 꽃을 사용하려면 필요한 최소 포장지 단계 (1부터 시작, 누적 해금)")]
     public int unlockWrapperTier = 1;

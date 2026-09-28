@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using TMPro;
@@ -18,7 +19,6 @@ public class FlowerSelectUI : MonoBehaviour
     // 포장지 레벨이 올라가면 라인/매스/품/필러 4태그가 모두 필요해질 수 있어 3에서 5로 상향.
     private const int MaxSelectable = 5;
 
-    private static readonly Color ItemColor = Color.white;
     private static readonly Color SelectedColor = new(0.65f, 0.85f, 0.70f);
     private static readonly Color WrapperColor = new(0.85f, 0.80f, 0.95f);
     private static readonly Color WrapperSelectedColor = new(0.55f, 0.45f, 0.85f);
@@ -118,20 +118,19 @@ public class FlowerSelectUI : MonoBehaviour
         if (wrapperPopup != null) wrapperPopup.SetActive(false);
         if (flowerPopup != null) flowerPopup.SetActive(true);
 
-        BuildFlowerChoices(order);
+        BuildFlowerChoices();
     }
 
-    private void BuildFlowerChoices(DayPuzzleGenerator.DayOrder order)
+    /// <summary>포장지 단계/보유 여부와 상관없이 등록된 모든 꽃을 후보로 보여준다.</summary>
+    private void BuildFlowerChoices()
     {
         itemImages.Clear();
         selected.Clear();
         UpdateBucketPreview();
 
-        if (ShopManager.Instance == null || CurrencyManager.Instance == null || BlockDatabase.Instance == null) return;
+        if (BlockDatabase.Instance == null) return;
 
-        int tier = ShopManager.Instance.GetTier(order.wrapperId);
-        var obtainedIds = CurrencyManager.Instance.GetObtainedFlowerIds();
-        currentCandidates = BlockDatabase.Instance.GetObtainedBlocksForWrapperTier(obtainedIds, tier);
+        currentCandidates = new List<BlockData>(BlockDatabase.Instance.AllBlocks);
 
         ApplySort();
     }
@@ -147,7 +146,7 @@ public class FlowerSelectUI : MonoBehaviour
         IEnumerable<BlockData> sorted = mode switch
         {
             SortMode.Size => currentCandidates.OrderBy(b => b.CellCount),
-            SortMode.Name => currentCandidates.OrderBy(b => b.name),
+            SortMode.Name => currentCandidates.OrderBy(b => b.flowerName, StringComparer.Ordinal),
             _ => currentCandidates.OrderBy(b => (int)b.color)
         };
         var sortedList = sorted.ToList();
@@ -174,7 +173,7 @@ public class FlowerSelectUI : MonoBehaviour
         if (img == null) return;
 
         img.sprite = block.flowerIcon != null ? block.flowerIcon : block.blockImage;
-        img.color = selected.Contains(block) ? SelectedColor : ItemColor;
+        img.color = GetIconColor(block);
         itemImages[block] = img;
 
         Transform nameT = slot.Find("NameBack/FlowerName");
@@ -206,9 +205,16 @@ public class FlowerSelectUI : MonoBehaviour
         }
 
         if (itemImages.TryGetValue(block, out var img))
-            img.color = selected.Contains(block) ? SelectedColor : ItemColor;
+            img.color = GetIconColor(block);
 
         UpdateBucketPreview();
+    }
+
+    /// <summary>꽃 고유 색으로 틴트하되, 선택된 상태면 선택 강조색을 곱해 구분한다.</summary>
+    private Color GetIconColor(BlockData block)
+    {
+        Color tint = ColorPalette.ToUnityColor(block.color);
+        return selected.Contains(block) ? tint * SelectedColor : tint;
     }
 
     private void UpdateBucketPreview()

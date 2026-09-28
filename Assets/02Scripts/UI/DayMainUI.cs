@@ -18,7 +18,7 @@ public class DayMainUI : MonoBehaviour
     private enum CatalogTab { Artifacts, Wrapper, Furniture }
 
     private const string RejectLine = "거절할순없으세요";
-    private const string ForceAcceptLine = "그래요라고 하세요";
+    private const string DefaultForceAcceptLine = "그래요라고 하세요";
 
     [SerializeField] private TMP_Text moneyText;
     [SerializeField] private TMP_Text bubbleText;
@@ -45,6 +45,7 @@ public class DayMainUI : MonoBehaviour
     private bool initialized;
     private bool catalogOpen;
     private bool showingAngryLine;
+    private string forceAcceptLine = DefaultForceAcceptLine;
 
     public void Initialize(DayPuzzleGenerator.DayOrder dayOrder)
     {
@@ -78,10 +79,17 @@ public class DayMainUI : MonoBehaviour
 
         string angryLine = GameFlowController.Instance != null ? GameFlowController.Instance.ConsumePendingCustomerLine() : null;
         showingAngryLine = !string.IsNullOrEmpty(angryLine);
-        if (showingAngryLine && bubbleText != null)
-            bubbleText.text = angryLine;
+        if (showingAngryLine)
+        {
+            if (bubbleText != null) bubbleText.text = angryLine;
+            forceAcceptLine = GameFlowController.Instance != null
+                ? GameFlowController.Instance.ConsumePendingRejectResponseLine()
+                : DefaultForceAcceptLine;
+        }
         else
+        {
             RefreshBubbleText();
+        }
     }
 
     private void Start()
@@ -95,7 +103,7 @@ public class DayMainUI : MonoBehaviour
     private void OnRejectClicked()
     {
         if (bubbleText == null) return;
-        bubbleText.text = showingAngryLine ? ForceAcceptLine : RejectLine;
+        bubbleText.text = showingAngryLine ? forceAcceptLine : RejectLine;
     }
 
     private void OnAcceptClicked()

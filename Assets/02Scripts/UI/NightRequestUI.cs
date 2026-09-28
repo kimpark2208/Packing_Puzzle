@@ -12,6 +12,7 @@ public class NightRequestUI : MonoBehaviour
 {
     private static readonly Color ItemColor = new(0.25f, 0.22f, 0.35f);
     private static readonly Color SelectedColor = new(0.55f, 0.45f, 0.85f);
+    private static readonly Color SelectedIconTint = new(0.55f, 0.55f, 0.55f);
 
     [SerializeField] private RectTransform listArea;
     [SerializeField] private RectTransform itemTemplate;
@@ -20,6 +21,8 @@ public class NightRequestUI : MonoBehaviour
 
     private readonly HashSet<int> selected = new();
     private readonly Dictionary<int, Image> itemImages = new();
+    private readonly Dictionary<int, Image> iconImages = new();
+    private readonly Dictionary<int, Color> iconBaseTints = new();
 
     private void Start()
     {
@@ -48,6 +51,8 @@ public class NightRequestUI : MonoBehaviour
     {
         if (itemTemplate == null || listArea == null) return;
 
+        var block = BlockDatabase.Instance != null ? BlockDatabase.Instance.GetById(flowerId) : null;
+
         RectTransform itemRT = Instantiate(itemTemplate, listArea);
         itemRT.gameObject.SetActive(true);
         itemRT.name = $"Flower_{flowerId}";
@@ -59,24 +64,44 @@ public class NightRequestUI : MonoBehaviour
             itemImages[flowerId] = img;
         }
 
-        var label = itemRT.GetComponentInChildren<TMP_Text>();
-        if (label != null) label.text = $"꽃 #{flowerId}";
+        Transform flowerImageT = itemRT.Find("FlowerImage");
+        var flowerImage = flowerImageT != null ? flowerImageT.GetComponent<Image>() : null;
+        if (flowerImage != null && block != null)
+        {
+            Color tint = ColorPalette.ToUnityColor(block.color);
+            flowerImage.sprite = block.flowerIcon != null ? block.flowerIcon : block.blockImage;
+            flowerImage.color = tint;
+            iconImages[flowerId] = flowerImage;
+            iconBaseTints[flowerId] = tint;
+        }
 
-        var btn = itemRT.GetComponent<Button>();
+        Transform colorMarkerT = itemRT.Find("ColorMarker_temp");
+        var colorMarker = colorMarkerT != null ? colorMarkerT.GetComponent<Image>() : null;
+        if (colorMarker != null && block != null) colorMarker.color = ColorPalette.ToUnityColor(block.color);
+
+        Transform nameT = itemRT.Find("NameBack/FlowerName");
+        var nameText = nameT != null ? nameT.GetComponent<TMP_Text>() : null;
+        if (nameText != null) nameText.text = block != null ? block.flowerName : $"꽃 #{flowerId}";
+
+        var btn = flowerImageT != null ? flowerImageT.GetComponent<Button>() : null;
         if (btn != null) btn.onClick.AddListener(() => ToggleSelect(flowerId));
     }
 
     private void ToggleSelect(int flowerId)
     {
+        iconBaseTints.TryGetValue(flowerId, out var baseTint);
+
         if (selected.Contains(flowerId))
         {
             selected.Remove(flowerId);
             if (itemImages.TryGetValue(flowerId, out var img1)) img1.color = ItemColor;
+            if (iconImages.TryGetValue(flowerId, out var icon1)) icon1.color = baseTint;
         }
         else
         {
             selected.Add(flowerId);
             if (itemImages.TryGetValue(flowerId, out var img2)) img2.color = SelectedColor;
+            if (iconImages.TryGetValue(flowerId, out var icon2)) icon2.color = baseTint * SelectedIconTint;
         }
     }
 

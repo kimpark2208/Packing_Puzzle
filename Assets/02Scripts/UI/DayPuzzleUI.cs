@@ -20,12 +20,19 @@ public class DayPuzzleUI : MonoBehaviour
     [SerializeField] private TMP_Text collapseBodyText;
     [SerializeField] private Button collapseConfirmButton;
 
+    [Header("강제 제출")]
+    [SerializeField] private Button compulsionButton;
+
     private const float CollapseAutoProceedDelay = 1.2f;
+    private const string RequirementNotMetLine = "이게뭐예요!!";
+    private const string RequirementNotMetRejectResponse = "알긴 아시나보죠?";
+    private const string GoodResultLine = "좋네요!";
 
     private WrapperBoardController board;
     private GachaManager gacha;
     private bool roundEnded;
     private bool collapseHandled;
+    private PuzzleValidationResult lastResult;
 
     private void Start()
     {
@@ -43,6 +50,8 @@ public class DayPuzzleUI : MonoBehaviour
 
         if (collapsePopup != null) collapsePopup.SetActive(false);
         if (collapseConfirmButton != null) collapseConfirmButton.onClick.AddListener(OnCollapseConfirmed);
+
+        if (compulsionButton != null) compulsionButton.onClick.AddListener(OnCompulsionClicked);
     }
 
     private void OnDestroy()
@@ -75,8 +84,18 @@ public class DayPuzzleUI : MonoBehaviour
         }
     }
 
+    /// <summary>CompulsionBTN: 완성 여부와 상관없이 지금까지 놓인 꽃으로 강제 제출한다.</summary>
+    private void OnCompulsionClicked()
+    {
+        if (roundEnded || board == null) return;
+        roundEnded = true;
+        ShowResultPopup(PuzzleValidator.ValidateSuccess());
+    }
+
     private void ShowResultPopup(PuzzleValidationResult result)
     {
+        lastResult = result;
+
         string body = result.success
             ? $"꽃다발을 완성했어요!\n색 조합 보너스: {result.colorBonus}\n{(result.requirementMet ? $"고객 요구사항 달성! +{result.requirementBonus}" : "고객 요구사항 미달성")}\n\n매출: {result.totalEarnings}원"
             : "리롤을 모두 사용했지만 꽃다발을 완성하지 못했어요...\n\n매출: 0원";
@@ -114,6 +133,14 @@ public class DayPuzzleUI : MonoBehaviour
     {
         if (resultPopup != null) resultPopup.SetActive(false);
         if (GameFlowController.Instance == null) return;
-        GameFlowController.Instance.BeginNewDay();
+
+        // 완성/강제제출로 끝났는데(=success 경로) 고객 요구사항을 못 채웠으면 손님이 화내고,
+        // 요구사항까지 채웠으면 만족한다. 리롤 소진 실패(success=false)는 그냥 다음 손님으로.
+        if (lastResult.success && !lastResult.requirementMet)
+            GameFlowController.Instance.ReturnToDayMainAngry(RequirementNotMetLine, RequirementNotMetRejectResponse);
+        else if (lastResult.success && lastResult.requirementMet)
+            GameFlowController.Instance.ReturnToDayMainAngry(GoodResultLine);
+        else
+            GameFlowController.Instance.BeginNewDay();
     }
 }

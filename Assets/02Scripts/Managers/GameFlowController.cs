@@ -25,7 +25,10 @@ public class GameFlowController : Singleton<GameFlowController>
     public DayPuzzleGenerator.DayOrder CurrentDayOrder { get; private set; }
     public List<BlockData> ChosenGachaPool { get; private set; } = new();
 
+    private const string DefaultRejectResponseLine = "그래요라고 하세요";
+
     private string pendingCustomerLine;
+    private string pendingRejectResponseLine = DefaultRejectResponseLine;
 
     private List<NightPuzzleData> nightQueue = new();
     private int nightIndex;
@@ -82,10 +85,12 @@ public class GameFlowController : Singleton<GameFlowController>
         SceneManager.LoadScene(SceneDayToNight);
     }
 
-    /// <summary>꽃다발 붕괴처럼 손님이 화나서 돌아갈 때. 데이메인으로 돌아가면 손님이 이 대사를 말한다.</summary>
-    public void ReturnToDayMainAngry(string customerLine)
+    /// <summary>꽃다발 붕괴/요구사항 미달성처럼 손님이 화나서 돌아갈 때. 데이메인으로 돌아가면 손님이 이 대사를 말한다.
+    /// rejectResponseLine은 "이건아니지"를 눌렀을 때 나오는 대사(기본값: "그래요라고 하세요").</summary>
+    public void ReturnToDayMainAngry(string customerLine, string rejectResponseLine = DefaultRejectResponseLine)
     {
         pendingCustomerLine = customerLine;
+        pendingRejectResponseLine = rejectResponseLine;
         BeginNewDay();
     }
 
@@ -94,6 +99,14 @@ public class GameFlowController : Singleton<GameFlowController>
     {
         string line = pendingCustomerLine;
         pendingCustomerLine = null;
+        return line;
+    }
+
+    /// <summary>화난 손님에게 "이건아니지"로 반박했을 때 나올 대사를 꺼내 쓰고 기본값으로 되돌린다.</summary>
+    public string ConsumePendingRejectResponseLine()
+    {
+        string line = pendingRejectResponseLine;
+        pendingRejectResponseLine = DefaultRejectResponseLine;
         return line;
     }
 
