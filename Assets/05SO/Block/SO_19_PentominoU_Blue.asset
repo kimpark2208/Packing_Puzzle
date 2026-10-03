@@ -1,0 +1,27 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 74a634c29bfedc144ae03bdc4755ce48, type: 3}
+  m_Name: SO_19_PentominoU_Blue
+  m_EditorClassIdentifier: Assembly-CSharp::FlowerData
+  blockID: 19
+  flowerName: "\uC791\uC57D"
+  color: 1
+  flowerRole: 1
+  shapeGrid:
+  - cols: 010001
+  - cols: 010101
+  anchorCoord: {x: 1, y: 1}
+  iconSprite: {fileID: 21300000, guid: 8723d8210f31df041af877dc6233a511, type: 3}
+  stemSprite: {fileID: 5856240631183992178, guid: b9f97a0c03bea8c49ac2b17ce37cf466, type: 3}
+  nightCellSprite: {fileID: 21300000, guid: 8723d8210f31df041af877dc6233a511, type: 3}
+  dayPieceSprite: {fileID: 21300000, guid: f58d1329dbb582c4facd343aa9704736, type: 3}
+  dayFillSprite: {fileID: 1087625391282943612, guid: 7396b96ef78be49498374dbdc2d37747, type: 3}

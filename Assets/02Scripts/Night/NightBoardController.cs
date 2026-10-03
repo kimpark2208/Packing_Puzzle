@@ -8,7 +8,7 @@ using UnityEngine.UI;
 /// <summary>
 /// 일반/잉여 밤 퍼즐 보드.
 /// 한 번의 드래그로 하나의 블럭을 배치한다. 드래그 도중 같은 칸을 재통과해도 취소하지 않으며,
-/// 처음 방문한 고유 셀의 집합만 후보 BlockData들의 회전/반전 변형과 비교한다.
+/// 처음 방문한 고유 셀의 집합만 후보 FlowerData들의 회전/반전 변형과 비교한다.
 /// GameFlowController가 밤 시간대에 생성된 퍼즐 큐를 순서대로 이 컨트롤러에 넘겨준다.
 /// </summary>
 public class NightBoardController : MonoBehaviour
@@ -20,7 +20,7 @@ public class NightBoardController : MonoBehaviour
 
     [Header("Test Only (인스펙터에서 직접 테스트할 때)")]
     [SerializeField] private int testGridSize = 5;
-    [SerializeField] private List<BlockData> testAllowedBlocks = new();
+    [SerializeField] private List<FlowerData> testAllowedBlocks = new();
 
     [Header("모바일 터치 오차 허용")]
     [Tooltip("각 칸의 터치 판정 영역을 시각적 경계보다 이만큼(px) 더 넓힌다. 특히 그리드 가장자리 칸은 바깥쪽으로 여유가 없어 손가락이 살짝 벗어나면 아예 아무 칸도 감지되지 않는데, 이를 완화한다.")]
@@ -44,7 +44,7 @@ public class NightBoardController : MonoBehaviour
     private bool isDrawing;
     private bool currentDrawIsInvalid;
 
-    public INightPuzzleValidator Validator { get; set; }
+    public NightShapePuzzleValidator Validator { get; set; }
 
     /// <summary>이번 퍼즐이 완료되어 획득한 꽃 ID 목록과 함께 발생.</summary>
     public event System.Action<List<int>> OnStagePuzzleCompleted;
@@ -81,7 +81,7 @@ public class NightBoardController : MonoBehaviour
     }
 
     /// <summary>GameFlowController가 절차적으로 생성한 퍼즐 하나를 이 보드에 로드한다.</summary>
-    public void LoadPuzzle(int size, List<BlockData> allowedBlocks, bool[,] wallGrid)
+    public void LoadPuzzle(int size, List<FlowerData> allowedBlocks, bool[,] wallGrid)
     {
         loadedExternally = true;
         shapeValidator = new NightShapePuzzleValidator(allowedBlocks, wallGrid);
@@ -90,7 +90,7 @@ public class NightBoardController : MonoBehaviour
         UpdateFlowerBlockPreview(allowedBlocks);
     }
 
-    public void LoadPuzzle(NightPuzzleData data, List<BlockData> allowedBlocks)
+    public void LoadPuzzle(NightPuzzleData data, List<FlowerData> allowedBlocks)
     {
         LoadPuzzle(data.gridSize, allowedBlocks, data.wallGrid ?? new bool[data.gridSize, data.gridSize]);
     }
@@ -101,7 +101,7 @@ public class NightBoardController : MonoBehaviour
     /// 기준으로 맞춰버려서 컨테이너가 커지면 미리보기도 같이 커지는 문제가 있었다. 그래서 크기/위치를
     /// 직접 계산해서 배치한다(컨테이너 크기와 무관하게 항상 flowerBlockPreviewSize 기준 크기로 보임).
     /// </summary>
-    private void UpdateFlowerBlockPreview(List<BlockData> allowedBlocks)
+    private void UpdateFlowerBlockPreview(List<FlowerData> allowedBlocks)
     {
         if (flowerBlockContainer == null) return;
 
@@ -112,14 +112,14 @@ public class NightBoardController : MonoBehaviour
 
         if (allowedBlocks == null) return;
 
-        var validBlocks = allowedBlocks.Where(b => b != null && b.blockImage != null).ToList();
+        var validBlocks = allowedBlocks.Where(b => b != null && b.dayPieceSprite != null).ToList();
         if (validBlocks.Count == 0) return;
 
         const float spacing = 12f;
         var sizes = new List<Vector2>();
-        foreach (BlockData block in validBlocks)
+        foreach (FlowerData block in validBlocks)
         {
-            float aspect = block.blockImage.rect.width / block.blockImage.rect.height;
+            float aspect = block.dayPieceSprite.rect.width / block.dayPieceSprite.rect.height;
             float w = flowerBlockPreviewSize;
             float h = flowerBlockPreviewSize;
             if (aspect >= 1f) h = w / aspect; else w = h * aspect;
@@ -131,7 +131,7 @@ public class NightBoardController : MonoBehaviour
 
         for (int i = 0; i < validBlocks.Count; i++)
         {
-            BlockData block = validBlocks[i];
+            FlowerData block = validBlocks[i];
             Vector2 size = sizes[i];
 
             GameObject previewGO = new GameObject($"BlockPreview_{block.blockID}", typeof(RectTransform), typeof(Image));
@@ -144,7 +144,7 @@ public class NightBoardController : MonoBehaviour
             rt.anchoredPosition = new Vector2(x + size.x / 2f, 0f);
 
             var image = previewGO.GetComponent<Image>();
-            image.sprite = block.blockImage;
+            image.sprite = block.dayPieceSprite;
             image.preserveAspect = true;
 
             x += size.x + spacing;
@@ -437,12 +437,12 @@ public class NightBoardController : MonoBehaviour
             return;
         }
 
-        BlockData matched = currentDrawIsInvalid ? null : shapeValidator.GetExactMatchBlock(currentPathSet);
+        FlowerData matched = currentDrawIsInvalid ? null : shapeValidator.GetExactMatchBlock(currentPathSet);
 
         if (matched != null)
         {
             int placedBlockId = nextPlacedBlockId++;
-            Sprite finalSprite = matched.flowerIcon;
+            Sprite finalSprite = matched.nightCellSprite;
             Color finalColor = ColorPalette.ToUnityColor(matched.color);
 
             foreach (Vector2Int coord in currentPathSet)
@@ -487,7 +487,6 @@ public class NightBoardController : MonoBehaviour
         foreach (int flowerId in obtainedFlowerIds)
         {
             CurrencyManager.Instance.ObtainFlower(flowerId);
-            EventBus.RaiseNightPuzzleComplete(flowerId);
         }
 
         Debug.Log($"[NightBoardController] 퍼즐 완료. 획득한 꽃: {string.Join(",", obtainedFlowerIds)}");

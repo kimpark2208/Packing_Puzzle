@@ -121,14 +121,6 @@ public class NightCellView : MonoBehaviour
         filledRect.localScale = Vector3.one * previewScale;
     }
 
-    public void CancelPreview()
-    {
-        if (IsWall) return;
-        if (State == CellVisualState.Confirmed) return;
-
-        SetEmpty();
-    }
-
     public void Confirm()
     {
         Confirm(pendingFlowerSprite, confirmedColorDefault);

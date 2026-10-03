@@ -24,7 +24,6 @@ public static class PuzzleValidator
 
         Debug.Log($"[PuzzleValidator] 꽃다발 완성! 색 조합 보너스: {result.colorBonus}, 요구사항 보너스: {result.requirementBonus}, 총 매출: {result.totalEarnings}");
 
-        EventBus.RaiseDayPuzzleComplete(result);
         currencyManager?.AddMoney(result.totalEarnings);
 
         return result;
@@ -38,7 +37,6 @@ public static class PuzzleValidator
 
         Debug.Log("[PuzzleValidator] 꽃다발 실패작 완성 (리롤 소진, 미완성 영역 존재)");
 
-        EventBus.RaiseDayPuzzleComplete(result);
         return result;
     }
 

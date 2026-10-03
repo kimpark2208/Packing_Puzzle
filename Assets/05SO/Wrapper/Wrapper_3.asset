@@ -1,0 +1,20 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6129992bb64f90841a805d247a59a5a4, type: 3}
+  m_Name: Wrapper_3
+  m_EditorClassIdentifier: Assembly-CSharp::WrapperData
+  wrapperId: 3
+  colorName: "\uB178\uB780"
+  color: {r: 0.98, g: 0.85, b: 0.2, a: 1}
+  ringCount: 2
+  presets:
+  - {fileID: 11400000, guid: 0042b8824ff4e884a953f4a541d98373, type: 2}

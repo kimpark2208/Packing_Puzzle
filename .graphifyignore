@@ -1,0 +1,8 @@
+﻿# 서드파티/설정/일회성 파일은 그래프에서 제외
+Packages/
+ProjectSettings/
+Library/
+Assets/TextMesh Pro/
+Assets/_Recovery/
+Assets/Editor/CreateRedCube.cs
+CLAUDE_AGENT_BRANCH.md

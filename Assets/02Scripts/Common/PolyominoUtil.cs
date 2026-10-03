@@ -3,13 +3,13 @@ using System.Linq;
 using UnityEngine;
 
 /// <summary>
-/// BlockData.shapeGrid로부터 회전/반전 변형 집합을 계산하는 공용 유틸리티.
+/// FlowerData.shapeGrid로부터 회전/반전 변형 집합을 계산하는 공용 유틸리티.
 /// NightShapePuzzleValidator와 절차적 생성기(낮/밤)가 동일한 로직을 공유하기 위해 분리했다.
 /// 모든 변형은 좌상단이 (0,0)이 되도록 정규화된 Vector2Int(x=col, y=row) 좌표 집합이다.
 /// </summary>
 public static class PolyominoUtil
 {
-    public static HashSet<Vector2Int> ReadShape(BlockData blockData)
+    public static HashSet<Vector2Int> ReadShape(FlowerData blockData)
     {
         HashSet<Vector2Int> result = new();
         if (blockData == null || blockData.shapeGrid == null) return result;
@@ -29,7 +29,7 @@ public static class PolyominoUtil
     }
 
     /// <summary>회전(0/90/180/270) x 반전(0/1) 조합 중 서로 겹치지 않는 고유한 형태만 반환.</summary>
-    public static List<HashSet<Vector2Int>> GetUniqueVariants(BlockData blockData)
+    public static List<HashSet<Vector2Int>> GetUniqueVariants(FlowerData blockData)
     {
         return GetUniqueVariants(ReadShape(blockData));
     }

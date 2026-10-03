@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -51,7 +50,7 @@ public class NightRequestUI : MonoBehaviour
     {
         if (itemTemplate == null || listArea == null) return;
 
-        var block = BlockDatabase.Instance != null ? BlockDatabase.Instance.GetById(flowerId) : null;
+        var block = BlockRegistry.Instance != null ? BlockRegistry.Instance.GetById(flowerId) : null;
 
         RectTransform itemRT = Instantiate(itemTemplate, listArea);
         itemRT.gameObject.SetActive(true);
@@ -64,26 +63,16 @@ public class NightRequestUI : MonoBehaviour
             itemImages[flowerId] = img;
         }
 
-        Transform flowerImageT = itemRT.Find("FlowerImage");
-        var flowerImage = flowerImageT != null ? flowerImageT.GetComponent<Image>() : null;
-        if (flowerImage != null && block != null)
-        {
-            Color tint = ColorPalette.ToUnityColor(block.color);
-            flowerImage.sprite = block.flowerIcon != null ? block.flowerIcon : block.blockImage;
-            flowerImage.color = tint;
-            iconImages[flowerId] = flowerImage;
-            iconBaseTints[flowerId] = tint;
-        }
+        if (block == null) return;
 
-        Transform colorMarkerT = itemRT.Find("ColorMarker_temp");
-        var colorMarker = colorMarkerT != null ? colorMarkerT.GetComponent<Image>() : null;
-        if (colorMarker != null && block != null) colorMarker.color = ColorPalette.ToUnityColor(block.color);
+        FlowerPieceView view = itemRT.GetComponent<FlowerPieceView>();
+        if (view == null) view = itemRT.gameObject.AddComponent<FlowerPieceView>();
+        view.Apply(block, block.iconSprite != null ? block.iconSprite : block.dayPieceSprite, view.Icon.preserveAspect);
 
-        Transform nameT = itemRT.Find("NameBack/FlowerName");
-        var nameText = nameT != null ? nameT.GetComponent<TMP_Text>() : null;
-        if (nameText != null) nameText.text = block != null ? block.flowerName : $"꽃 #{flowerId}";
+        iconImages[flowerId] = view.Icon;
+        iconBaseTints[flowerId] = ColorPalette.ToUnityColor(block.color);
 
-        var btn = flowerImageT != null ? flowerImageT.GetComponent<Button>() : null;
+        var btn = view.Icon.GetComponent<Button>();
         if (btn != null) btn.onClick.AddListener(() => ToggleSelect(flowerId));
     }
 

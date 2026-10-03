@@ -128,7 +128,6 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 438470799}
-  - component: {fileID: 438470798}
   - component: {fileID: 438470797}
   - component: {fileID: 438470796}
   - component: {fileID: 438470795}
@@ -166,10 +165,9 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 416d02a9ae96a1640bb5043e487a71b1, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::BlockDatabase
+  m_EditorClassIdentifier: Assembly-CSharp::BlockRegistry
   dontDestroyOnLoad: 1
   allBlocks:
-  - {fileID: 11400000, guid: b30d6639bfa19410c339c765fbe5e3f6, type: 2}
   - {fileID: 11400000, guid: 0fd7e801d344731e1ebbd2ad81e67929, type: 2}
   - {fileID: 11400000, guid: f8a801357f1d40bb9c391f863212ded2, type: 2}
   - {fileID: 11400000, guid: 2cee97a2a4448bd77c8c6e5b0b02d02a, type: 2}
@@ -184,6 +182,13 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 3208bd6d18c2721c3cdd2e972dbc17a2, type: 2}
   - {fileID: 11400000, guid: f67ab93f7eeeb72ef93b4884c418a6c1, type: 2}
   - {fileID: 11400000, guid: cb81504988c3e04bd3a254d16ff49ab3, type: 2}
+  - {fileID: 11400000, guid: 217d1a49ffb76504a8a798e404ac4e85, type: 2}
+  - {fileID: 11400000, guid: c087f60d1708837459d20695a7a600a4, type: 2}
+  - {fileID: 11400000, guid: fdee28cc8b4bc6d40931211a1ffcd1aa, type: 2}
+  - {fileID: 11400000, guid: ac11b23f9dadde149aae80c311cbff3d, type: 2}
+  - {fileID: 11400000, guid: d2d034b2162e6e845b4976d00c33534a, type: 2}
+  - {fileID: 11400000, guid: 3c45d9cf71d4c024db7a4b63e42505d5, type: 2}
+  - {fileID: 11400000, guid: 2f0143ab9e546e9408135a2dfb361ec5, type: 2}
 --- !u!114 &438470796
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -211,20 +216,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::CurrencyManager
   dontDestroyOnLoad: 1
   initialMoney: 0
---- !u!114 &438470798
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 438470793}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 7aff7d5a61c21544691f65e3361c22a7, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::GameManager
-  dontDestroyOnLoad: 1
-  score: 0
 --- !u!4 &438470799
 Transform:
   m_ObjectHideFlags: 0
@@ -232,6 +223,59 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 438470793}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &1128491991
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1128491993}
+  - component: {fileID: 1128491992}
+  m_Layer: 0
+  m_Name: WrapperRegistry
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1128491992
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1128491991}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ecf28af0c49d88e42962f2532ccf9904, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::WrapperRegistry
+  dontDestroyOnLoad: 1
+  allWrappers:
+  - {fileID: 11400000, guid: d805c74c715965e4f956c16bcdce0b84, type: 2}
+  - {fileID: 11400000, guid: 6282cecc2200e834cb7be4b5d1fa9819, type: 2}
+  - {fileID: 11400000, guid: 625864dc4e1ed4d44bfee0944d2095ed, type: 2}
+  - {fileID: 11400000, guid: 683c5452e8862b4428ccb969a6e9bb11, type: 2}
+  - {fileID: 11400000, guid: a5214ce27b2934f44b7c481e95d165a3, type: 2}
+  - {fileID: 11400000, guid: 9cfc792935d8c3f4fbca40d0be8254e9, type: 2}
+  - {fileID: 11400000, guid: c65e791fa90fa474294ddcdb7ef89f19, type: 2}
+--- !u!4 &1128491993
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1128491991}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
@@ -377,9 +421,58 @@ MonoBehaviour:
     m_VarianceClampScale: 0.9
     m_ContrastAdaptiveSharpening: 0
   m_Version: 2
+--- !u!1 &1513376230
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1513376232}
+  - component: {fileID: 1513376231}
+  m_Layer: 0
+  m_Name: DayClock
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1513376231
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1513376230}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7c159ae46e216d245909c2c11f15e112, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DayClock
+  dontDestroyOnLoad: 1
+  dayDurationSeconds: 300
+  moodDurationSeconds: 45
+--- !u!4 &1513376232
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1513376230}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
   m_Roots:
   - {fileID: 1296008752}
   - {fileID: 438470799}
+  - {fileID: 1513376232}
+  - {fileID: 1128491993}

@@ -8,20 +8,30 @@ using UnityEngine.UI;
 /// <summary>
 /// 꽃 선택 화면. "포장지 선택 -> 꽃 선택" 순서를 그대로 따른다.
 /// 1단계: WrapperPopup에서 보유한 포장지 중 이번 주문에 쓸 것을 하나 고른다 (목표 점수/정답 레시피가 이때 확정됨).
-/// 2단계: 포장지를 고르면 FlowerPopup으로 전환되고, 최대 3종을 가챠 풀로 고른다.
-/// 포장지 목록은 개수가 가변적이라 템플릿을 복제해서 만들고, 꽃 목록은 개수가 21개로 고정이라
-/// 미리 배치된 슬롯 21개를 활성/비활성 + 내용 갱신하는 방식으로 채운다.
+/// 2단계: 포장지를 고르면 FlowerPopup(역할별 선반 4개)으로 전환되고, 역할(라인/폼/매스/필러)마다
+/// 정해진 개수까지 꽃을 담아 가챠 풀로 만든다. 같은 꽃을 여러 번 담으면 풀에 그만큼 중복되어 더 자주 나온다.
+/// 포장지 목록과 꽃 선택 슬롯은 모두 개수가 가변적이라 템플릿(프리팹)을 복제해서 만든다.
 /// </summary>
 public class FlowerSelectUI : MonoBehaviour
 {
-    private enum SortMode { Color, Size, Name }
+    [Serializable]
+    private class Shelf
+    {
+        public FlowerData.FlowerRole role;
+        public int maxCount;
+        public TMP_Text label;
+        public RectTransform slotParent;
+    }
 
-    // 포장지 레벨이 올라가면 라인/매스/품/필러 4태그가 모두 필요해질 수 있어 3에서 5로 상향.
-    private const int MaxSelectable = 5;
+    private class SlotView
+    {
+        public Image icon;
+        public TMP_Text badge;
+    }
 
     private static readonly Color SelectedColor = new(0.65f, 0.85f, 0.70f);
-    private static readonly Color WrapperColor = new(0.85f, 0.80f, 0.95f);
-    private static readonly Color WrapperSelectedColor = new(0.55f, 0.45f, 0.85f);
+    private const float SelectedLift = 30f; // 담긴 꽃이 화병에서 살짝 올라오는 높이
+
 
     [SerializeField] private TMP_Text headerText;
 
@@ -30,18 +40,14 @@ public class FlowerSelectUI : MonoBehaviour
     [SerializeField] private RectTransform wrapperArea;
     [SerializeField] private RectTransform wrapperItemTemplate;
 
-    [Header("꽃 선택 팝업 (슬롯 21개 고정 배치, Instantiate 안 함)")]
+    [Header("꽃 선택 팝업 (역할별 선반, 슬롯은 템플릿을 복제해서 생성)")]
     [SerializeField] private GameObject flowerPopup;
-    [SerializeField] private RectTransform flowerArea;
-    [SerializeField] private TMP_Dropdown sortDropdown;
+    [SerializeField] private RectTransform slotPrefab;
+    [SerializeField] private Shelf[] shelves;
     [SerializeField] private Button flowerBucketButton;
-    [SerializeField] private TMP_Text flowerCurSelectedText;
 
-    private readonly HashSet<BlockData> selected = new();
-    private readonly Dictionary<BlockData, Image> itemImages = new();
-    private readonly Dictionary<int, Image> wrapperImages = new();
-    private readonly List<RectTransform> flowerSlots = new();
-    private List<BlockData> currentCandidates = new();
+    private readonly Dictionary<FlowerData, int> counts = new();
+    private readonly Dictionary<FlowerData, SlotView> views = new();
     private bool wrapperChosen;
 
     private void Start()
@@ -49,16 +55,11 @@ public class FlowerSelectUI : MonoBehaviour
         if (wrapperItemTemplate != null) wrapperItemTemplate.gameObject.SetActive(false);
         if (wrapperPopup != null) wrapperPopup.SetActive(true);
         if (flowerPopup != null) flowerPopup.SetActive(false);
-
-        if (flowerArea != null)
-        {
-            foreach (Transform child in flowerArea) flowerSlots.Add((RectTransform)child);
-        }
+        ClearSlots(); // 에디터에서 배치 확인용으로 미리 넣어둔 슬롯은 시작할 때 지운다
 
         if (flowerBucketButton != null) flowerBucketButton.onClick.AddListener(OnConfirm);
-        if (sortDropdown != null) sortDropdown.onValueChanged.AddListener(OnSortChanged);
 
-        UpdateBucketPreview();
+        RefreshLabels();
         BuildWrapperChoices();
     }
 
@@ -73,16 +74,16 @@ public class FlowerSelectUI : MonoBehaviour
             var item = ShopManager.Instance.GetItemById(wrapperId);
             string label = item.HasValue ? item.Value.itemName : $"포장지 {wrapperId}";
 
+            // 손님이 말하는 포장지 색과 같은 색/이름을 보여준다(WrapperData의 색)
+            WrapperData data = WrapperRegistry.Instance != null ? WrapperRegistry.Instance.GetById(wrapperId) : null;
+            if (data != null) label = $"{data.colorName}색 {label}";
+
             RectTransform itemRT = Instantiate(wrapperItemTemplate, wrapperArea);
             itemRT.gameObject.SetActive(true);
             itemRT.name = $"Wrapper_{wrapperId}";
 
             var img = itemRT.Find("WrapperImage") != null ? itemRT.Find("WrapperImage").GetComponent<Image>() : null;
-            if (img != null)
-            {
-                img.color = WrapperColor;
-                wrapperImages[wrapperId] = img;
-            }
+            if (img != null && data != null) img.color = data.color;
 
             var confirmBtnT = itemRT.Find("ConfirmBTN");
             var confirmBtn = confirmBtnT != null ? confirmBtnT.GetComponent<Button>() : null;
@@ -98,12 +99,6 @@ public class FlowerSelectUI : MonoBehaviour
     {
         if (GameFlowController.Instance == null) return;
 
-        if (wrapperImages.TryGetValue(wrapperId, out var chosenImg))
-        {
-            foreach (var kvp in wrapperImages) kvp.Value.color = WrapperColor;
-            chosenImg.color = WrapperSelectedColor;
-        }
-
         GameFlowController.Instance.ChooseWrapper(wrapperId);
         wrapperChosen = true;
 
@@ -112,7 +107,7 @@ public class FlowerSelectUI : MonoBehaviour
 
         if (headerText != null)
         {
-            headerText.text = $"포장지 확정! 오늘 사용할 꽃을 최대 {MaxSelectable}종 고르세요";
+            headerText.text = "포장지 확정! 역할별로 사용할 꽃을 골라 담으세요";
         }
 
         if (wrapperPopup != null) wrapperPopup.SetActive(false);
@@ -124,110 +119,112 @@ public class FlowerSelectUI : MonoBehaviour
     /// <summary>포장지 단계/보유 여부와 상관없이 등록된 모든 꽃을 후보로 보여준다.</summary>
     private void BuildFlowerChoices()
     {
-        itemImages.Clear();
-        selected.Clear();
-        UpdateBucketPreview();
+        views.Clear();
+        counts.Clear();
+        RefreshLabels();
 
-        if (BlockDatabase.Instance == null) return;
+        if (BlockRegistry.Instance == null) return;
 
-        currentCandidates = new List<BlockData>(BlockDatabase.Instance.AllBlocks);
+        ClearSlots();
 
-        ApplySort();
-    }
-
-    private void OnSortChanged(int _)
-    {
-        ApplySort();
-    }
-
-    private void ApplySort()
-    {
-        SortMode mode = sortDropdown != null ? (SortMode)sortDropdown.value : SortMode.Color;
-        IEnumerable<BlockData> sorted = mode switch
+        foreach (var shelf in shelves)
         {
-            SortMode.Size => currentCandidates.OrderBy(b => b.CellCount),
-            SortMode.Name => currentCandidates.OrderBy(b => b.flowerName, StringComparer.Ordinal),
-            _ => currentCandidates.OrderBy(b => (int)b.color)
-        };
-        var sortedList = sorted.ToList();
-
-        for (int i = 0; i < flowerSlots.Count; i++)
-        {
-            RectTransform slot = flowerSlots[i];
-            if (i < sortedList.Count)
+            foreach (var flower in BlockRegistry.Instance.AllBlocks.Where(b => b.flowerRole == shelf.role))
             {
-                slot.gameObject.SetActive(true);
-                BindFlowerSlot(slot, sortedList[i]);
-            }
-            else
-            {
-                slot.gameObject.SetActive(false);
+                RectTransform slot = Instantiate(slotPrefab, shelf.slotParent);
+                slot.name = $"Slot_{flower.blockID}";
+                BindFlowerSlot(slot, flower);
             }
         }
     }
 
-    private void BindFlowerSlot(RectTransform slot, BlockData block)
+    private void ClearSlots()
     {
-        Transform imgT = slot.Find("FlowerImage");
-        var img = imgT != null ? imgT.GetComponent<Image>() : null;
-        if (img == null) return;
-
-        img.sprite = block.flowerIcon != null ? block.flowerIcon : block.blockImage;
-        img.color = GetIconColor(block);
-        itemImages[block] = img;
-
-        Transform nameT = slot.Find("NameBack/FlowerName");
-        var nameText = nameT != null ? nameT.GetComponent<TMP_Text>() : null;
-        if (nameText != null) nameText.text = block.flowerName;
-
-        Transform colorMarkerT = slot.Find("ColorMarker_temp");
-        var colorMarker = colorMarkerT != null ? colorMarkerT.GetComponent<Image>() : null;
-        if (colorMarker != null) colorMarker.color = ColorPalette.ToUnityColor(block.color);
-
-        var btn = imgT.GetComponent<Button>();
-        if (btn != null)
+        foreach (var shelf in shelves)
         {
-            btn.onClick.RemoveAllListeners();
-            btn.onClick.AddListener(() => ToggleSelect(block));
+            if (shelf.slotParent == null) continue;
+            foreach (Transform old in shelf.slotParent) Destroy(old.gameObject);
         }
     }
 
-    private void ToggleSelect(BlockData block)
+    // 슬롯 프리셋마다 자식 위치가 달라(화병은 Button이 VaseImage에, ColorMarker가 그 아래) 이름으로 깊이 찾는다.
+    private static Transform FindIn(RectTransform slot, string childName)
     {
-        if (selected.Contains(block))
-        {
-            selected.Remove(block);
-        }
-        else
-        {
-            if (selected.Count >= MaxSelectable) return;
-            selected.Add(block);
-        }
-
-        if (itemImages.TryGetValue(block, out var img))
-            img.color = GetIconColor(block);
-
-        UpdateBucketPreview();
+        return slot.GetComponentsInChildren<Transform>(true).FirstOrDefault(t => t.name == childName);
     }
 
-    /// <summary>꽃 고유 색으로 틴트하되, 선택된 상태면 선택 강조색을 곱해 구분한다.</summary>
-    private Color GetIconColor(BlockData block)
+    private void BindFlowerSlot(RectTransform slot, FlowerData block)
     {
+        // 줄기 꽃 이미지(stemSprite)가 비어있으면 프리팹의 기본 이미지를 그대로 둔다.
+        FlowerPieceView view = slot.GetComponent<FlowerPieceView>();
+        if (view == null) view = slot.gameObject.AddComponent<FlowerPieceView>();
+        view.Apply(block, block.stemSprite, false);
+
+        Transform badgeT = FindIn(slot, "CountBadge");
+        views[block] = new SlotView { icon = view.Icon, badge = badgeT != null ? badgeT.GetComponentInChildren<TMP_Text>(true) : null };
+        RefreshSlot(block);
+
+        var btn = slot.GetComponentInChildren<Button>(true);
+        if (btn != null) btn.onClick.AddListener(() => OnSlotClicked(block));
+    }
+
+    /// <summary>역할별 상한까지 한 번 누를 때마다 1개씩 담는다. 상한이 찼으면 이미 담은 꽃을 눌러 비운다.</summary>
+    private void OnSlotClicked(FlowerData block)
+    {
+        Shelf shelf = shelves.FirstOrDefault(s => s.role == block.flowerRole);
+        if (shelf == null) return;
+
+        counts.TryGetValue(block, out int n);
+        if (RoleTotal(shelf.role) < shelf.maxCount) counts[block] = n + 1;
+        else if (n > 0) counts.Remove(block);
+        else return;
+
+        RefreshSlot(block);
+        RefreshLabels();
+    }
+
+    private int RoleTotal(FlowerData.FlowerRole role)
+    {
+        return counts.Where(kv => kv.Key.flowerRole == role).Sum(kv => kv.Value);
+    }
+
+    private void RefreshSlot(FlowerData block)
+    {
+        if (!views.TryGetValue(block, out var view)) return;
+
+        counts.TryGetValue(block, out int n);
         Color tint = ColorPalette.ToUnityColor(block.color);
-        return selected.Contains(block) ? tint * SelectedColor : tint;
+        view.icon.color = n > 0 ? tint * SelectedColor : tint;
+        view.icon.rectTransform.anchoredPosition = new Vector2(0f, n > 0 ? SelectedLift : 0f);
+
+        if (view.badge != null)
+        {
+            view.badge.transform.parent.gameObject.SetActive(n > 0);
+            view.badge.text = $"x{n}";
+        }
     }
 
-    private void UpdateBucketPreview()
+    private void RefreshLabels()
     {
-        if (flowerCurSelectedText == null) return;
-        flowerCurSelectedText.text = selected.Count == 0
-            ? "선택된 꽃 없음"
-            : string.Join(", ", selected.Select(b => b.flowerName));
+        if (shelves == null) return;
+        foreach (var shelf in shelves)
+        {
+            if (shelf.label == null) continue;
+            string roleName = shelf.role switch
+            {
+                FlowerData.FlowerRole.Line => "라인",
+                FlowerData.FlowerRole.Mass => "매스",
+                FlowerData.FlowerRole.Form => "폼",
+                _ => "필러",
+            };
+            shelf.label.text = $"{roleName}({RoleTotal(shelf.role)}/{shelf.maxCount})";
+        }
     }
 
     private void OnConfirm()
     {
-        if (!wrapperChosen || GameFlowController.Instance == null || selected.Count == 0) return;
-        GameFlowController.Instance.ConfirmFlowerSelection(new List<BlockData>(selected));
+        if (!wrapperChosen || GameFlowController.Instance == null || counts.Count == 0) return;
+        var pool = counts.SelectMany(kv => Enumerable.Repeat(kv.Key, kv.Value)).ToList();
+        GameFlowController.Instance.ConfirmFlowerSelection(pool);
     }
 }

@@ -3,7 +3,7 @@ using UnityEditor;
 using UnityEngine;
 
 /// <summary>
-/// 모든 BlockData의 "배치 중" 통짜 이미지를 코드로 생성해 실제 PNG 파일로 저장하는 에디터 툴.
+/// 모든 FlowerData의 밤 퍼즐 블록 미리보기용 통짜 이미지를 코드로 생성해 실제 PNG 파일로 저장하는 에디터 툴.
 /// Assets/03Images/Block의 기존 I_Three.png 등과 같은 스타일(단색 칸 + 검은 테두리/격자선)을 따른다.
 /// 블록 모양/색이 바뀌면 메뉴에서 다시 실행해 재생성하면 된다.
 /// </summary>
@@ -19,13 +19,13 @@ public static class BlockImageGenerator
             AssetDatabase.CreateFolder("Assets/03Images/Block", "Generated");
         }
 
-        string[] guids = AssetDatabase.FindAssets("t:BlockData", new[] { "Assets/05SO/Block" });
+        string[] guids = AssetDatabase.FindAssets("t:FlowerData", new[] { "Assets/05SO/Block" });
         int count = 0;
 
         foreach (string guid in guids)
         {
             string path = AssetDatabase.GUIDToAssetPath(guid);
-            var data = AssetDatabase.LoadAssetAtPath<BlockData>(path);
+            var data = AssetDatabase.LoadAssetAtPath<FlowerData>(path);
             if (data == null || data.shapeGrid == null || data.shapeGrid.Length == 0) continue;
 
             GenerateForBlock(data);
@@ -37,7 +37,7 @@ public static class BlockImageGenerator
         Debug.Log($"[BlockImageGenerator] 블록 이미지 {count}개 생성 및 할당 완료 ({OutputFolder})");
     }
 
-    private static void GenerateForBlock(BlockData data)
+    private static void GenerateForBlock(FlowerData data)
     {
         Texture2D tex = BlockTextureUtil.CreateSolidBlockTexture(data);
         byte[] png = tex.EncodeToPNG();
@@ -57,7 +57,7 @@ public static class BlockImageGenerator
         importer.SaveAndReimport();
 
         var sprite = AssetDatabase.LoadAssetAtPath<Sprite>(assetPath);
-        data.blockImage = sprite;
+        data.dayPieceSprite = sprite;
         EditorUtility.SetDirty(data);
     }
 }

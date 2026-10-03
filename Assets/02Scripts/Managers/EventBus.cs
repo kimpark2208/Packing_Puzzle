@@ -4,60 +4,26 @@ using UnityEngine;
 
 /// <summary>
 /// 게임 플로우를 조율하는 중앙 이벤트 버스 (싱글톤)
-/// 낮 퍼즐 완료, 낮→밤 전환, 밤 퍼즐 생성, 일수 진행 등의 이벤트를 발행
+/// 구독하는 곳이 있는 이벤트만 둔다. 새 구독이 생기면 이벤트와 Raise 메서드를 추가한다.
 /// </summary>
 public class EventBus : Singleton<EventBus>
 {
-    // ========== 낮 퍼즐 이벤트 ==========
-
-    /// <summary>낮 퍼즐 완료 시 발행 (검증 결과: 색상, 꽃, 완벽도, 매출)</summary>
-    public static event Action<PuzzleValidationResult> OnDayPuzzleComplete;
-
-    /// <summary>낮 시간 종료, 밤 퍼즐 생성 시작 (요청한 꽃 목록)</summary>
-    public static event Action<int[]> OnDayEnded;
-
-    // ========== 밤 퍼즐 이벤트 ==========
-
-    /// <summary>절차적 밤 퍼즐 생성 완료 (생성된 퍼즐 데이터)</summary>
-    public static event Action<NightPuzzleData[]> OnNightPuzzlesGenerated;
-
-    /// <summary>밤 퍼즐 완료, 꽃 획득 (획득한 꽃 ID)</summary>
-    public static event Action<int> OnNightPuzzleComplete;
-
-    /// <summary>이번 밤에 준비된 모든 퍼즐(메인+잉여)을 다 풀었을 때</summary>
-    public static event Action OnAllNightPuzzlesFinished;
-
     /// <summary>손님이 성불하는 연출 타이밍 (표시할 문구)</summary>
     public static event Action<string> OnAscensionMoment;
-
-    // ========== 재화 이벤트 ==========
 
     /// <summary>금액 변경 (변경된 금액)</summary>
     public static event Action<int> OnMoneyChanged;
 
-    /// <summary>포장지 언락 (언락된 포장지 ID)</summary>
-    public static event Action<int> OnWrapperUnlocked;
-
-    /// <summary>꽃 획득 (획득한 꽃 ID)</summary>
-    public static event Action<int> OnFlowerObtained;
-
-    // ========== 일수 진행 이벤트 ==========
-
     /// <summary>다음 날로 진행 (새로운 일수)</summary>
     public static event Action<int> OnDayAdvanced;
 
-    // ========== 이벤트 발행 메서드 ==========
+    /// <summary>하루 시간이 모두 소진됨</summary>
+    public static event Action OnDayTimeUp;
 
-    public static void RaiseDayPuzzleComplete(PuzzleValidationResult result) => OnDayPuzzleComplete?.Invoke(result);
-    public static void RaiseDayEnded(int[] requestedFlowerIds) => OnDayEnded?.Invoke(requestedFlowerIds);
-    public static void RaiseNightPuzzlesGenerated(NightPuzzleData[] puzzles) => OnNightPuzzlesGenerated?.Invoke(puzzles);
-    public static void RaiseNightPuzzleComplete(int flowerObtainedId) => OnNightPuzzleComplete?.Invoke(flowerObtainedId);
-    public static void RaiseAllNightPuzzlesFinished() => OnAllNightPuzzlesFinished?.Invoke();
     public static void RaiseAscensionMoment(string description) => OnAscensionMoment?.Invoke(description);
     public static void RaiseMoneyChanged(int newAmount) => OnMoneyChanged?.Invoke(newAmount);
-    public static void RaiseWrapperUnlocked(int wrapperId) => OnWrapperUnlocked?.Invoke(wrapperId);
-    public static void RaiseFlowerObtained(int flowerId) => OnFlowerObtained?.Invoke(flowerId);
     public static void RaiseDayAdvanced(int newDay) => OnDayAdvanced?.Invoke(newDay);
+    public static void RaiseDayTimeUp() => OnDayTimeUp?.Invoke();
 }
 
 /// <summary>낮 퍼즐 검증 결과</summary>

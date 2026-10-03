@@ -27,11 +27,13 @@ public class DayPuzzleUI : MonoBehaviour
     private const string RequirementNotMetLine = "이게뭐예요!!";
     private const string RequirementNotMetRejectResponse = "알긴 아시나보죠?";
     private const string GoodResultLine = "좋네요!";
+    private const string LateLine = "늦으셨네요."; // 손님 기분이 다 닳은 뒤에 퍼즐이 끝났을 때(성공 여부와 무관)
 
     private WrapperBoardController board;
     private GachaManager gacha;
     private bool roundEnded;
     private bool collapseHandled;
+    private bool customerLate; // 퍼즐이 끝난 순간 손님 기분이 이미 다 닳아 있었는가
     private PuzzleValidationResult lastResult;
 
     private void Start()
@@ -43,6 +45,7 @@ public class DayPuzzleUI : MonoBehaviour
         {
             board.BuildLevel();
             board.OnFlowerPlaced += HandleFlowerPlaced;
+            if (gacha != null) gacha.SetMaxRerolls(board.AllSlots.Count + 1); // 칸 개수 + 1
         }
 
         if (resultPopup != null) resultPopup.SetActive(false);
@@ -77,7 +80,8 @@ public class DayPuzzleUI : MonoBehaviour
             return;
         }
 
-        if (gacha != null && gacha.RerollExhausted && gacha.IsTrayEmpty)
+        // 하나를 놓으면 트레이의 나머지는 사라지므로, 뽑기 횟수를 다 썼는데 아직 못 채웠으면 더 놓을 조각이 없다.
+        if (gacha != null && gacha.RerollExhausted)
         {
             roundEnded = true;
             ShowResultPopup(PuzzleValidator.ValidateFailure());
@@ -95,6 +99,7 @@ public class DayPuzzleUI : MonoBehaviour
     private void ShowResultPopup(PuzzleValidationResult result)
     {
         lastResult = result;
+        customerLate = IsCustomerLate();
 
         string body = result.success
             ? $"꽃다발을 완성했어요!\n색 조합 보너스: {result.colorBonus}\n{(result.requirementMet ? $"고객 요구사항 달성! +{result.requirementBonus}" : "고객 요구사항 미달성")}\n\n매출: {result.totalEarnings}원"
@@ -104,8 +109,14 @@ public class DayPuzzleUI : MonoBehaviour
         if (resultPopup != null) resultPopup.SetActive(true);
     }
 
+    private static bool IsCustomerLate()
+    {
+        return DayClock.Instance != null && DayClock.Instance.MoodRemaining <= 0f;
+    }
+
     private void ShowCollapsePopup()
     {
+        customerLate = IsCustomerLate();
         collapseHandled = false;
         if (collapseBodyText != null) collapseBodyText.text = "꽃다발이 한쪽으로 기울며 무너졌어요!\n손님이 크게 실망합니다...";
         if (collapsePopup != null) collapsePopup.SetActive(true);
@@ -126,7 +137,8 @@ public class DayPuzzleUI : MonoBehaviour
 
         if (collapsePopup != null) collapsePopup.SetActive(false);
         if (GameFlowController.Instance == null) return;
-        GameFlowController.Instance.ReturnToDayMainAngry("장사접으세요");
+        if (customerLate) GameFlowController.Instance.ReturnToDayMainAngry(LateLine, RequirementNotMetRejectResponse);
+        else GameFlowController.Instance.ReturnToDayMainAngry("장사접으세요");
     }
 
     private void OnResultConfirmed()
@@ -134,9 +146,12 @@ public class DayPuzzleUI : MonoBehaviour
         if (resultPopup != null) resultPopup.SetActive(false);
         if (GameFlowController.Instance == null) return;
 
-        // 완성/강제제출로 끝났는데(=success 경로) 고객 요구사항을 못 채웠으면 손님이 화내고,
+        // 손님 기분이 다 닳은 뒤에 끝났으면 성공 여부와 상관없이 "늦으셨네요."
+        // 아니면 완성/강제제출로 끝났는데(=success 경로) 고객 요구사항을 못 채웠으면 손님이 화내고,
         // 요구사항까지 채웠으면 만족한다. 리롤 소진 실패(success=false)는 그냥 다음 손님으로.
-        if (lastResult.success && !lastResult.requirementMet)
+        if (customerLate)
+            GameFlowController.Instance.ReturnToDayMainAngry(LateLine, RequirementNotMetRejectResponse);
+        else if (lastResult.success && !lastResult.requirementMet)
             GameFlowController.Instance.ReturnToDayMainAngry(RequirementNotMetLine, RequirementNotMetRejectResponse);
         else if (lastResult.success && lastResult.requirementMet)
             GameFlowController.Instance.ReturnToDayMainAngry(GoodResultLine);

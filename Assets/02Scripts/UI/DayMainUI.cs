@@ -19,6 +19,8 @@ public class DayMainUI : MonoBehaviour
 
     private const string RejectLine = "거절할순없으세요";
     private const string DefaultForceAcceptLine = "그래요라고 하세요";
+    private const string TimeUpLine = "시간이 늦었네요 가봐야겠어요";
+    private const float TimeUpHideDelay = 5f;
 
     [SerializeField] private TMP_Text moneyText;
     [SerializeField] private TMP_Text bubbleText;
@@ -37,6 +39,10 @@ public class DayMainUI : MonoBehaviour
     [SerializeField] private GameObject artifactsPage;
     [SerializeField] private GameObject wrapperPage;
     [SerializeField] private GameObject furniturePage;
+
+    [Header("하루 시간 종료 연출 (밤 메인에서 사용)")]
+    [SerializeField] private GameObject bubbleContainer;
+    [SerializeField] private GameObject characterRoot;
     [SerializeField] private Button artifactsIndexButton;
     [SerializeField] private Button wrapperIndexButton;
     [SerializeField] private Button furnitureIndexButton;
@@ -90,6 +96,13 @@ public class DayMainUI : MonoBehaviour
         {
             RefreshBubbleText();
         }
+
+        bool timeUp = GameFlowController.Instance != null && GameFlowController.Instance.ConsumeDayTimeUp();
+        if (timeUp)
+        {
+            if (bubbleText != null) bubbleText.text = TimeUpLine;
+            EndConversation();
+        }
     }
 
     private void Start()
@@ -116,6 +129,21 @@ public class DayMainUI : MonoBehaviour
         }
 
         if (GameFlowController.Instance != null) GameFlowController.Instance.GoToFlowerSelect();
+    }
+
+    /// <summary>하루 시간이 끝난 손님: 대사를 한 뒤 잠시 후 말풍선과 캐릭터가 사라지고 전등만 남는다.</summary>
+    private void EndConversation()
+    {
+        if (askButton != null) askButton.enabled = false; // interactable=false는 비활성 색(반투명)이 입혀져서 컴포넌트만 끈다
+        if (acceptButton != null) acceptButton.enabled = false;
+        StartCoroutine(HideCustomerAfterDelay());
+    }
+
+    private System.Collections.IEnumerator HideCustomerAfterDelay()
+    {
+        yield return new WaitForSeconds(TimeUpHideDelay);
+        if (bubbleContainer != null) bubbleContainer.SetActive(false);
+        if (characterRoot != null) characterRoot.SetActive(false);
     }
 
     private void RefreshBubbleText()

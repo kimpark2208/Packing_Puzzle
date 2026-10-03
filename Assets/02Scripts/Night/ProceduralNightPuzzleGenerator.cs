@@ -45,7 +45,7 @@ public static class ProceduralNightPuzzleGenerator
     private static NightPuzzleData GenerateStage(int gridSize, int[] flowerIds, bool isBonusStage)
     {
         var blocks = flowerIds
-            .Select(id => BlockDatabase.Instance != null ? BlockDatabase.Instance.GetById(id) : null)
+            .Select(id => BlockRegistry.Instance != null ? BlockRegistry.Instance.GetById(id) : null)
             .Where(b => b != null)
             .ToList();
 
@@ -120,12 +120,12 @@ public static class ProceduralNightPuzzleGenerator
     /// blocks의 변형들을 왼쪽 위부터 순서대로 실제로 하나씩 놓아서 그리드를 채운다.
     /// 어떤 변형도 들어맞지 않는 칸만 필러(벽)로 남긴다. 직접 놓아본 배치이므로 항상 풀 수 있음이 보장된다.
     /// </summary>
-    private static bool[,] BuildGuaranteedWallFallback(int gridSize, List<BlockData> blocks)
+    private static bool[,] BuildGuaranteedWallFallback(int gridSize, List<FlowerData> blocks)
     {
         bool[,] covered = new bool[gridSize, gridSize];
 
         var variants = new List<List<Vector2Int>>();
-        foreach (BlockData block in blocks)
+        foreach (FlowerData block in blocks)
         {
             foreach (HashSet<Vector2Int> variant in PolyominoUtil.GetUniqueVariants(block))
             {
@@ -201,7 +201,7 @@ public static class ProceduralNightPuzzleGenerator
         return reachable[target];
     }
 
-    private static bool TryFindWallPlacement(int gridSize, List<BlockData> blocks, int wallCellCount, System.Diagnostics.Stopwatch stopwatch, bool requireUnique, out bool[,] wall)
+    private static bool TryFindWallPlacement(int gridSize, List<FlowerData> blocks, int wallCellCount, System.Diagnostics.Stopwatch stopwatch, bool requireUnique, out bool[,] wall)
     {
         int totalCells = gridSize * gridSize;
 
@@ -235,7 +235,7 @@ public static class ProceduralNightPuzzleGenerator
     /// Dancing Links로 "벽이 아닌 모든 칸을 blocks의 회전/반전 변형만으로, 겹침 없이 정확히 한 번씩" 덮는
     /// 방법이 정확히 하나만 존재하는지 검증한다. (0개=불가능, 2개 이상=유일하지 않음 → 둘 다 실패로 취급)
     /// </summary>
-    private static bool HasUniqueExactTiling(int gridSize, List<BlockData> blocks, bool[,] wallGrid)
+    private static bool HasUniqueExactTiling(int gridSize, List<FlowerData> blocks, bool[,] wallGrid)
     {
         var dlx = BuildExactCoverInstance(gridSize, blocks, wallGrid, out int primaryColumnCount);
         if (primaryColumnCount == 0) return false;
@@ -243,14 +243,14 @@ public static class ProceduralNightPuzzleGenerator
     }
 
     /// <summary>유일성은 따지지 않고, 이 벽 배치로 그냥 완전히 채울 수 있는 방법이 하나라도 있는지만 검사한다.</summary>
-    private static bool HasAtLeastOneExactTiling(int gridSize, List<BlockData> blocks, bool[,] wallGrid)
+    private static bool HasAtLeastOneExactTiling(int gridSize, List<FlowerData> blocks, bool[,] wallGrid)
     {
         var dlx = BuildExactCoverInstance(gridSize, blocks, wallGrid, out int primaryColumnCount);
         if (primaryColumnCount == 0) return false;
         return dlx.CountSolutions(1) >= 1;
     }
 
-    private static DancingLinks BuildExactCoverInstance(int gridSize, List<BlockData> blocks, bool[,] wallGrid, out int primaryColumnCount)
+    private static DancingLinks BuildExactCoverInstance(int gridSize, List<FlowerData> blocks, bool[,] wallGrid, out int primaryColumnCount)
     {
         var cellToColumn = new Dictionary<int, int>();
         int columnIndex = 0;
@@ -268,7 +268,7 @@ public static class ProceduralNightPuzzleGenerator
         var dlx = new DancingLinks(primaryColumnCount, primaryColumnCount);
 
         int rowId = 0;
-        foreach (BlockData block in blocks)
+        foreach (FlowerData block in blocks)
         {
             foreach (HashSet<Vector2Int> variant in PolyominoUtil.GetUniqueVariants(block))
             {

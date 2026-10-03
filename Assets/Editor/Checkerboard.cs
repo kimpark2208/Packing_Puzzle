@@ -1,16 +1,16 @@
 ﻿using UnityEngine;
 using UnityEditor;
 
-// BlockData 인스펙터 창을 바둑판 토글 형태로 강제 재정의합니다.
-[CustomEditor(typeof(BlockData))]
-public class BlockDataEditor : Editor
+// FlowerData 인스펙터 창을 바둑판 토글 형태로 강제 재정의합니다.
+[CustomEditor(typeof(FlowerData))]
+public class FlowerDataEditor : Editor
 {
     public override void OnInspectorGUI()
     {
         // 1. 기존의 기본 항목들(ID, Score, Color, 프리팹 등)을 먼저 정상적으로 그립니다.
         DrawDefaultInspector();
 
-        BlockData data = (BlockData)target;
+        FlowerData data = (FlowerData)target;
         if (data.shapeGrid == null || data.shapeGrid.Length == 0) return;
 
         GUILayout.Space(25);

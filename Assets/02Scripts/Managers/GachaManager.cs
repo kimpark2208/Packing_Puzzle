@@ -15,19 +15,16 @@ public class GachaManager : MonoBehaviour
     [SerializeField] private Transform tray;
     [SerializeField] private int drawCount = 3;
     [SerializeField] private int maxRerolls = 3;
-    [SerializeField] private List<BlockData> initialPool = new(); // 인스펙터 테스트용 기본 풀
+    [SerializeField] private List<FlowerData> initialPool = new(); // 인스펙터 테스트용 기본 풀
 
-    private List<BlockData> pool = new();
+    private List<FlowerData> pool = new();
     private int rerollCount = 0;
     private readonly List<GameObject> curSpawned = new();
 
-    /// <summary>트레이에 남은 조각이 하나도 없는가.</summary>
-    public bool IsTrayEmpty => curSpawned.Count == 0;
-
-    /// <summary>리롤 횟수를 모두 사용했는가.</summary>
+    /// <summary>뽑기 횟수를 모두 사용했는가.</summary>
     public bool RerollExhausted => rerollCount >= maxRerolls;
 
-    /// <summary>포장지 레벨에 맞춰 최대 리롤 횟수를 설정한다.</summary>
+    /// <summary>최대 뽑기 횟수를 설정한다. 낮 퍼즐에서는 프리셋의 칸 개수 + 1(한 번 뽑을 때마다 하나를 놓으므로 칸 수만큼 + 여유 한 번).</summary>
     public void SetMaxRerolls(int value)
     {
         maxRerolls = Mathf.Max(1, value);
@@ -35,7 +32,7 @@ public class GachaManager : MonoBehaviour
 
     private void Awake()
     {
-        pool = new List<BlockData>(initialPool);
+        pool = new List<FlowerData>(initialPool);
     }
 
     private void OnEnable()
@@ -68,9 +65,9 @@ public class GachaManager : MonoBehaviour
     }
 
     /// <summary>FlowerSelect 화면에서 플레이어가 고른 3종(가변 개수)의 꽃으로 가챠 풀을 세팅한다.</summary>
-    public void SetPool(List<BlockData> newPool)
+    public void SetPool(List<FlowerData> newPool)
     {
-        pool = new List<BlockData>(newPool);
+        pool = new List<FlowerData>(newPool);
         rerollCount = 0;
         ClearBlocks();
     }
@@ -93,7 +90,7 @@ public class GachaManager : MonoBehaviour
 
         for (int i = 0; i < drawCount; i++)
         {
-            BlockData picked = pool[Random.Range(0, pool.Count)];
+            FlowerData picked = pool[Random.Range(0, pool.Count)];
             GameObject block = Instantiate(pieceViewPrefab, tray, false);
             block.SetActive(true); // pieceViewPrefab이 숨겨진 템플릿이어도 복제본은 보이게
 
@@ -103,6 +100,10 @@ public class GachaManager : MonoBehaviour
 
             draggable.blockData = picked;
             draggable.OnPlaced += HandleBlockPlaced;
+
+            FlowerPieceView view = block.GetComponent<FlowerPieceView>();
+            if (view == null) view = block.AddComponent<FlowerPieceView>();
+            view.Apply(picked, picked.iconSprite != null ? picked.iconSprite : picked.dayPieceSprite, true);
 
             // FlowerImage의 Button은 선택 화면(클릭으로 고르기)용이라 드래그로 놓는 트레이에서는 꺼둔다.
             Transform flowerImageT = block.transform.Find("FlowerImage");
@@ -116,9 +117,11 @@ public class GachaManager : MonoBehaviour
         Debug.Log($"[GachaManager] 가챠 {rerollCount}/{maxRerolls}");
     }
 
+    /// <summary>뽑은 조각 중 하나를 놓으면 나머지는 사라진다(한 번 뽑을 때마다 하나만 고를 수 있다).</summary>
     private void HandleBlockPlaced(GameObject block)
     {
         curSpawned.Remove(block);
+        ClearBlocks();
     }
 
     private void ClearBlocks()
@@ -133,13 +136,6 @@ public class GachaManager : MonoBehaviour
     public void ResetRerollCount()
     {
         rerollCount = 0;
-    }
-
-    /// <summary>붕괴로 라운드가 재시작될 때: 리롤 횟수와 트레이를 초기화한다.</summary>
-    public void RestartAttempt()
-    {
-        rerollCount = 0;
-        ClearBlocks();
     }
 
     private void HandleDayAdvanced(int newDay)

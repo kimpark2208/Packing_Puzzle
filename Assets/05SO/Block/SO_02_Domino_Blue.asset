@@ -1,0 +1,26 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 74a634c29bfedc144ae03bdc4755ce48, type: 3}
+  m_Name: SO_02_Domino_Blue
+  m_EditorClassIdentifier: Assembly-CSharp::FlowerData
+  blockID: 2
+  flowerName: "\uC218\uAD6D"
+  color: 1
+  flowerRole: 2
+  shapeGrid:
+  - cols: 0101
+  anchorCoord: {x: 0, y: 0}
+  iconSprite: {fileID: 21300000, guid: 5d2ff3ff139201c408154e4df1f0d0dd, type: 3}
+  stemSprite: {fileID: 5856240631183992178, guid: b9f97a0c03bea8c49ac2b17ce37cf466, type: 3}
+  nightCellSprite: {fileID: 21300000, guid: 5d2ff3ff139201c408154e4df1f0d0dd, type: 3}
+  dayPieceSprite: {fileID: 21300000, guid: b56ef46b20191e6469f64f3523357002, type: 3}
+  dayFillSprite: {fileID: 2873771665418804091, guid: ac67b31bf83cda94ca67c4f98a983dc7, type: 3}

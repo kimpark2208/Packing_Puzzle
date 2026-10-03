@@ -3,22 +3,22 @@ using System.Linq;
 using UnityEngine;
 
 /// <summary>
-/// 일반/잉여 밤 퍼즐용 판정기. 하나 이상의 BlockData(꽃) 각각의 shapeGrid에서
+/// 일반/잉여 밤 퍼즐용 판정기. 하나 이상의 FlowerData(꽃) 각각의 shapeGrid에서
 /// 회전, 좌우 반전 및 그 조합으로 나오는 모든 고유한 형태를 미리 계산해 두고,
 /// 플레이어가 드래그로 선택한 칸 집합이 그 중 어떤 것과 위치 무관하게(shape-only) 일치하는지 판정한다.
 /// 위치는 중요하지 않다. 매 변형은 셀 집합을 좌상단이 (0,0)이 되도록 정규화한다.
 /// 여러 꽃이 동시에 후보로 주어질 수 있다(잉여/조합 스테이지).
 /// </summary>
-public class NightShapePuzzleValidator : INightPuzzleValidator
+public class NightShapePuzzleValidator
 {
-    private readonly List<(BlockData block, List<HashSet<Vector2Int>> variants)> entries = new();
+    private readonly List<(FlowerData block, List<HashSet<Vector2Int>> variants)> entries = new();
     private readonly bool[,] wallGrid;
 
-    public NightShapePuzzleValidator(IEnumerable<BlockData> blocks, bool[,] wallGrid = null)
+    public NightShapePuzzleValidator(IEnumerable<FlowerData> blocks, bool[,] wallGrid = null)
     {
         this.wallGrid = wallGrid;
 
-        foreach (BlockData block in blocks)
+        foreach (FlowerData block in blocks)
         {
             if (block == null) continue;
             entries.Add((block, PolyominoUtil.GetUniqueVariants(block)));
@@ -75,8 +75,8 @@ public class NightShapePuzzleValidator : INightPuzzleValidator
         return false;
     }
 
-    /// <summary>선택된 셀 집합과 정확히 일치하는 변형을 가진 꽃(BlockData)을 찾는다. 없으면 null.</summary>
-    public BlockData GetExactMatchBlock(IReadOnlyCollection<Vector2Int> selectedCells)
+    /// <summary>선택된 셀 집합과 정확히 일치하는 변형을 가진 꽃(FlowerData)을 찾는다. 없으면 null.</summary>
+    public FlowerData GetExactMatchBlock(IReadOnlyCollection<Vector2Int> selectedCells)
     {
         if (selectedCells == null || selectedCells.Count == 0) return null;
 
@@ -91,8 +91,6 @@ public class NightShapePuzzleValidator : INightPuzzleValidator
 
         return null;
     }
-
-    public bool IsExactMatch(IReadOnlyCollection<Vector2Int> selectedCells) => GetExactMatchBlock(selectedCells) != null;
 
     /// <summary>selectedCells가 variant 내부에 위치 이동만으로 정확히 포함될 수 있는지 확인한다.</summary>
     private static bool CanFitInsideVariant(IReadOnlyCollection<Vector2Int> selectedCells, HashSet<Vector2Int> variant)

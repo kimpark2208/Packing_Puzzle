@@ -148,15 +148,6 @@ public class DancingLinks
         return best;
     }
 
-    /// <summary>
-    /// 해 하나를 찾아 사용된 행들의 rowId 리스트로 반환한다. 해가 없으면 null.
-    /// </summary>
-    public List<int> SolveOne()
-    {
-        var solution = new List<int>();
-        return Search(solution) ? solution : null;
-    }
-
     private bool Search(List<int> solution)
     {
         if (root.Right == root) return true; // 모든 Primary 컬럼이 커버됨

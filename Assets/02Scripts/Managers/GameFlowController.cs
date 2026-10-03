@@ -23,12 +23,13 @@ public class GameFlowController : Singleton<GameFlowController>
     [SerializeField] private int maxBonusNightStages = 5;
 
     public DayPuzzleGenerator.DayOrder CurrentDayOrder { get; private set; }
-    public List<BlockData> ChosenGachaPool { get; private set; } = new();
+    public List<FlowerData> ChosenGachaPool { get; private set; } = new();
 
     private const string DefaultRejectResponseLine = "그래요라고 하세요";
 
     private string pendingCustomerLine;
     private string pendingRejectResponseLine = DefaultRejectResponseLine;
+    private bool pendingDayTimeUp;
 
     private List<NightPuzzleData> nightQueue = new();
     private int nightIndex;
@@ -36,12 +37,14 @@ public class GameFlowController : Singleton<GameFlowController>
     protected override void OnAwake()
     {
         SceneManager.sceneLoaded += OnSceneLoaded;
+        EventBus.OnDayTimeUp += HandleDayTimeUp;
     }
 
     protected override void OnDestroy()
     {
         base.OnDestroy();
         SceneManager.sceneLoaded -= OnSceneLoaded;
+        EventBus.OnDayTimeUp -= HandleDayTimeUp;
     }
 
     private void Start()
@@ -59,6 +62,7 @@ public class GameFlowController : Singleton<GameFlowController>
     {
         CurrentDayOrder = DayPuzzleGenerator.GenerateOrder(CurrencyManager.Instance.CurrentDay);
         CurrencyManager.Instance.SetCurrentRequirement(CurrentDayOrder.requirement);
+        if (DayClock.Instance != null) DayClock.Instance.ResetMood(); // 새 손님이 오면 기분 시간이 다시 찬다
         SceneManager.LoadScene(SceneDayMain);
     }
 
@@ -73,9 +77,9 @@ public class GameFlowController : Singleton<GameFlowController>
         SceneManager.LoadScene(SceneFlowerSelect);
     }
 
-    public void ConfirmFlowerSelection(List<BlockData> chosen)
+    public void ConfirmFlowerSelection(List<FlowerData> chosen)
     {
-        ChosenGachaPool = new List<BlockData>(chosen);
+        ChosenGachaPool = new List<FlowerData>(chosen);
         SceneManager.LoadScene(SceneDayPuzzle);
     }
 
@@ -110,6 +114,21 @@ public class GameFlowController : Singleton<GameFlowController>
         return line;
     }
 
+    /// <summary>하루 시간이 끝나면 하던 일과 상관없이 밤 메인으로 강제 전환한다. 밤 메인에서 손님이 마무리 대사를 한다.</summary>
+    private void HandleDayTimeUp()
+    {
+        pendingDayTimeUp = true;
+        SceneManager.LoadScene(SceneNightMain);
+    }
+
+    /// <summary>밤 메인 진입 시, 시간 초과로 강제 전환된 것이면 true를 한 번 반환하고 지운다.</summary>
+    public bool ConsumeDayTimeUp()
+    {
+        bool value = pendingDayTimeUp;
+        pendingDayTimeUp = false;
+        return value;
+    }
+
     // ========== 밤 ==========
 
     /// <summary>DayToNight 화면에서 밤 메인 허브로 넘어갈 때 호출. 지금은 단순 씬 이동만 한다.</summary>
@@ -127,7 +146,6 @@ public class GameFlowController : Singleton<GameFlowController>
         }
 
         int[] requested = CurrencyManager.Instance.ClearDailyRequestsAndGet();
-        EventBus.RaiseDayEnded(requested);
 
         var obtained = CurrencyManager.Instance.GetObtainedFlowerIds();
         int gridSize = ShopManager.Instance.GetGridSize(CurrentDayOrder?.wrapperId ?? 1);
@@ -136,7 +154,6 @@ public class GameFlowController : Singleton<GameFlowController>
         nightQueue = ProceduralNightPuzzleGenerator.GenerateNightQueue(gridSize, requested, obtained, bonusCount);
         nightIndex = 0;
 
-        EventBus.RaiseNightPuzzlesGenerated(nightQueue.ToArray());
         SceneManager.LoadScene(SceneNightPuzzle);
     }
 
@@ -149,10 +166,10 @@ public class GameFlowController : Singleton<GameFlowController>
         }
 
         NightPuzzleData data = nightQueue[nightIndex];
-        var allowedBlocks = new List<BlockData>();
+        var allowedBlocks = new List<FlowerData>();
         foreach (int id in data.requiredFlowerIds)
         {
-            var b = BlockDatabase.Instance.GetById(id);
+            var b = BlockRegistry.Instance.GetById(id);
             if (b != null) allowedBlocks.Add(b);
         }
 
@@ -183,18 +200,11 @@ public class GameFlowController : Singleton<GameFlowController>
     private System.Collections.IEnumerator FinishNightRoutine()
     {
         EventBus.RaiseAscensionMoment("오늘 밤도 손님들이 모두 편안히 떠났습니다");
-        EventBus.RaiseAllNightPuzzlesFinished();
 
         yield return new WaitForSeconds(1.6f);
 
         CurrencyManager.Instance.AdvanceDay();
         BeginNewDay();
-    }
-
-    /// <summary>밤 퍼즐을 그만 풀고 싶을 때(잉여 스테이지 스킵) 호출.</summary>
-    public void SkipRemainingNightStages()
-    {
-        FinishNight();
     }
 
     // ========== 씬 로드 훅 ==========

@@ -30,7 +30,6 @@ public class CurrencyManager : Singleton<CurrencyManager>
     public int CurrentDay => currentDay;
     public IReadOnlyCollection<int> OwnedWrappers => ownedWrappers;
     public IReadOnlyDictionary<int, bool> ObtainedFlowers => obtainedFlowers;
-    public IReadOnlyList<int> RequestedFlowerIdsForTonight => requestedFlowerIdsForTonight;
     public CustomerRequirementGenerator.CustomerRequirement CurrentRequirement => currentRequirement;
 
     /// <summary>DayPuzzleGenerator가 생성한 오늘의 요구사항을 단일 소스로 등록한다(표시용과 판정용이 어긋나지 않도록).</summary>
@@ -49,14 +48,17 @@ public class CurrencyManager : Singleton<CurrencyManager>
         currentMoney = initialMoney;
         currentDay = 1;
 
-        // 초기 포장지: ID 1 (5x5) 언락
-        ownedWrappers.Add(1);
+        // 초기 포장지: 기획서(포장지 프리셋 PDF)에 프리셋이 있는 5번만 보유한 것으로 친다.
+        // 6번은 3링이라 보드가 아직 지원하지 않는다(WrapperBoardController.SupportedRings 참고).
+        ownedWrappers.Add(5);
 
-        // 초기 꽃: 모노미노(1), 도미노-빨강(2), S-테트로미노-파랑(9) 획득 가능 (BlockDatabase의 1단계 포장지 꽃 ID와 일치해야 함)
-        // 9번은 좌우 반전이 실제로 다르게 보이는(거울상) 도형이라, 처음부터 회전/반전 조작을 눈으로 확인할 수 있다.
+        // 초기 꽃: 역할(속성)별로 하나씩. 장미-도미노(1, 매스), 튤립-I트로미노(3, 필러), 해바라기-L트로미노(4, 폼), 프리지아-S테트로미노(8, 라인)
+        // (BlockRegistry의 1단계 포장지 꽃 ID와 일치해야 함)
+        // 8번은 좌우 반전이 실제로 다르게 보이는(거울상) 도형이라, 처음부터 회전/반전 조작을 눈으로 확인할 수 있다.
         obtainedFlowers[1] = true;
-        obtainedFlowers[2] = true;
-        obtainedFlowers[9] = true;
+        obtainedFlowers[3] = true;
+        obtainedFlowers[4] = true;
+        obtainedFlowers[8] = true;
 
         requestedFlowerIdsForTonight.Clear();
 
@@ -102,7 +104,6 @@ public class CurrencyManager : Singleton<CurrencyManager>
         if (!ownedWrappers.Contains(wrapperId))
         {
             ownedWrappers.Add(wrapperId);
-            EventBus.RaiseWrapperUnlocked(wrapperId);
             Debug.Log($"[CurrencyManager] 포장지 {wrapperId} 언락");
         }
     }
@@ -140,23 +141,13 @@ public class CurrencyManager : Singleton<CurrencyManager>
         if (!obtainedFlowers.ContainsKey(flowerId))
         {
             obtainedFlowers[flowerId] = true;
-            EventBus.RaiseFlowerObtained(flowerId);
             Debug.Log($"[CurrencyManager] 꽃 {flowerId} 획득");
         }
         else if (!obtainedFlowers[flowerId])
         {
             obtainedFlowers[flowerId] = true;
-            EventBus.RaiseFlowerObtained(flowerId);
             Debug.Log($"[CurrencyManager] 꽃 {flowerId} 획득");
         }
-    }
-
-    /// <summary>
-    /// 꽃 획득 여부 확인
-    /// </summary>
-    public bool HasFlower(int flowerId)
-    {
-        return obtainedFlowers.ContainsKey(flowerId) && obtainedFlowers[flowerId];
     }
 
     /// <summary>
@@ -225,6 +216,12 @@ public class CurrencyManager : Singleton<CurrencyManager>
 
         if (GUILayout.Button("Debug: 다음 날"))
             AdvanceDay();
+
+        if (GUILayout.Button("Debug: 하루 시간 -1분") && DayClock.Instance != null)
+            DayClock.Instance.SkipDayTime(60f);
+
+        if (GUILayout.Button("Debug: 손님 기분 -20%") && DayClock.Instance != null)
+            DayClock.Instance.DrainMood(0.2f);
 
         GUILayout.Label($"현재 금액: {CurrentMoney}\n현재 일수: {CurrentDay}\n보유 포장지: {ownedWrappers.Count}개");
     }

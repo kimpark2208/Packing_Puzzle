@@ -26,7 +26,6 @@ public class ShopManager : Singleton<ShopManager>
         public int gridSizeInt;         // 포장지만: 실제 그리드 한 변 길이
         public int tier;                // 포장지만: 누적 해금 단계 (1부터)
         public string colorHintName;    // 포장지만: 명확한 힌트용 색깔 이름 (예: "핑크")
-        public string sizeHintWord;     // 포장지만: 모호한 힌트용 크기 표현 (예: "가장 작은")
     }
 
     // 모든 상점 아이템
@@ -50,8 +49,7 @@ public class ShopManager : Singleton<ShopManager>
             gridSize = "5x5",
             gridSizeInt = 5,
             tier = 1,
-            colorHintName = "핑크",
-            sizeHintWord = "가장 작은"
+            colorHintName = "핑크"
         });
 
         allItems.Add(new ShopItem
@@ -64,8 +62,7 @@ public class ShopManager : Singleton<ShopManager>
             gridSize = "8x8",
             gridSizeInt = 8,
             tier = 2,
-            colorHintName = "노란",
-            sizeHintWord = "중간 크기의"
+            colorHintName = "노란"
         });
 
         allItems.Add(new ShopItem
@@ -78,8 +75,7 @@ public class ShopManager : Singleton<ShopManager>
             gridSize = "10x10",
             gridSizeInt = 10,
             tier = 3,
-            colorHintName = "보라",
-            sizeHintWord = "가장 큰"
+            colorHintName = "보라"
         });
 
         allItems.Add(new ShopItem
@@ -92,8 +88,7 @@ public class ShopManager : Singleton<ShopManager>
             gridSize = "12x12",
             gridSizeInt = 12,
             tier = 4,
-            colorHintName = "초록",
-            sizeHintWord = "더 화려한"
+            colorHintName = "초록"
         });
 
         allItems.Add(new ShopItem
@@ -106,8 +101,7 @@ public class ShopManager : Singleton<ShopManager>
             gridSize = "14x14",
             gridSizeInt = 14,
             tier = 5,
-            colorHintName = "주황",
-            sizeHintWord = "한층 더 화려한"
+            colorHintName = "주황"
         });
 
         allItems.Add(new ShopItem
@@ -120,8 +114,7 @@ public class ShopManager : Singleton<ShopManager>
             gridSize = "16x16",
             gridSizeInt = 16,
             tier = 6,
-            colorHintName = "청록",
-            sizeHintWord = "매우 화려한"
+            colorHintName = "청록"
         });
 
         allItems.Add(new ShopItem
@@ -134,8 +127,7 @@ public class ShopManager : Singleton<ShopManager>
             gridSize = "18x18",
             gridSizeInt = 18,
             tier = 7,
-            colorHintName = "금빛",
-            sizeHintWord = "가장 화려한"
+            colorHintName = "금빛"
         });
 
         // ========== 가구 (Furniture) ==========
@@ -240,11 +232,6 @@ public class ShopManager : Singleton<ShopManager>
     }
 
     /// <summary>
-    /// 모든 아이템 반환
-    /// </summary>
-    public List<ShopItem> GetAllItems() => new List<ShopItem>(allItems);
-
-    /// <summary>
     /// 아이템 ID로 찾기
     /// </summary>
     public ShopItem? GetItemById(int itemId)
@@ -276,12 +263,5 @@ public class ShopManager : Singleton<ShopManager>
     {
         var item = GetItemById(wrapperId);
         return item.HasValue && !string.IsNullOrEmpty(item.Value.colorHintName) ? item.Value.colorHintName : "특별한";
-    }
-
-    /// <summary>손님이 "모호한" 힌트를 줄 때 사용하는 크기 표현.</summary>
-    public string GetSizeHintWord(int wrapperId)
-    {
-        var item = GetItemById(wrapperId);
-        return item.HasValue && !string.IsNullOrEmpty(item.Value.sizeHintWord) ? item.Value.sizeHintWord : "적당한";
     }
 }
