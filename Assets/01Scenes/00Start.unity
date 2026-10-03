@@ -452,7 +452,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::DayClock
   dontDestroyOnLoad: 1
   dayDurationSeconds: 300
-  moodDurationSeconds: 45
+  moodDurationSeconds: 40
 --- !u!4 &1513376232
 Transform:
   m_ObjectHideFlags: 0

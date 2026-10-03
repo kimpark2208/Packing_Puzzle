@@ -20,7 +20,8 @@ public class DayMainUI : MonoBehaviour
     private const string RejectLine = "거절할순없으세요";
     private const string DefaultForceAcceptLine = "그래요라고 하세요";
     private const string TimeUpLine = "시간이 늦었네요 가봐야겠어요";
-    private const float TimeUpHideDelay = 5f;
+
+    [SerializeField] private float TimeUpHideDelay = 5f;
 
     [SerializeField] private TMP_Text moneyText;
     [SerializeField] private TMP_Text bubbleText;
@@ -52,6 +53,7 @@ public class DayMainUI : MonoBehaviour
     private bool catalogOpen;
     private bool showingAngryLine;
     private string forceAcceptLine = DefaultForceAcceptLine;
+    private bool closing; // 하루 시간이 끝나 손님이 퇴장하는 중
 
     public void Initialize(DayPuzzleGenerator.DayOrder dayOrder)
     {
@@ -115,12 +117,14 @@ public class DayMainUI : MonoBehaviour
 
     private void OnRejectClicked()
     {
+        if (closing) { HideCustomer(); return; }
         if (bubbleText == null) return;
         bubbleText.text = showingAngryLine ? forceAcceptLine : RejectLine;
     }
 
     private void OnAcceptClicked()
     {
+        if (closing) { HideCustomer(); return; }
         if (showingAngryLine)
         {
             showingAngryLine = false;
@@ -131,17 +135,22 @@ public class DayMainUI : MonoBehaviour
         if (GameFlowController.Instance != null) GameFlowController.Instance.GoToFlowerSelect();
     }
 
-    /// <summary>하루 시간이 끝난 손님: 대사를 한 뒤 잠시 후 말풍선과 캐릭터가 사라지고 전등만 남는다.</summary>
+    /// <summary>하루 시간이 끝난 손님: 대사를 한 뒤 잠시 후(또는 응답 버튼을 누르면 바로) 말풍선과 캐릭터가 사라지고 전등만 남는다.</summary>
     private void EndConversation()
     {
-        if (askButton != null) askButton.enabled = false; // interactable=false는 비활성 색(반투명)이 입혀져서 컴포넌트만 끈다
-        if (acceptButton != null) acceptButton.enabled = false;
+        closing = true; // 버튼은 그대로 두고(색 유지), 누르면 바로 퇴장한다
         StartCoroutine(HideCustomerAfterDelay());
     }
 
     private System.Collections.IEnumerator HideCustomerAfterDelay()
     {
         yield return new WaitForSeconds(TimeUpHideDelay);
+        HideCustomer();
+    }
+
+    private void HideCustomer()
+    {
+        StopAllCoroutines();
         if (bubbleContainer != null) bubbleContainer.SetActive(false);
         if (characterRoot != null) characterRoot.SetActive(false);
     }

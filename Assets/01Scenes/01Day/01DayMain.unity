@@ -891,6 +891,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 700286fb42c325b458bb2182aafe20bc, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::DayMainUI
+  TimeUpHideDelay: 3
   moneyText: {fileID: 1573980856}
   bubbleText: {fileID: 729435958}
   askButton: {fileID: 236430660}
