@@ -76,3 +76,7 @@ crashlytics-build.properties
 
 # graphify output
 /graphify-out/
+
+# Unity test runner leftovers
+/Assets/Resources/PerformanceTestRunInfo.json*
+/Assets/Resources/PerformanceTestRunSettings.json*
