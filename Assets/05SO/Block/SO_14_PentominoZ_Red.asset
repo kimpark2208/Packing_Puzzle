@@ -21,8 +21,8 @@ MonoBehaviour:
   - cols: 000100
   - cols: 000101
   anchorCoord: {x: 1, y: 1}
-  iconSprite: {fileID: 21300000, guid: d2aa64b667f55bc4f8e345930364dfb6, type: 3}
+  iconSprite: {fileID: -3182467019310743072, guid: a88ffab4d83f02c4d8bd22562c2faccc, type: 3}
   stemSprite: {fileID: 5856240631183992178, guid: b9f97a0c03bea8c49ac2b17ce37cf466, type: 3}
-  nightCellSprite: {fileID: 21300000, guid: d2aa64b667f55bc4f8e345930364dfb6, type: 3}
+  nightCellSprite: {fileID: -3182467019310743072, guid: a88ffab4d83f02c4d8bd22562c2faccc, type: 3}
   dayPieceSprite: {fileID: 21300000, guid: 26e4535e2d208d64ab23ed013b557d44, type: 3}
-  dayFillSprite: {fileID: -3170352978273040377, guid: 8ec1d2f5bd2e15d4c93a806a49baaa17, type: 3}
+  dayFillSprite: {fileID: -3480653308909891845, guid: 29875a58e269b374195376c434488224, type: 3}

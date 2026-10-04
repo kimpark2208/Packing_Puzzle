@@ -52,7 +52,7 @@ public class FlowerData : ScriptableObject
     [UnityEngine.Serialization.FormerlySerializedAs("flowerIcon")]
     public Sprite nightCellSprite;
 
-    [Header("밤 퍼즐 - 블록 미리보기용 통짜 이미지 (모양대로 칸을 색으로 채운 한 장). BlockImageGenerator가 자동 생성해 채운다.")]
+    [Header("밤 퍼즐 - 블록 미리보기용 통짜 이미지 (모양대로 칸을 흰색으로 채운 한 장, 색상은 런타임에 ColorPalette로 틴트됨). BlockImageGenerator가 자동 생성해 채운다.")]
     [UnityEngine.Serialization.FormerlySerializedAs("blockImage")]
     public Sprite dayPieceSprite;
 

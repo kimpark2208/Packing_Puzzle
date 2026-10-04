@@ -71,11 +71,15 @@ public class DayMainUI : MonoBehaviour
         if (askButton != null) askButton.onClick.AddListener(OnRejectClicked);
         if (acceptButton != null) acceptButton.onClick.AddListener(OnAcceptClicked);
 
-        if (lanternButton != null) lanternButton.onClick.AddListener(() =>
+        if (lanternButton != null)
         {
-            if (nightMode || nightEnding) return; // 밤 손님을 만나는 중에는 전등으로 밤을 다시 시작하지 않는다
-            if (GameFlowController.Instance != null) GameFlowController.Instance.ProceedToNightMain();
-        });
+            lanternButton.interactable = false; // 하루 시간이 끝나고 손님이 사라진 뒤에야 누를 수 있다(HideCustomer)
+            lanternButton.onClick.AddListener(() =>
+            {
+                if (nightMode || nightEnding) return; // 밤 손님을 만나는 중에는 전등으로 밤을 다시 시작하지 않는다
+                if (GameFlowController.Instance != null) GameFlowController.Instance.ProceedToNightMain();
+            });
+        }
 
         if (preferencesButton != null) preferencesButton.onClick.AddListener(OpenPreferences);
         if (preferencesCloseButton != null) preferencesCloseButton.onClick.AddListener(ClosePreferences);
@@ -192,6 +196,7 @@ public class DayMainUI : MonoBehaviour
         StopAllCoroutines();
         if (bubbleContainer != null) bubbleContainer.SetActive(false);
         if (characterRoot != null) characterRoot.SetActive(false);
+        if (lanternButton != null && !nightEnding) lanternButton.interactable = true; // 하루 시간 종료 손님이 사라졌으니 전등으로 밤을 시작할 수 있다
 
         if (nightEnding && GameFlowController.Instance != null) GameFlowController.Instance.EndNight(); // 손님이 사라지면 하루 결산 화면으로
     }
@@ -206,7 +211,7 @@ public class DayMainUI : MonoBehaviour
             return;
         }
 
-        bubbleText.text = $"{order.hintColorName}색 포장지에 {order.requirement.description}";
+        bubbleText.text = CustomerDialogue.OrderLine(order);
     }
 
     private void OpenPreferences()

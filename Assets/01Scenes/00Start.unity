@@ -152,8 +152,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::GameFlowController
   dontDestroyOnLoad: 1
-  minBonusNightStages: 3
-  maxBonusNightStages: 5
+  nightRewardPerFlower: 6
 --- !u!114 &438470795
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -216,6 +215,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::CurrencyManager
   dontDestroyOnLoad: 1
   initialMoney: 0
+  initialFlowerStock: 5
 --- !u!4 &438470799
 Transform:
   m_ObjectHideFlags: 0
@@ -452,7 +452,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::DayClock
   dontDestroyOnLoad: 1
   dayDurationSeconds: 300
-  moodDurationSeconds: 40
+  moodDurationSeconds: 60
+  nightDurationSeconds: 180
 --- !u!4 &1513376232
 Transform:
   m_ObjectHideFlags: 0

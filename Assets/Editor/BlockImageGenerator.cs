@@ -4,8 +4,8 @@ using UnityEngine;
 
 /// <summary>
 /// 모든 FlowerData의 밤 퍼즐 블록 미리보기용 통짜 이미지를 코드로 생성해 실제 PNG 파일로 저장하는 에디터 툴.
-/// Assets/03Images/Block의 기존 I_Three.png 등과 같은 스타일(단색 칸 + 검은 테두리/격자선)을 따른다.
-/// 블록 모양/색이 바뀌면 메뉴에서 다시 실행해 재생성하면 된다.
+/// Assets/03Images/Block의 기존 I_Three.png 등과 같은 스타일(흰색 칸 + 검은 테두리/격자선)을 따른다. 색은 쓸 때 꽃 색으로 틴트한다.
+/// 블록 모양이 바뀌면 메뉴에서 다시 실행해 재생성하면 된다.
 /// </summary>
 public static class BlockImageGenerator
 {

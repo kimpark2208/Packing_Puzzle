@@ -22,9 +22,6 @@ public class ShopManager : Singleton<ShopManager>
         public int price;               // 가격
         public ShopCategory category;   // 카테고리
         public string description;      // 설명
-        public string gridSize;         // 포장지만: "5x5", "8x8" 등 (표시용)
-        public int gridSizeInt;         // 포장지만: 실제 그리드 한 변 길이
-        public int tier;                // 포장지만: 누적 해금 단계 (1부터)
         public string colorHintName;    // 포장지만: 명확한 힌트용 색깔 이름 (예: "핑크")
     }
 
@@ -42,91 +39,70 @@ public class ShopManager : Singleton<ShopManager>
         allItems.Add(new ShopItem
         {
             itemId = 1,
-            itemName = "포장지 (5x5)",
+            itemName = "포장지",
             price = 0,
             category = ShopCategory.Wrapper,
             description = "기본 포장지",
-            gridSize = "5x5",
-            gridSizeInt = 5,
-            tier = 1,
             colorHintName = "핑크"
         });
 
         allItems.Add(new ShopItem
         {
             itemId = 2,
-            itemName = "포장지 (8x8)",
+            itemName = "포장지",
             price = 1000,
             category = ShopCategory.Wrapper,
             description = "더 큰 포장지",
-            gridSize = "8x8",
-            gridSizeInt = 8,
-            tier = 2,
             colorHintName = "노란"
         });
 
         allItems.Add(new ShopItem
         {
             itemId = 3,
-            itemName = "포장지 (10x10)",
+            itemName = "포장지",
             price = 2500,
             category = ShopCategory.Wrapper,
             description = "매우 큰 포장지",
-            gridSize = "10x10",
-            gridSizeInt = 10,
-            tier = 3,
             colorHintName = "보라"
         });
 
         allItems.Add(new ShopItem
         {
             itemId = 4,
-            itemName = "포장지 (품 등장)",
+            itemName = "포장지",
             price = 4000,
             category = ShopCategory.Wrapper,
             description = "라인/매스/필러 요구 개수가 늘어난 포장지",
-            gridSize = "12x12",
-            gridSizeInt = 12,
-            tier = 4,
             colorHintName = "초록"
         });
 
         allItems.Add(new ShopItem
         {
             itemId = 5,
-            itemName = "포장지 (5단계)",
+            itemName = "포장지",
             price = 6000,
             category = ShopCategory.Wrapper,
             description = "라인/매스/품/필러를 모두 요구하는 포장지",
-            gridSize = "14x14",
-            gridSizeInt = 14,
-            tier = 5,
             colorHintName = "주황"
         });
 
         allItems.Add(new ShopItem
         {
             itemId = 6,
-            itemName = "포장지 (6단계)",
+            itemName = "포장지",
             price = 8500,
             category = ShopCategory.Wrapper,
             description = "요구 개수가 더 늘어난 고난도 포장지",
-            gridSize = "16x16",
-            gridSizeInt = 16,
-            tier = 6,
             colorHintName = "청록"
         });
 
         allItems.Add(new ShopItem
         {
             itemId = 7,
-            itemName = "포장지 (최종)",
+            itemName = "포장지",
             price = 12000,
             category = ShopCategory.Wrapper,
             description = "가장 많은 꽃을 요구하는 최종 단계 포장지",
-            gridSize = "18x18",
-            gridSizeInt = 18,
-            tier = 7,
             colorHintName = "금빛"
         });
 
@@ -242,20 +218,6 @@ public class ShopManager : Singleton<ShopManager>
                 return item;
         }
         return null;
-    }
-
-    /// <summary>포장지 ID로 그리드 한 변 길이를 얻는다. 못 찾으면 기본값 5.</summary>
-    public int GetGridSize(int wrapperId)
-    {
-        var item = GetItemById(wrapperId);
-        return (item.HasValue && item.Value.gridSizeInt > 0) ? item.Value.gridSizeInt : 5;
-    }
-
-    /// <summary>포장지 ID로 누적 해금 단계(tier)를 얻는다. 못 찾으면 기본값 1.</summary>
-    public int GetTier(int wrapperId)
-    {
-        var item = GetItemById(wrapperId);
-        return (item.HasValue && item.Value.tier > 0) ? item.Value.tier : 1;
     }
 
     /// <summary>손님이 "명확한" 힌트를 줄 때 사용하는 포장지 색깔 이름.</summary>

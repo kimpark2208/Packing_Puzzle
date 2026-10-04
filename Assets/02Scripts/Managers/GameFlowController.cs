@@ -36,7 +36,7 @@ public class GameFlowController : Singleton<GameFlowController>
     private int nightIndex;
     private bool nightCustomerPending; // 밤 요청을 마치고 밤 메인에서 밤 손님을 만나야 하는가
     private bool nightEndPending;      // 밤 시간이 끝나 밤 메인에서 마지막 손님이 외치고 떠나야 하는가
-    private int nightGridSize = 5;
+    private const int NightGridSize = 5; // 임시: 밤 퍼즐 판은 5x5 정사각형으로 고정
 
     protected override void OnAwake()
     {
@@ -149,10 +149,8 @@ public class GameFlowController : Singleton<GameFlowController>
         int[] requested = requestedFlowerIds.Distinct().ToArray();
 
         var obtained = CurrencyManager.Instance.GetObtainedFlowerIds();
-        nightGridSize = ShopManager.Instance.GetGridSize(CurrentDayOrder?.wrapperId ?? 1);
-
         // 멈춤을 줄이려고 요청 퍼즐만 만든다. 잉여 퍼즐은 필요할 때 EnsureNightStage가 하나씩 만든다(요청이 없으면 첫 잉여 퍼즐만).
-        nightQueue = ProceduralNightPuzzleGenerator.GenerateNightQueue(nightGridSize, requested, obtained, 0);
+        nightQueue = ProceduralNightPuzzleGenerator.GenerateNightQueue(NightGridSize, requested, obtained, 0);
         nightIndex = 0;
         EnsureNightStage(0);
 
@@ -180,7 +178,7 @@ public class GameFlowController : Singleton<GameFlowController>
     {
         while (nightQueue.Count <= index)
         {
-            var more = ProceduralNightPuzzleGenerator.GenerateNightQueue(nightGridSize, null, CurrencyManager.Instance.GetObtainedFlowerIds(), 1);
+            var more = ProceduralNightPuzzleGenerator.GenerateNightQueue(NightGridSize, null, CurrencyManager.Instance.GetObtainedFlowerIds(), 1);
             if (more.Count == 0) return;
             nightQueue.AddRange(more);
         }

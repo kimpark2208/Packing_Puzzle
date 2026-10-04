@@ -43,6 +43,7 @@ public class NightBoardController : MonoBehaviour
     private readonly HashSet<int> erasedBlockIds = new();
     private bool isDrawing;
     private bool currentDrawIsInvalid;
+    private bool puzzleCompleted; // 완료 뒤엔 입력을 받지 않는다(결과 팝업의 버튼을 누를 때 뒤의 블록이 지워지지 않도록)
 
     public NightShapePuzzleValidator Validator { get; set; }
 
@@ -145,6 +146,7 @@ public class NightBoardController : MonoBehaviour
 
             var image = previewGO.GetComponent<Image>();
             image.sprite = block.dayPieceSprite;
+            image.color = ColorPalette.ToUnityColor(block.color); // 블록 이미지는 흰색이라 꽃 색으로 틴트한다
             image.preserveAspect = true;
 
             x += size.x + spacing;
@@ -154,6 +156,7 @@ public class NightBoardController : MonoBehaviour
     private void CreateBoard(int size, bool[,] wallGrid)
     {
         ClearBoardObjects();
+        puzzleCompleted = false;
         gridLayout.enabled = true;
 
         gridSize = size;
@@ -242,6 +245,8 @@ public class NightBoardController : MonoBehaviour
 
     private void Update()
     {
+        if (puzzleCompleted) return;
+
         if (!isDrawing && Input.GetMouseButtonDown(0) && graphicRaycaster != null && EventSystem.current != null)
         {
             TryStartDrawingFromPointer();
@@ -482,6 +487,7 @@ public class NightBoardController : MonoBehaviour
 
     private void OnPuzzleCompleted()
     {
+        puzzleCompleted = true;
         List<int> obtainedFlowerIds = placedBlockFlowerId.Values.Distinct().ToList();
 
         foreach (int flowerId in obtainedFlowerIds)

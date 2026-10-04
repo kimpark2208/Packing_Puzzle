@@ -4,7 +4,7 @@ using UnityEngine;
 /// <summary>
 /// 낮 퍼즐(손님 주문) 절차적 생성.
 /// 손님 등장 시 보유한 포장지의 프리셋을 모두 모아 하나를 무작위로 고르고, 그 프리셋으로 풀 수 있는 주문과
-/// 힌트(그 프리셋 포장지의 색/크기 표현)를 만든다. 플레이어가 포장지를 고르면 그 포장지의 단계(tier)와
+/// 힌트(그 프리셋 포장지의 색 표현)를 만든다. 플레이어가 포장지를 고르면
 /// 퍼즐에 쓸 프리셋을 확정한다. 손님이 말한 포장지를 고르면 주문을 풀 수 있는 프리셋이고,
 /// 다른 포장지를 고르면 그 포장지의 프리셋 중 무작위라 못 풀 수도 있다(손님 말을 안 들은 대가).
 /// </summary>
@@ -24,7 +24,6 @@ public static class DayPuzzleGenerator
         // ---- 플레이어가 포장지를 고른 뒤에 확정되는 것 ----
         public bool isFinalized;
         public int wrapperId;
-        public int tier;
         public int presetIndex;        // 퍼즐에 쓸 프리셋 번호 (-1이면 보드 기본값)
     }
 
@@ -72,11 +71,10 @@ public static class DayPuzzleGenerator
         };
     }
 
-    /// <summary>플레이어가 포장지를 골랐을 때 호출. 그 포장지의 단계(tier)와 퍼즐에 쓸 프리셋을 확정한다.</summary>
+    /// <summary>플레이어가 포장지를 골랐을 때 호출. 퍼즐에 쓸 프리셋을 확정한다.</summary>
     public static void FinalizeForWrapper(DayOrder order, int chosenWrapperId)
     {
         order.wrapperId = chosenWrapperId;
-        order.tier = ShopManager.Instance.GetTier(chosenWrapperId);
         order.presetIndex = chosenWrapperId == order.hintWrapperId ? order.hintPresetIndex : RandomPlayablePresetIndex(chosenWrapperId);
         order.isFinalized = true;
     }

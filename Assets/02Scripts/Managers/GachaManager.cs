@@ -16,7 +16,7 @@ public class GachaManager : MonoBehaviour
 {
     [SerializeField] private Button gachaButton;     // 리롤 버튼
     [SerializeField] private RectTransform bucket;   // 자식 FlowerTemplate들이 꽃이 나올 자리
-    [SerializeField] private int maxRerolls = 5;
+    [SerializeField] private int maxRerolls = 2;
     [SerializeField] private List<FlowerData> initialPool = new(); // 인스펙터 테스트용 기본 풀
 
     private readonly List<GameObject> slotTemplates = new();
@@ -107,15 +107,24 @@ public class GachaManager : MonoBehaviour
         var fresh = new List<FlowerData>(pool);
         if (avoid != null) foreach (var f in avoid) fresh.Remove(f);
 
+        int count = DrawCount();
         var picks = new List<FlowerData>();
-        TakeRandom(fresh, picks, slotTemplates.Count);
+        TakeRandom(fresh, picks, count);
 
         // 새 꽃이 모자라면 방금 보여준 꽃으로 채운다.
         var rest = new List<FlowerData>(pool);
         foreach (var f in picks) rest.Remove(f);
-        TakeRandom(rest, picks, slotTemplates.Count);
+        TakeRandom(rest, picks, count);
 
         for (int i = 0; i < picks.Count; i++) Spawn(slotTemplates[i], picks[i]);
+    }
+
+    /// <summary>한 번에 뽑을 꽃 개수: 오늘 고른 포장지 데이터의 값. 버킷에 슬롯 오브젝트가 있는 만큼까지만 보여줄 수 있다.</summary>
+    private int DrawCount()
+    {
+        var order = GameFlowController.Instance != null ? GameFlowController.Instance.CurrentDayOrder : null;
+        WrapperData data = order != null && order.isFinalized && WrapperRegistry.Instance != null ? WrapperRegistry.Instance.GetById(order.wrapperId) : null;
+        return data != null ? Mathf.Min(data.flowersPerDraw, slotTemplates.Count) : slotTemplates.Count;
     }
 
     private static void TakeRandom(List<FlowerData> from, List<FlowerData> into, int total)

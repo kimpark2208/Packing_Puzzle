@@ -19,8 +19,8 @@ MonoBehaviour:
   shapeGrid:
   - cols: 0101
   anchorCoord: {x: 0, y: 0}
-  iconSprite: {fileID: 21300000, guid: d2aa64b667f55bc4f8e345930364dfb6, type: 3}
+  iconSprite: {fileID: 7063445062853087527, guid: 133ed902eb78116429f4e19cbf0d67d6, type: 3}
   stemSprite: {fileID: 5856240631183992178, guid: b9f97a0c03bea8c49ac2b17ce37cf466, type: 3}
-  nightCellSprite: {fileID: 21300000, guid: d2aa64b667f55bc4f8e345930364dfb6, type: 3}
+  nightCellSprite: {fileID: 7063445062853087527, guid: 133ed902eb78116429f4e19cbf0d67d6, type: 3}
   dayPieceSprite: {fileID: 21300000, guid: 0667cf08620f25442848ba60036919f6, type: 3}
-  dayFillSprite: {fileID: 1087625391282943612, guid: 7396b96ef78be49498374dbdc2d37747, type: 3}
+  dayFillSprite: {fileID: -2764537206855289646, guid: ff27b819afb375b499366b7b05aa9148, type: 3}

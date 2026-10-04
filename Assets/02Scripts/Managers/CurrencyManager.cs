@@ -47,9 +47,9 @@ public class CurrencyManager : Singleton<CurrencyManager>
         currentMoney = initialMoney;
         currentDay = 1;
 
-        // 초기 포장지: 기획서(포장지 프리셋 PDF)에 프리셋이 있는 5번만 보유한 것으로 친다.
-        // 6번은 3링이라 보드가 아직 지원하지 않는다(WrapperBoardController.SupportedRings 참고).
-        ownedWrappers.Add(5);
+        // 초기 포장지: 기획서(포장지 프리셋 PDF)의 프리셋이 들어 있는 2번만 보유한 것으로 친다.
+        // 3번(3링) 프리셋은 보드가 아직 지원하지 않는다(WrapperBoardController.SupportedRings 참고).
+        ownedWrappers.Add(2);
 
         // 초기 꽃: 역할(속성)별로 하나씩. 장미-도미노(1, 매스), 튤립-I트로미노(3, 필러), 해바라기-L트로미노(4, 폼), 프리지아-S테트로미노(8, 라인)
         // (BlockRegistry의 1단계 포장지 꽃 ID와 일치해야 함)
@@ -187,8 +187,8 @@ public class CurrencyManager : Singleton<CurrencyManager>
         if (GUILayout.Button("Debug: +1000 금액"))
             AddMoney(1000);
 
-        if (GUILayout.Button("Debug: 포장지 2 언락"))
-            UnlockWrapper(2);
+        if (GUILayout.Button("Debug: 포장지 3 언락"))
+            UnlockWrapper(3);
 
         if (GUILayout.Button("Debug: 다음 날"))
             AdvanceDay();

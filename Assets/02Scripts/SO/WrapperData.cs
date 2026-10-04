@@ -13,7 +13,10 @@ public class WrapperData : ScriptableObject
     public Color color = Color.white;
 
     [Header("포장지 크기 (동심원 개수)")]
-    [Min(1)] public int ringCount = 3;
+    [Range(1, 4)] public int ringCount = 3;
+
+    [Header("가챠(버킷) 한 번에 나오는 꽃 개수 (버킷의 슬롯 수까지만 보인다)")]
+    [Min(1)] public int flowersPerDraw = 3;
 
     [Header("이 포장지의 프리셋 (라운드 시작 시 무작위로 하나 선택)")]
     public List<WrapperPresetData> presets = new();

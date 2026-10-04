@@ -1,7 +1,7 @@
 using UnityEngine;
 
 /// <summary>
-/// FlowerData.shapeGrid로부터 "칸을 색으로 채우고 검은 테두리/격자선을 그리는" 스타일의 텍스처를 만든다.
+/// FlowerData.shapeGrid로부터 "칸을 흰색으로 채우고 검은 테두리/격자선을 그리는" 스타일의 텍스처를 만든다(색은 쓸 때 틴트).
 /// Assets/03Images/Block의 기존 I_Three.png / O_Four.png / T_Four.png와 같은 스타일을 코드로 재현한 것.
 /// BlockImageGenerator(에디터 툴, 실제 PNG 파일로 저장)가 사용한다. dayPieceSprite는 밤 퍼즐의
 /// FlowerBlock 미리보기(NightBoardController)에서 읽는 셀 단위 블록 이미지다.
@@ -30,7 +30,7 @@ public static class BlockTextureUtil
         for (int i = 0; i < pixels.Length; i++) pixels[i] = clear;
         tex.SetPixels32(pixels);
 
-        Color32 fill = ColorPalette.ToUnityColor(data.color);
+        Color32 fill = new Color32(255, 255, 255, 255); // 흰색으로 만들고, 쓸 때 꽃 색(ColorPalette)으로 틴트한다
         Color32 border = new Color32(25, 25, 25, 255);
         int borderPx = Mathf.Max(2, Mathf.RoundToInt(ReferenceCellPx * BorderRatio));
 

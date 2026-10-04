@@ -17,7 +17,7 @@ public class WrapperBoardController : MonoBehaviour
 {
     public static WrapperBoardController Instance { get; private set; }
 
-    /// <summary>에디터에 배치된 동심원 칸의 링 수. TODO: 링 수가 다른 포장지를 지원하려면 칸 구성을 새로 정해야 한다.</summary>
+    /// <summary>에디터에 칸 오브젝트가 배치된 링 수. 3·4링 칸을 씬에 배치하면 이 값을 올린다(포장지는 최대 4링).</summary>
     public const int SupportedRings = 2;
 
     [SerializeField] private RectTransform slotArea;
@@ -35,7 +35,7 @@ public class WrapperBoardController : MonoBehaviour
     // 태그 색(기획서): 라인=주황, 매스=파랑, 폼=핑크, 필러=노랑. 비어있음/미리보기/채움은 투명도로만 구분한다.
     private const float IdleAlpha = 0.45f;
     private const float HoverAlpha = 0.90f;
-    private const float FilledAlpha = 1f;
+    private const float FilledAlpha = 0f; // 꽃이 놓인 칸은 뒤의 셀 배경을 숨긴다
     private const int CollapseDiff = 2;
 
     [Header("기울기: 좌우 꽃 개수가 1개 차이일 때 많은 쪽으로 기운다(Lerp로 서서히)")]
@@ -53,6 +53,7 @@ public class WrapperBoardController : MonoBehaviour
     private float baseAngle;  // 에디터에 배치된 기본 z 회전
     private float tiltTarget; // 기본 회전에서 더 기울 각도
     private bool collapsing;  // 붕괴로 쓰러지는 중이면 더 빠른 속도로 기운다
+    private int activeRings = SupportedRings; // 이번 포장지의 링 수(맨 바깥 링 판정에 쓴다)
 
     /// <summary>꽃이 영역에 배치될 때마다 발행.</summary>
     public event Action OnFlowerPlaced;
@@ -119,6 +120,7 @@ public class WrapperBoardController : MonoBehaviour
             index = presetIndex;
         }
         if (data == null || data.presets.Count == 0) return null;
+        activeRings = Mathf.Min(data.ringCount, SupportedRings);
         return data.presets[Mathf.Clamp(index, 0, data.presets.Count - 1)];
     }
 
@@ -154,7 +156,11 @@ public class WrapperBoardController : MonoBehaviour
         region.Fill(flower);
         region.SetHighlightAlpha(FilledAlpha);
         Transform flowerImage = FlowerImageOf(region);
-        if (flowerImage != null) flowerImage.gameObject.SetActive(true);
+        if (flowerImage != null)
+        {
+            flowerImage.GetComponent<Image>().color = ColorPalette.ToUnityColor(flower.color); // 칸 이미지가 흰색이라 놓은 꽃의 색으로 물들인다
+            flowerImage.gameObject.SetActive(true);
+        }
         if (region == hoveredRegion) hoveredRegion = null;
 
         placementHistory.Add(flower);
@@ -201,7 +207,7 @@ public class WrapperBoardController : MonoBehaviour
             return regions.FirstOrDefault(r => r.ringIndex == -1);
         }
 
-        const int ringCount = SupportedRings;
+        int ringCount = activeRings;
         for (int ring = 0; ring < ringCount; ring++)
         {
             float inner = centerRadius + ring * ringSpacing;

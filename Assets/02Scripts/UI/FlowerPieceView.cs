@@ -5,16 +5,13 @@ using UnityEngine.UI;
 
 /// <summary>
 /// 꽃 한 송이를 보여주는 템플릿(트레이 조각 FlowerTemplate, 선택 화면 슬롯 VaseTemplate)의 표시만 담당한다:
-/// 아이콘, 색 마커, 이름, 속성 색 배경(FlowerBack). 템플릿마다 자식 위치가 달라서 이름으로 깊이 찾고,
+/// 아이콘, 속성(역할) 마크, 이름. 템플릿마다 자식 위치가 달라서 이름으로 깊이 찾고,
 /// 없는 요소는 건너뛴다. 드래그 입력은 BlockDrag, 선택 개수 같은 화면별 동작은 각 화면이 맡는다.
 /// </summary>
 public class FlowerPieceView : MonoBehaviour
 {
-    private const float FlowerBackAlpha = 150f / 255f;
-
     private Image icon;
-    private Image colorMarker;
-    private Image flowerBack; // 꽃의 속성(역할) 상징 색으로 깔리는 배경
+    private Image featureMark; // 꽃의 속성(역할) 상징 색으로 칠해지는 마크
     private TMP_Text nameText;
 
     /// <summary>꽃 아이콘 이미지. 화면별로 선택 상태 등에 맞춰 색을 바꿀 때 쓴다.</summary>
@@ -28,8 +25,7 @@ public class FlowerPieceView : MonoBehaviour
         if (icon == null) icon = GetComponent<Image>();
         if (icon == null) icon = gameObject.AddComponent<Image>();
 
-        colorMarker = FindChild<Image>("ColorMarker_temp");
-        flowerBack = FindChild<Image>("FlowerBack");
+        featureMark = FindChild<Image>("FeatureMark_temp");
         nameText = FindChild<TMP_Text>("FlowerName");
     }
 
@@ -46,12 +42,11 @@ public class FlowerPieceView : MonoBehaviour
         icon.preserveAspect = preserveAspect;
         icon.color = ColorPalette.ToUnityColor(flower.color);
 
-        if (colorMarker != null) colorMarker.color = ColorPalette.ToUnityColor(flower.color);
-        if (flowerBack != null)
+        if (featureMark != null)
         {
-            Color back = ColorPalette.ToRoleColor(flower.flowerRole);
-            back.a = FlowerBackAlpha;
-            flowerBack.color = back;
+            Color mark = ColorPalette.ToRoleColor(flower.flowerRole);
+            mark.a = featureMark.color.a; // 투명도는 프리팹에 정해 둔 값을 따른다
+            featureMark.color = mark;
         }
         if (nameText != null) nameText.text = flower.flowerName;
     }

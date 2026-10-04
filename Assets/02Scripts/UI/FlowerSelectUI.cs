@@ -159,7 +159,7 @@ public class FlowerSelectUI : MonoBehaviour
         }
     }
 
-    // 슬롯 프리셋마다 자식 위치가 달라(화병은 Button이 VaseImage에, ColorMarker가 그 아래) 이름으로 깊이 찾는다.
+    // 슬롯 프리셋마다 자식 위치가 달라(화병은 Button이 VaseImage에 있다) 이름으로 깊이 찾는다.
     private static Transform FindIn(RectTransform slot, string childName)
     {
         return slot.GetComponentsInChildren<Transform>(true).FirstOrDefault(t => t.name == childName);

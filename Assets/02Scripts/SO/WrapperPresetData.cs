@@ -12,6 +12,7 @@ public enum WrapperRegionPosition
     A_1Ring_Upper, A_1Ring_Lower, B_1Ring_Upper, B_1Ring_Lower,
     A_2Ring_Upper, A_2Ring_Lower, B_2Ring_Upper, B_2Ring_Lower,
     A_3Ring_Upper, A_3Ring_Lower, B_3Ring_Upper, B_3Ring_Lower,
+    A_4Ring_Upper, A_4Ring_Lower, B_4Ring_Upper, B_4Ring_Lower,
 }
 
 public static class WrapperRegionPositionExtensions

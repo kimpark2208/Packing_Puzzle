@@ -15,6 +15,7 @@ MonoBehaviour:
   wrapperId: 3
   colorName: "\uB178\uB780"
   color: {r: 0.98, g: 0.85, b: 0.2, a: 1}
-  ringCount: 2
+  ringCount: 3
+  flowersPerDraw: 3
   presets:
-  - {fileID: 11400000, guid: 0042b8824ff4e884a953f4a541d98373, type: 2}
+  - {fileID: 11400000, guid: d5b03e6684d5ae047aeef2fb19bf49bb, type: 2}
