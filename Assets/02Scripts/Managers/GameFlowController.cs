@@ -120,7 +120,7 @@ public class GameFlowController : Singleton<GameFlowController>
         return line;
     }
 
-    /// <summary>하루 시간이 끝나면 하던 일과 상관없이 밤 메인으로 강제 전환한다. 밤 메인에서 손님이 마무리 대사를 한다.</summary>
+    /// <summary>하루 시간이 끝나면 하던 일과 상관없이 밤 메인으로 강제 전환한다. 밤 메인에서 손님(낮 모습으로 바꾼 캐릭터와 전등)이 마무리 대사를 한다.</summary>
     private void HandleDayTimeUp()
     {
         pendingDayTimeUp = true;

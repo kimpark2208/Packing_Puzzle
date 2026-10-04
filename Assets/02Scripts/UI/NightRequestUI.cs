@@ -38,6 +38,9 @@ public class NightRequestUI : MonoBehaviour
 
         if (confirmButton != null) confirmButton.onClick.AddListener(OnConfirm);
         if (goToNightMainButton != null) goToNightMainButton.onClick.AddListener(OnGoToNightMain);
+
+        TutorialOverlay.Play("talisman", new TutorialOverlay.Step(listArea,
+            $"{TutorialOverlay.Em("얻고싶은 꽃")}을 고르세요.\n특별한 손님이 그 꽃을 위해 찾아올거예요."));
     }
 
     private void OnGoToNightMain()

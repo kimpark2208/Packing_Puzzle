@@ -28,9 +28,9 @@ public class DayPuzzleUI : MonoBehaviour
     [SerializeField] private MoneyRuleSettings moneySettings;
 
     private const float CollapseAutoProceedDelay = 1.2f;
-    private const string RequirementNotMetLine = "이게뭐예요!!";
+    private const string RequirementNotMetLine = "주문이랑 다른데요. 유명한 곳이라고 들었는데… 실망이네요.";
     private const string RequirementNotMetRejectResponse = "알긴 아시나보죠?";
-    private const string GoodResultLine = "좋네요!";
+    private const string GoodResultLine = "우와, 좋네요! 친구가 분명 좋아할 거예요.";
     private const string LateLine = "늦으셨네요."; // 손님 기분이 다 닳은 뒤에 퍼즐이 끝났을 때(성공 여부와 무관)
 
     private WrapperBoardController board;
@@ -62,6 +62,12 @@ public class DayPuzzleUI : MonoBehaviour
         if (collapseConfirmButton != null) collapseConfirmButton.onClick.AddListener(OnCollapseConfirmed);
 
         if (compulsionButton != null) compulsionButton.onClick.AddListener(OnCompulsionClicked);
+
+        if (gacha != null)
+        {
+            TutorialOverlay.Play("puzzle-match", new TutorialOverlay.Step(gacha.Bucket,
+                $"바구니에 나온 꽃을 끌어서 꽃의 {TutorialOverlay.Em("오른쪽 위 마커")}와 {TutorialOverlay.Em("같은 색 영역")}에 놓으세요.\n주황=라인 · 핑크=폼 · 파랑=매스 · 노랑=필러"));
+        }
     }
 
     private void OnDestroy()
@@ -73,6 +79,13 @@ public class DayPuzzleUI : MonoBehaviour
     {
         if (roundEnded || board == null) return;
 
+        if (gacha != null)
+        {
+            TutorialOverlay.Play("puzzle-balance",
+                new TutorialOverlay.Step(board.BoardArea, $"양쪽에 꽃을 고르게 놓으세요.\n한쪽이 2개 이상 많아지면 꽃다발이 {TutorialOverlay.Em("무너져요!")}"),
+                new TutorialOverlay.Step(gacha.RerollButton, $"원하는 꽃이 안 나오면 {TutorialOverlay.Em("[다시 뽑기]")}를 누르세요.\n파란 숫자는 남은 횟수예요."));
+        }
+
         if (board.IsComplete)
         {
             roundEnded = true;
@@ -82,6 +95,7 @@ public class DayPuzzleUI : MonoBehaviour
 
         if (board.IsCollapsed())
         {
+            TutorialOverlay.Play("puzzle-collapse", new TutorialOverlay.Step(null, $"꽃다발이 무너졌어요! 이번 꽃다발은 {TutorialOverlay.Em("감점")}돼요."));
             roundEnded = true; // 팝업이 보이는 동안은 더 놓지 못한다
             collapseCount++;
             board.PlayCollapse(); // 더 무거운 쪽으로 쓰러지는 연출

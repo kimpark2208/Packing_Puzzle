@@ -89,6 +89,26 @@ public class NightBoardController : MonoBehaviour
         Validator = shapeValidator;
         CreateBoard(size, wallGrid);
         UpdateFlowerBlockPreview(allowedBlocks);
+        PlayTutorial();
+    }
+
+    /// <summary>처음 보는 밤 퍼즐: 그리는 법과, 막힌 칸이 있으면 막힌 칸 설명을 차례로 보여 준다.</summary>
+    private void PlayTutorial()
+    {
+        RectTransform wall = null;
+        foreach (NightCellView cell in cells)
+        {
+            if (cell != null && cell.IsWall) { wall = (RectTransform)cell.transform; break; }
+        }
+
+        TutorialOverlay.Play("night-draw", new TutorialOverlay.Step(flowerBlockContainer,
+            $"왼쪽 {TutorialOverlay.Em("꽃 조각 모양")}대로 오른쪽 빈 칸에 그려 넣으세요.\n조각은 {TutorialOverlay.Em("좌우반전")}하거나 {TutorialOverlay.Em("회전")}한 모양으로 그려도 돼요."));
+
+        if (wall != null)
+        {
+            TutorialOverlay.Play("night-wall", new TutorialOverlay.Step(wall,
+                $"어두운 칸은 막힌 자리라 채울 수 없어요.\n나머지 빈칸을 {TutorialOverlay.Em("빈틈없이")} 채우면 수리 완료!"));
+        }
     }
 
     public void LoadPuzzle(NightPuzzleData data, List<FlowerData> allowedBlocks)
@@ -245,7 +265,7 @@ public class NightBoardController : MonoBehaviour
 
     private void Update()
     {
-        if (puzzleCompleted) return;
+        if (puzzleCompleted || TutorialOverlay.IsShowing) return;
 
         if (!isDrawing && Input.GetMouseButtonDown(0) && graphicRaycaster != null && EventSystem.current != null)
         {

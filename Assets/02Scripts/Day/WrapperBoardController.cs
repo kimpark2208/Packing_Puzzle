@@ -21,6 +21,7 @@ public class WrapperBoardController : MonoBehaviour
     public const int SupportedRings = 2;
 
     [SerializeField] private RectTransform slotArea;
+    public RectTransform BoardArea => slotArea; // 튜토리얼이 가리키는 보드 영역
     [SerializeField] private RectTransform flowerArea; // 칸과 같은 이름의 꽃 이미지를 두는 곳 (SlotArea와 같은 위치/크기)
     [SerializeField] private float centerRadius = 70f;
     [SerializeField] private float ringSpacing = 100f;

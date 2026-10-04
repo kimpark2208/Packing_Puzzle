@@ -8,7 +8,8 @@ using UnityEngine;
 public class CurrencyManager : Singleton<CurrencyManager>
 {
     [SerializeField] private int initialMoney = 0;
-    [SerializeField] private int initialFlowerStock = 5; // 초기 꽃 4종의 시작 보유 수량
+    [SerializeField] private int initialFlowerStock = 10; // 모든 꽃의 시작 보유 수량
+    [SerializeField] private int[] outOfStockFlowerIds = { 9, 5, 2, 6 }; // 시작 보유 수량이 0인 꽃(역할별 하나씩: 라인 백합, 매스 라벤더, 폼 수국, 필러 팬지)
 
     // ========== 기본 상태 ==========
     private int currentMoney;
@@ -54,11 +55,10 @@ public class CurrencyManager : Singleton<CurrencyManager>
         // 초기 꽃: 역할(속성)별로 하나씩. 장미-도미노(1, 매스), 튤립-I트로미노(3, 필러), 해바라기-L트로미노(4, 폼), 프리지아-S테트로미노(8, 라인)
         // (BlockRegistry의 1단계 포장지 꽃 ID와 일치해야 함)
         // 8번은 좌우 반전이 실제로 다르게 보이는(거울상) 도형이라, 처음부터 회전/반전 조작을 눈으로 확인할 수 있다.
-        foreach (int id in new[] { 1, 3, 4, 8 })
-        {
-            obtainedFlowers[id] = true;
-            flowerStock[id] = initialFlowerStock;
-        }
+        foreach (int id in new[] { 1, 3, 4, 8 }) obtainedFlowers[id] = true;
+
+        // 보유 수량은 등록된 모든 꽃이 initialFlowerStock(GetFlowerStock의 기본값)이고, 지정한 꽃만 0이다.
+        foreach (int id in outOfStockFlowerIds) flowerStock[id] = 0;
 
         Debug.Log($"[CurrencyManager] 초기화 완료 - 금액: {currentMoney}, 일수: {currentDay}");
     }
@@ -135,7 +135,7 @@ public class CurrencyManager : Singleton<CurrencyManager>
     /// <summary>보유 수량(없으면 0).</summary>
     public int GetFlowerStock(int flowerId)
     {
-        return flowerStock.TryGetValue(flowerId, out int n) ? n : 0;
+        return flowerStock.TryGetValue(flowerId, out int n) ? n : initialFlowerStock;
     }
 
     /// <summary>보유 수량을 amount만큼 늘리거나(음수면 줄인다). 꽃 선택에서 보유보다 많이 고르면 마이너스가 될 수 있다.</summary>

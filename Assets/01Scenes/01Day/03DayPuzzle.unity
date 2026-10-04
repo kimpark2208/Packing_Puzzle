@@ -1474,6 +1474,103 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 654297646}
   m_CullTransparentMesh: 1
+--- !u!1001 &662331283
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 0}
+    m_Modifications:
+    - target: {fileID: 389122790141454202, guid: aa08a747395b5054e954eae18810e0ae, type: 3}
+      propertyPath: m_Pivot.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 389122790141454202, guid: aa08a747395b5054e954eae18810e0ae, type: 3}
+      propertyPath: m_Pivot.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 389122790141454202, guid: aa08a747395b5054e954eae18810e0ae, type: 3}
+      propertyPath: m_AnchorMax.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 389122790141454202, guid: aa08a747395b5054e954eae18810e0ae, type: 3}
+      propertyPath: m_AnchorMax.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 389122790141454202, guid: aa08a747395b5054e954eae18810e0ae, type: 3}
+      propertyPath: m_AnchorMin.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 389122790141454202, guid: aa08a747395b5054e954eae18810e0ae, type: 3}
+      propertyPath: m_AnchorMin.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 389122790141454202, guid: aa08a747395b5054e954eae18810e0ae, type: 3}
+      propertyPath: m_SizeDelta.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 389122790141454202, guid: aa08a747395b5054e954eae18810e0ae, type: 3}
+      propertyPath: m_SizeDelta.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 389122790141454202, guid: aa08a747395b5054e954eae18810e0ae, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 389122790141454202, guid: aa08a747395b5054e954eae18810e0ae, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 389122790141454202, guid: aa08a747395b5054e954eae18810e0ae, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 389122790141454202, guid: aa08a747395b5054e954eae18810e0ae, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 389122790141454202, guid: aa08a747395b5054e954eae18810e0ae, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 389122790141454202, guid: aa08a747395b5054e954eae18810e0ae, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 389122790141454202, guid: aa08a747395b5054e954eae18810e0ae, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 389122790141454202, guid: aa08a747395b5054e954eae18810e0ae, type: 3}
+      propertyPath: m_AnchoredPosition.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 389122790141454202, guid: aa08a747395b5054e954eae18810e0ae, type: 3}
+      propertyPath: m_AnchoredPosition.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 389122790141454202, guid: aa08a747395b5054e954eae18810e0ae, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 389122790141454202, guid: aa08a747395b5054e954eae18810e0ae, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 389122790141454202, guid: aa08a747395b5054e954eae18810e0ae, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4810918444431652204, guid: aa08a747395b5054e954eae18810e0ae, type: 3}
+      propertyPath: m_Name
+      value: TutorialOverlay
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: aa08a747395b5054e954eae18810e0ae, type: 3}
 --- !u!114 &706082487 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 513549446332665067, guid: 657bd24b146ed0847933f8625e259d35, type: 3}
@@ -2291,7 +2388,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::PouchGacha
   gachaButton: {fileID: 1263605276}
   bucket: {fileID: 1744586045}
-  maxRerolls: 3
+  maxRerolls: 10
   wiltChance: 0.25
   initialPool:
   - {fileID: 11400000, guid: 0fd7e801d344731e1ebbd2ad81e67929, type: 2}
@@ -4109,3 +4206,4 @@ SceneRoots:
   - {fileID: 1227432582}
   - {fileID: 174447710}
   - {fileID: 913807943}
+  - {fileID: 662331283}

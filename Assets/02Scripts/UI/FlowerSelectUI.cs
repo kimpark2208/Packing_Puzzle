@@ -30,6 +30,7 @@ public class FlowerSelectUI : MonoBehaviour
 
     private static readonly Color SelectedColor = new(0.65f, 0.85f, 0.70f);
     private const float SelectedLift = 30f; // 담긴 꽃이 화병에서 살짝 올라오는 높이
+    private const int ExampleWrapperId = 3; // 고를 수 없는 예시로 보여 주는 포장지
 
 
     [SerializeField] private TMP_Text headerText;
@@ -46,6 +47,7 @@ public class FlowerSelectUI : MonoBehaviour
 
     private readonly Dictionary<FlowerData, int> counts = new();
     private readonly Dictionary<FlowerData, SlotView> views = new();
+    private readonly Dictionary<FlowerData, RectTransform> slotRects = new(); // 튜토리얼이 가리킬 슬롯 위치
     private readonly Dictionary<FlowerData.FlowerRole, int> limits = new(); // 역할별로 담는 개수: 고른 프리셋에 그 역할의 칸이 있으면 1, 없으면 0
     private bool wrapperChosen;
 
@@ -66,30 +68,50 @@ public class FlowerSelectUI : MonoBehaviour
         if (wrapperArea == null || wrapperItemTemplate == null) return;
 
         var owned = CurrencyManager.Instance.OwnedWrappers;
+        RectTransform firstItem = null;
         foreach (int wrapperId in owned)
         {
-            var item = ShopManager.Instance.GetItemById(wrapperId);
-            string label = item.HasValue ? item.Value.itemName : $"포장지 {wrapperId}";
-
-            // 손님이 말하는 포장지 색과 같은 색/이름을 보여준다(WrapperData의 색)
-            WrapperData data = WrapperRegistry.Instance != null ? WrapperRegistry.Instance.GetById(wrapperId) : null;
-            if (data != null) label = $"{data.colorName}색 {label}";
-
-            RectTransform itemRT = Instantiate(wrapperItemTemplate, wrapperArea);
-            itemRT.gameObject.SetActive(true);
-            itemRT.name = $"Wrapper_{wrapperId}";
-
-            var img = itemRT.Find("WrapperImage") != null ? itemRT.Find("WrapperImage").GetComponent<Image>() : null;
-            if (img != null && data != null) img.color = data.color;
-
-            var confirmBtnT = itemRT.Find("ConfirmBTN");
-            var confirmBtn = confirmBtnT != null ? confirmBtnT.GetComponent<Button>() : null;
-            var confirmLabel = confirmBtn != null ? confirmBtn.GetComponentInChildren<TMP_Text>() : null;
-            if (confirmLabel != null) confirmLabel.text = label;
-
-            int capturedId = wrapperId;
-            if (confirmBtn != null) confirmBtn.onClick.AddListener(() => OnWrapperChosen(capturedId));
+            RectTransform itemRT = AddWrapperItem(wrapperId, selectable: true);
+            if (firstItem == null) firstItem = itemRT;
         }
+
+        // 포장지마다 크기가 다르다는 걸 보여 주는 예시: 아직 없는 3번 포장지를 고를 수 없게 옆에 둔다.
+        if (!owned.Contains(ExampleWrapperId)) AddWrapperItem(ExampleWrapperId, selectable: false);
+
+        if (firstItem != null)
+        {
+            TutorialOverlay.Play("wrapper", new TutorialOverlay.Step(firstItem,
+                $"손님이 말한 {TutorialOverlay.Em("포장지")}를 고르세요.\n{TutorialOverlay.Em("포장지")}마다 필요한 꽃의 개수가 달라요."));
+        }
+    }
+
+    private RectTransform AddWrapperItem(int wrapperId, bool selectable)
+    {
+        var item = ShopManager.Instance.GetItemById(wrapperId);
+        string label = item.HasValue ? item.Value.itemName : $"포장지 {wrapperId}";
+
+        // 손님이 말하는 포장지 색과 같은 색/이름을 보여준다(WrapperData의 색)
+        WrapperData data = WrapperRegistry.Instance != null ? WrapperRegistry.Instance.GetById(wrapperId) : null;
+        if (data != null) label = $"{data.colorName}색 {label}";
+
+        RectTransform itemRT = Instantiate(wrapperItemTemplate, wrapperArea);
+        itemRT.gameObject.SetActive(true);
+        itemRT.name = $"Wrapper_{wrapperId}";
+
+        var img = itemRT.Find("WrapperImage") != null ? itemRT.Find("WrapperImage").GetComponent<Image>() : null;
+        if (img != null && data != null) img.color = data.color;
+
+        var confirmBtnT = itemRT.Find("ConfirmBTN");
+        var confirmBtn = confirmBtnT != null ? confirmBtnT.GetComponent<Button>() : null;
+        var confirmLabel = confirmBtn != null ? confirmBtn.GetComponentInChildren<TMP_Text>() : null;
+        if (confirmLabel != null) confirmLabel.text = label;
+
+        if (confirmBtn != null)
+        {
+            confirmBtn.interactable = selectable;
+            if (selectable) confirmBtn.onClick.AddListener(() => OnWrapperChosen(wrapperId));
+        }
+        return itemRT;
     }
 
     private void OnWrapperChosen(int wrapperId)
@@ -132,6 +154,7 @@ public class FlowerSelectUI : MonoBehaviour
     private void BuildFlowerChoices()
     {
         views.Clear();
+        slotRects.Clear();
         counts.Clear();
         RefreshLabels();
 
@@ -145,9 +168,24 @@ public class FlowerSelectUI : MonoBehaviour
             {
                 RectTransform slot = Instantiate(slotPrefab, shelf.slotParent);
                 slot.name = $"Slot_{flower.blockID}";
+                slotRects[flower] = slot;
                 BindFlowerSlot(slot, flower);
             }
         }
+
+        PlayFlowerTutorial();
+    }
+
+    private void PlayFlowerTutorial()
+    {
+        RectTransform firstLabel = shelves.Length > 0 && shelves[0].label != null ? (RectTransform)shelves[0].label.transform : null;
+        RectTransform firstPickable = slotRects.FirstOrDefault(kv => CurrencyManager.Instance == null || CurrencyManager.Instance.GetFlowerStock(kv.Key.blockID) > 0).Value;
+
+        TutorialOverlay.Play("flowers",
+            new TutorialOverlay.Step(firstLabel,
+                $"꽃은 {TutorialOverlay.Em("라인-폼-매스-필러")} 네 가지 역할로 나뉘어요.\n이름표의 (0/1) 숫자를 모두 채울 만큼 꽃을 골라야 해요."),
+            new TutorialOverlay.Step(firstPickable,
+                $"{TutorialOverlay.Em("x숫자")}는 남은 꽃 개수예요. 재고가 0인 꽃은 고를 수 없어요.\n주문서에 맞는 꽃을 눌러 담으세요."));
     }
 
     private void ClearSlots()
@@ -193,6 +231,7 @@ public class FlowerSelectUI : MonoBehaviour
         else
         {
             if (Limit(shelf.role) == 0) return; // 이 프리셋엔 이 역할의 칸이 없다
+            if (CurrencyManager.Instance != null && CurrencyManager.Instance.GetFlowerStock(block.blockID) <= 0) return; // 재고가 없는 꽃은 고를 수 없다
             foreach (FlowerData other in counts.Keys.Where(k => k.flowerRole == shelf.role).ToList())
             {
                 counts.Remove(other);

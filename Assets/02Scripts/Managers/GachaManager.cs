@@ -31,6 +31,10 @@ public class GachaManager : MonoBehaviour
 
     public int RerollsLeft => Mathf.Max(0, maxRerolls - rerollCount);
 
+    /// <summary>튜토리얼이 가리킬 수 있도록 꽃이 나오는 자리와 리롤 버튼을 알려 준다.</summary>
+    public RectTransform Bucket => bucket;
+    public RectTransform RerollButton => gachaButton != null ? (RectTransform)gachaButton.transform : null;
+
     /// <summary>디버그용: 이번 퍼즐의 리롤 가능 횟수를 늘린다.</summary>
     public void AddRerolls(int amount)
     {
@@ -158,7 +162,12 @@ public class GachaManager : MonoBehaviour
         var flowerButton = flowerImageT != null ? flowerImageT.GetComponent<Button>() : null;
         if (flowerButton != null) flowerButton.enabled = false;
 
-        if (Random.value < wiltChance) Wilt(draggable, view);
+        if (Random.value < wiltChance)
+        {
+            Wilt(draggable, view);
+            TutorialOverlay.Play("wilted", new TutorialOverlay.Step((RectTransform)block.transform,
+                $"회색 꽃은 {TutorialOverlay.Em("시든 꽃")}이에요. 놓을 수 없어요.\n{TutorialOverlay.Em("[다시 뽑기]")}를 누르거나 다른 꽃을 놓으면 새 꽃이 나와요."));
+        }
 
         shown.Add(block);
     }
