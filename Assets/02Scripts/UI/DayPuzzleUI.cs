@@ -103,7 +103,7 @@ public class DayPuzzleUI : MonoBehaviour
     {
         customerLate = IsCustomerLate();
         SettlementResult result = settlement.Settle(endKind, collapseCount);
-        GameFlowController.Instance?.ConsumeChosenFlowers(); // 퍼즐이 끝났으니 고른 꽃이 소모된다(붕괴 재시작은 끝이 아니다)
+        GameFlowController.Instance?.ConsumeUsedFlowers(board.PlacementHistory); // 퍼즐이 끝났으니 놓은 꽃이 소모된다(붕괴 재시작은 끝이 아니다)
         DayClock.Instance?.StopMood(); // 퍼즐이 끝났으니 기분 시간은 다음 주문까지 멈춘다
         return result;
     }
@@ -151,11 +151,11 @@ public class DayPuzzleUI : MonoBehaviour
         RestartPuzzle();
     }
 
-    /// <summary>붕괴 후 같은 손님의 주문을 처음부터 다시 만든다. 손님 기분 시간과 리롤 횟수는 그대로이고, 놓았던 꽃은 풀로 돌아온다.</summary>
+    /// <summary>붕괴 후 같은 손님의 주문을 처음부터 다시 만든다. 손님 기분 시간과 리롤 횟수는 그대로이고, 버켓의 꽃은 새로 뽑는다.</summary>
     private void RestartPuzzle()
     {
         board.BuildLevel();
-        if (gacha != null) gacha.RestorePool();
+        if (gacha != null) gacha.Redraw();
         roundEnded = false;
     }
 

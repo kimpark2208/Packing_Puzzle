@@ -215,10 +215,10 @@ public class GameFlowController : Singleton<GameFlowController>
         board.LoadPuzzle(data, allowedBlocks);
     }
 
-    /// <summary>낮 퍼즐이 끝났을 때: 꽃 선택에서 고른 꽃을 쓴 것과 상관없이 고른 개수만큼 보유 수량에서 소모한다(한 번만).</summary>
-    public void ConsumeChosenFlowers()
+    /// <summary>낮 퍼즐이 끝났을 때: 실제로 칸에 놓은 꽃 한 송이마다 보유 수량을 1씩 소모한다(한 번만).</summary>
+    public void ConsumeUsedFlowers(IEnumerable<FlowerData> used)
     {
-        foreach (FlowerData flower in ChosenGachaPool) CurrencyManager.Instance.AddFlowerStock(flower.blockID, -1);
+        foreach (FlowerData flower in used) CurrencyManager.Instance.AddFlowerStock(flower.blockID, -1);
         ChosenGachaPool = new List<FlowerData>();
     }
 

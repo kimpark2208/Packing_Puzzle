@@ -9,7 +9,7 @@ using UnityEngine.UI;
 /// 꽃 선택 화면. "포장지 선택 -> 꽃 선택" 순서를 그대로 따른다.
 /// 1단계: WrapperPopup에서 보유한 포장지 중 이번 주문에 쓸 것을 하나 고른다 (목표 점수/정답 레시피가 이때 확정됨).
 /// 2단계: 포장지를 고르면 FlowerPopup(역할별 선반 4개)으로 전환되고, 역할(라인/폼/매스/필러)마다
-/// 정해진 개수까지 꽃을 담아 가챠 풀로 만든다. 같은 꽃을 여러 번 담으면 풀에 그만큼 중복되어 더 자주 나온다.
+/// 꽃을 하나씩 골라 가챠 풀(최대 4종)로 만든다. 같은 역할에서 다른 꽃을 누르면 바꿔 담는다.
 /// 포장지 목록과 꽃 선택 슬롯은 모두 개수가 가변적이라 템플릿(프리팹)을 복제해서 만든다.
 /// </summary>
 public class FlowerSelectUI : MonoBehaviour
@@ -46,7 +46,7 @@ public class FlowerSelectUI : MonoBehaviour
 
     private readonly Dictionary<FlowerData, int> counts = new();
     private readonly Dictionary<FlowerData, SlotView> views = new();
-    private readonly Dictionary<FlowerData.FlowerRole, int> limits = new(); // 역할별로 담아야 하는 개수(= 고른 프리셋의 속성별 칸 수)
+    private readonly Dictionary<FlowerData.FlowerRole, int> limits = new(); // 역할별로 담는 개수: 고른 프리셋에 그 역할의 칸이 있으면 1, 없으면 0
     private bool wrapperChosen;
 
     private void Start()
@@ -104,7 +104,7 @@ public class FlowerSelectUI : MonoBehaviour
 
         if (headerText != null)
         {
-            headerText.text = "역할별로 사용할 꽃을 고르세요";
+            headerText.text = "역할별로 사용할 꽃을 하나씩 고르세요";
         }
 
         if (wrapperPopup != null) wrapperPopup.SetActive(false);
@@ -114,13 +114,13 @@ public class FlowerSelectUI : MonoBehaviour
         BuildFlowerChoices();
     }
 
-    /// <summary>고른 프리셋의 속성별 칸 수가 역할별로 담아야 하는 꽃 개수다. 모두 채우면 바로 퍼즐로 넘어간다.</summary>
+    /// <summary>고른 프리셋에 칸이 있는 역할마다 꽃을 하나씩 담는다. 모두 채우면 바로 퍼즐로 넘어간다.</summary>
     private void LoadRoleLimits(DayPuzzleGenerator.DayOrder order)
     {
         limits.Clear();
         WrapperData data = WrapperRegistry.Instance != null ? WrapperRegistry.Instance.GetById(order.wrapperId) : null;
         bool valid = data != null && order.presetIndex >= 0 && order.presetIndex < data.presets.Count;
-        foreach (var shelf in shelves) limits[shelf.role] = valid ? data.presets[order.presetIndex].CountByTag(shelf.role) : 0;
+        foreach (var shelf in shelves) limits[shelf.role] = valid && data.presets[order.presetIndex].CountByTag(shelf.role) > 0 ? 1 : 0;
     }
 
     private int Limit(FlowerData.FlowerRole role)
@@ -180,16 +180,26 @@ public class FlowerSelectUI : MonoBehaviour
         if (btn != null) btn.onClick.AddListener(() => OnSlotClicked(block));
     }
 
-    /// <summary>역할별 상한까지 한 번 누를 때마다 1개씩 담는다. 상한이 찼으면 이미 담은 꽃을 눌러 비운다.</summary>
+    /// <summary>역할당 꽃 하나만 담는다. 담은 꽃을 다시 누르면 비우고, 같은 역할의 다른 꽃을 누르면 바꿔 담는다.</summary>
     private void OnSlotClicked(FlowerData block)
     {
         Shelf shelf = shelves.FirstOrDefault(s => s.role == block.flowerRole);
         if (shelf == null) return;
 
-        counts.TryGetValue(block, out int n);
-        if (RoleTotal(shelf.role) < Limit(shelf.role)) counts[block] = n + 1;
-        else if (n > 0) counts.Remove(block);
-        else return;
+        if (counts.ContainsKey(block))
+        {
+            counts.Remove(block);
+        }
+        else
+        {
+            if (Limit(shelf.role) == 0) return; // 이 프리셋엔 이 역할의 칸이 없다
+            foreach (FlowerData other in counts.Keys.Where(k => k.flowerRole == shelf.role).ToList())
+            {
+                counts.Remove(other);
+                RefreshSlot(other);
+            }
+            counts[block] = 1;
+        }
 
         RefreshSlot(block);
         RefreshLabels();

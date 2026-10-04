@@ -7,9 +7,10 @@ using Random = UnityEngine.Random;
 
 /// <summary>
 /// 낮 퍼즐의 "꽃 가챠". FlowerBucket 안에 미리 배치해 둔 자리(자식 FlowerTemplate)만큼 꽃을 뽑아 보여준다.
-/// - 풀: 플레이어가 꽃 선택 화면에서 고른 꽃 중 아직 놓지 않은 것. 퍼즐에 놓은 꽃만 풀에서 빠진다.
-/// - 꽃 하나를 놓으면 버켓의 나머지는 사라지고(풀에는 남는다) 새 꽃들이 나온다. 칸 수만큼 놓으면 풀이 비어 끝난다.
-/// - 리롤: 버켓의 꽃을 모두 치우고 다른 꽃을 뽑는다. 퍼즐 전체에서 maxRerolls번, 치운 꽃은 풀에 남는다.
+/// - 풀: 플레이어가 꽃 선택 화면에서 역할별로 하나씩 고른 꽃 종류(최대 4종). 놓아도 줄지 않는 무한 공급이다.
+/// - 꽃 하나를 놓으면 버켓의 나머지는 사라지고 풀에서 새로 무작위로 뽑는다.
+/// - 뽑힌 꽃은 wiltChance 확률로 시든 꽃(회색)이 되어 놓을 수 없다. 시든 꽃은 리롤하거나 다른 꽃을 놓아 새로 뽑으면 사라진다.
+/// - 리롤: 버켓의 꽃을 모두 치우고 다른 꽃을 뽑는다. 퍼즐 전체에서 maxRerolls번.
 /// 모든 조각은 자리 템플릿을 복제해 데이터만 다르게 주입한다.
 /// </summary>
 public class GachaManager : MonoBehaviour
@@ -17,12 +18,14 @@ public class GachaManager : MonoBehaviour
     [SerializeField] private Button gachaButton;     // 리롤 버튼
     [SerializeField] private RectTransform bucket;   // 자식 FlowerTemplate들이 꽃이 나올 자리
     [SerializeField] private int maxRerolls = 2;
+    [SerializeField, Range(0f, 1f)] private float wiltChance = 0.08f; // 뽑힌 꽃 하나가 시든 꽃일 확률
     [SerializeField] private List<FlowerData> initialPool = new(); // 인스펙터 테스트용 기본 풀
+
+    private static readonly Color WiltedColor = new(0.55f, 0.55f, 0.55f);
 
     private readonly List<GameObject> slotTemplates = new();
     private readonly List<GameObject> shown = new();
     private List<FlowerData> pool = new();
-    private List<FlowerData> fullPool = new(); // 처음 고른 풀(붕괴해서 다시 시작할 때 돌려놓는다)
     private int rerollCount;
     private TMP_Text rerollBadge; // 리롤 버튼의 CountBadge 텍스트(남은 횟수)
 
@@ -38,7 +41,6 @@ public class GachaManager : MonoBehaviour
     private void Awake()
     {
         pool = new List<FlowerData>(initialPool);
-        fullPool = new List<FlowerData>(initialPool);
     }
 
     private void Start()
@@ -71,16 +73,14 @@ public class GachaManager : MonoBehaviour
     public void SetPool(List<FlowerData> newPool)
     {
         pool = new List<FlowerData>(newPool);
-        fullPool = new List<FlowerData>(newPool);
         rerollCount = 0;
         Draw(null);
         RefreshBadge();
     }
 
-    /// <summary>붕괴로 퍼즐을 다시 시작할 때: 놓아서 소모됐던 꽃이 풀로 돌아오고 새로 뽑는다. 리롤 횟수는 돌아오지 않는다.</summary>
-    public void RestorePool()
+    /// <summary>붕괴로 퍼즐을 다시 시작할 때: 새로 뽑는다. 리롤 횟수는 돌아오지 않는다.</summary>
+    public void Redraw()
     {
-        pool = new List<FlowerData>(fullPool);
         Draw(null);
     }
 
@@ -99,7 +99,7 @@ public class GachaManager : MonoBehaviour
         if (rerollBadge != null) rerollBadge.text = RerollsLeft.ToString();
     }
 
-    /// <summary>버켓을 비우고 풀에서 자리 수만큼 새로 뽑는다. avoid(방금 보여준 꽃)는 가능하면 피한다.</summary>
+    /// <summary>버켓을 비우고 풀에서 자리 수만큼 서로 다른 종류를 새로 뽑는다. avoid(방금 보여준 꽃)는 가능하면 피한다.</summary>
     private void Draw(List<FlowerData> avoid)
     {
         ClearShown();
@@ -158,17 +158,23 @@ public class GachaManager : MonoBehaviour
         var flowerButton = flowerImageT != null ? flowerImageT.GetComponent<Button>() : null;
         if (flowerButton != null) flowerButton.enabled = false;
 
+        if (Random.value < wiltChance) Wilt(draggable, view);
+
         shown.Add(block);
     }
 
-    /// <summary>꽃 하나를 놓으면 그 꽃만 풀에서 빠지고, 안 쓴 나머지는 사라진 뒤 새 꽃들이 나온다.</summary>
+    /// <summary>시든 꽃: 회색으로 칠하고 드래그할 수 없게 한다(비활성 컴포넌트는 드래그 이벤트를 받지 않는다).</summary>
+    private static void Wilt(BlockDrag draggable, FlowerPieceView view)
+    {
+        draggable.enabled = false;
+        view.Icon.color = WiltedColor;
+    }
+
+    /// <summary>꽃 하나를 놓으면 버켓의 나머지는 사라지고 풀에서 새 꽃들을 무작위로 뽑는다(풀은 줄지 않는다).</summary>
     private void HandleBlockPlaced(GameObject block)
     {
-        var placed = block.GetComponent<BlockDrag>();
-        if (placed != null) pool.Remove(placed.blockData);
         shown.Remove(block);
-
-        Draw(ShownFlowers());
+        Draw(null);
     }
 
     private List<FlowerData> ShownFlowers()
