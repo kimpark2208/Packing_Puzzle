@@ -47,8 +47,7 @@ public class DayPuzzleUI : MonoBehaviour
         board = WrapperBoardController.Instance;
         gacha = FindFirstObjectByType<GachaManager>();
 
-        // 정산 조립: 규칙들(수치는 설정 에셋) + 계산기 + 지갑
-        settlement = new PuzzleSettlement(new MoneyCalculator(MoneyRuleSet.Create(moneySettings)), CurrencyManager.Instance);
+        settlement = new PuzzleSettlement(moneySettings); // 규칙 수치는 설정 에셋
 
         if (board != null)
         {

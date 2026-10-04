@@ -1,4 +1,4 @@
-// 금액 가감 규칙들. 규칙 하나가 클래스 하나이고, 서로를 모른다. 새 규칙은 IMoneyRule을 구현해 MoneyRuleSet에 추가한다.
+// 금액 가감 규칙들. 규칙 하나가 클래스 하나이고, 서로를 모른다. 새 규칙은 IMoneyRule을 구현해 PuzzleSettlement의 규칙 목록에 추가한다.
 
 /// <summary>[가산] 놓은 순서대로 이웃한 두 꽃의 색 조합 점수 합.</summary>
 public class ColorComboRule : IMoneyRule

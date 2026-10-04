@@ -5,7 +5,7 @@ using UnityEngine;
 /// 게임 재화 및 상태 관리 (싱글톤)
 /// 현재 금액, 일수, 보유 포장지, 획득한 꽃, 요청한 꽃 등을 추적
 /// </summary>
-public class CurrencyManager : Singleton<CurrencyManager>, IWallet
+public class CurrencyManager : Singleton<CurrencyManager>
 {
     [SerializeField] private int initialMoney = 0;
     [SerializeField] private int initialFlowerStock = 5; // 초기 꽃 4종의 시작 보유 수량
@@ -21,9 +21,6 @@ public class CurrencyManager : Singleton<CurrencyManager>, IWallet
     private Dictionary<int, bool> obtainedFlowers = new();  // ID → 획득 여부
     private Dictionary<int, int> flowerStock = new();       // ID → 보유 수량(해금 여부와는 별개)
 
-    // ========== 일일 요청 ==========
-    private List<int> requestedFlowerIdsForTonight = new();  // 오늘 밤에 얻을 꽃
-
     // ========== 고객 요구사항 ==========
     private CustomerRequirementGenerator.CustomerRequirement currentRequirement;
 
@@ -32,7 +29,6 @@ public class CurrencyManager : Singleton<CurrencyManager>, IWallet
     public int CurrentDay => currentDay;
     public int TodayEarned { get; private set; } // 오늘 번 돈 합계(날짜가 넘어가면 0으로 돌아간다)
     public IReadOnlyCollection<int> OwnedWrappers => ownedWrappers;
-    public IReadOnlyDictionary<int, bool> ObtainedFlowers => obtainedFlowers;
     public CustomerRequirementGenerator.CustomerRequirement CurrentRequirement => currentRequirement;
 
     /// <summary>DayPuzzleGenerator가 생성한 오늘의 요구사항을 단일 소스로 등록한다(표시용과 판정용이 어긋나지 않도록).</summary>
@@ -58,14 +54,11 @@ public class CurrencyManager : Singleton<CurrencyManager>, IWallet
         // 초기 꽃: 역할(속성)별로 하나씩. 장미-도미노(1, 매스), 튤립-I트로미노(3, 필러), 해바라기-L트로미노(4, 폼), 프리지아-S테트로미노(8, 라인)
         // (BlockRegistry의 1단계 포장지 꽃 ID와 일치해야 함)
         // 8번은 좌우 반전이 실제로 다르게 보이는(거울상) 도형이라, 처음부터 회전/반전 조작을 눈으로 확인할 수 있다.
-        obtainedFlowers[1] = true;
-        obtainedFlowers[3] = true;
-        obtainedFlowers[4] = true;
-        obtainedFlowers[8] = true;
-
-        foreach (int id in new[] { 1, 3, 4, 8 }) flowerStock[id] = initialFlowerStock;
-
-        requestedFlowerIdsForTonight.Clear();
+        foreach (int id in new[] { 1, 3, 4, 8 })
+        {
+            obtainedFlowers[id] = true;
+            flowerStock[id] = initialFlowerStock;
+        }
 
         Debug.Log($"[CurrencyManager] 초기화 완료 - 금액: {currentMoney}, 일수: {currentDay}");
     }
@@ -139,9 +132,6 @@ public class CurrencyManager : Singleton<CurrencyManager>, IWallet
 
     // ========== 꽃 (Flower) 관리 ==========
 
-    /// <summary>
-    /// 꽃 획득
-    /// </summary>
     /// <summary>보유 수량(없으면 0).</summary>
     public int GetFlowerStock(int flowerId)
     {
@@ -154,18 +144,13 @@ public class CurrencyManager : Singleton<CurrencyManager>, IWallet
         flowerStock[flowerId] = GetFlowerStock(flowerId) + amount; // 임시: 0 아래(마이너스)도 허용하고 표시만 0으로 한다
     }
 
+    /// <summary>꽃을 해금한다(이미 해금했으면 아무 일도 없다).</summary>
     public void ObtainFlower(int flowerId)
     {
-        if (!obtainedFlowers.ContainsKey(flowerId))
-        {
-            obtainedFlowers[flowerId] = true;
-            Debug.Log($"[CurrencyManager] 꽃 {flowerId} 획득");
-        }
-        else if (!obtainedFlowers[flowerId])
-        {
-            obtainedFlowers[flowerId] = true;
-            Debug.Log($"[CurrencyManager] 꽃 {flowerId} 획득");
-        }
+        if (obtainedFlowers.GetValueOrDefault(flowerId)) return;
+
+        obtainedFlowers[flowerId] = true;
+        Debug.Log($"[CurrencyManager] 꽃 {flowerId} 획득");
     }
 
     /// <summary>
@@ -182,30 +167,6 @@ public class CurrencyManager : Singleton<CurrencyManager>, IWallet
         return result;
     }
 
-    // ========== 일일 요청 (Daily Request) ==========
-
-    /// <summary>
-    /// 꽃 요청 (오늘 밤에 얻을 꽃)
-    /// </summary>
-    public void RequestFlowerForTonight(int flowerId)
-    {
-        if (!requestedFlowerIdsForTonight.Contains(flowerId))
-        {
-            requestedFlowerIdsForTonight.Add(flowerId);
-            Debug.Log($"[CurrencyManager] 꽃 {flowerId} 요청 (밤 퍼즐용)");
-        }
-    }
-
-    /// <summary>
-    /// 일일 요청 목록 초기화 (낮 시간 종료 시)
-    /// </summary>
-    public int[] ClearDailyRequestsAndGet()
-    {
-        var result = requestedFlowerIdsForTonight.ToArray();
-        requestedFlowerIdsForTonight.Clear();
-        return result;
-    }
-
     // ========== 일수 진행 ==========
 
     /// <summary>
@@ -215,7 +176,6 @@ public class CurrencyManager : Singleton<CurrencyManager>, IWallet
     {
         currentDay++;
         TodayEarned = 0;
-        requestedFlowerIdsForTonight.Clear();
 
         EventBus.RaiseDayAdvanced(currentDay);
         Debug.Log($"[CurrencyManager] 일수 진행: Day {currentDay}");

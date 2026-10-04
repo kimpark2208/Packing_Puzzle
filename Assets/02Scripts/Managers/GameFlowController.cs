@@ -146,12 +146,7 @@ public class GameFlowController : Singleton<GameFlowController>
     /// <summary>밤 메인(요청 선택) 화면에서 확인을 눌렀을 때. requestedFlowerIds는 오늘 밤 최우선으로 만들 꽃들.</summary>
     public void ConfirmNightRequests(List<int> requestedFlowerIds)
     {
-        foreach (int id in requestedFlowerIds)
-        {
-            CurrencyManager.Instance.RequestFlowerForTonight(id);
-        }
-
-        int[] requested = CurrencyManager.Instance.ClearDailyRequestsAndGet();
+        int[] requested = requestedFlowerIds.Distinct().ToArray();
 
         var obtained = CurrencyManager.Instance.GetObtainedFlowerIds();
         nightGridSize = ShopManager.Instance.GetGridSize(CurrentDayOrder?.wrapperId ?? 1);
