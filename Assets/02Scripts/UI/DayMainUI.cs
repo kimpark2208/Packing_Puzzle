@@ -20,6 +20,7 @@ public class DayMainUI : MonoBehaviour
     private const string RejectLine = "거절할순없으세요";
     private const string DefaultForceAcceptLine = "그래요라고 하세요";
     private const string TimeUpLine = "시간이 늦었네요 가봐야겠어요";
+    private const string NightEndLine = "해가 뜨면 저는 죽어요!!";
 
     [SerializeField] private float TimeUpHideDelay = 5f;
 
@@ -54,6 +55,8 @@ public class DayMainUI : MonoBehaviour
     private bool showingAngryLine;
     private string forceAcceptLine = DefaultForceAcceptLine;
     private bool closing; // 하루 시간이 끝나 손님이 퇴장하는 중
+    private bool nightMode; // 밤 메인에서 밤 손님을 만나는 중(수락하면 밤 퍼즐로)
+    private bool nightEnding; // 밤 시간이 끝나 밤 손님이 외치고 떠나는 중(사라지면 낮으로)
 
     public void Initialize(DayPuzzleGenerator.DayOrder dayOrder)
     {
@@ -70,6 +73,7 @@ public class DayMainUI : MonoBehaviour
 
         if (lanternButton != null) lanternButton.onClick.AddListener(() =>
         {
+            if (nightMode || nightEnding) return; // 밤 손님을 만나는 중에는 전등으로 밤을 다시 시작하지 않는다
             if (GameFlowController.Instance != null) GameFlowController.Instance.ProceedToNightMain();
         });
 
@@ -84,6 +88,22 @@ public class DayMainUI : MonoBehaviour
         catalogOpen = false;
         if (catalogPopup != null) catalogPopup.SetActive(false);
         SwitchCatalogTab(CatalogTab.Wrapper);
+
+        // 밤 시간이 끝나서 온 것이면: 마지막 손님이 외치고 떠난다(낮 시간 종료 때와 같은 연출).
+        if (GameFlowController.Instance != null && GameFlowController.Instance.ConsumeNightEnd())
+        {
+            BeginNightEnd();
+            return;
+        }
+
+        // 밤 요청을 마치고 온 밤 손님: 첫 퍼즐에 나올 꽃을 말하고, 수락하면 밤 퍼즐로 간다.
+        string nightFlowers = GameFlowController.Instance != null ? GameFlowController.Instance.ConsumeNightCustomerFlowers() : null;
+        if (nightFlowers != null)
+        {
+            nightMode = true;
+            if (bubbleText != null) bubbleText.text = $"이 물건을 수리해주시면 {nightFlowers}을(를) 만들어드릴게요";
+            return;
+        }
 
         string angryLine = GameFlowController.Instance != null ? GameFlowController.Instance.ConsumePendingCustomerLine() : null;
         showingAngryLine = !string.IsNullOrEmpty(angryLine);
@@ -105,6 +125,10 @@ public class DayMainUI : MonoBehaviour
             if (bubbleText != null) bubbleText.text = TimeUpLine;
             EndConversation();
         }
+        else if (!showingAngryLine)
+        {
+            DayClock.Instance?.StartMood(); // 반응 대사 없이 바로 새 주문이 시작된다
+        }
     }
 
     private void Start()
@@ -125,14 +149,29 @@ public class DayMainUI : MonoBehaviour
     private void OnAcceptClicked()
     {
         if (closing) { HideCustomer(); return; }
+        if (nightMode)
+        {
+            if (GameFlowController.Instance != null) GameFlowController.Instance.StartNightPuzzle();
+            return;
+        }
         if (showingAngryLine)
         {
             showingAngryLine = false;
+            DayClock.Instance?.StartMood(); // 반응 대사가 끝나고 다음 주문이 시작되는 순간 기분 시간이 가득 찬다
             RefreshBubbleText();
             return;
         }
 
         if (GameFlowController.Instance != null) GameFlowController.Instance.GoToFlowerSelect();
+    }
+
+    /// <summary>밤 시간이 끝났을 때: 손님이 "해가 뜨면 저는 죽어요!!"라고 외치고, 낮 시간 종료 때와 같은 방식(응답 버튼을 누르거나 시간이 지나면)으로 사라진다. 사라지면 낮으로 넘어간다.</summary>
+    public void BeginNightEnd()
+    {
+        nightMode = false;
+        nightEnding = true;
+        if (bubbleText != null) bubbleText.text = NightEndLine;
+        EndConversation();
     }
 
     /// <summary>하루 시간이 끝난 손님: 대사를 한 뒤 잠시 후(또는 응답 버튼을 누르면 바로) 말풍선과 캐릭터가 사라지고 전등만 남는다.</summary>
@@ -153,6 +192,8 @@ public class DayMainUI : MonoBehaviour
         StopAllCoroutines();
         if (bubbleContainer != null) bubbleContainer.SetActive(false);
         if (characterRoot != null) characterRoot.SetActive(false);
+
+        if (nightEnding && GameFlowController.Instance != null) GameFlowController.Instance.EndNight(); // 손님이 사라지면 하루 결산 화면으로
     }
 
     private void RefreshBubbleText()
@@ -170,11 +211,13 @@ public class DayMainUI : MonoBehaviour
 
     private void OpenPreferences()
     {
+        DayClock.Instance?.SetPaused(true);
         if (preferencesPopup != null) preferencesPopup.SetActive(true);
     }
 
     private void ClosePreferences()
     {
+        DayClock.Instance?.SetPaused(false);
         if (preferencesPopup != null) preferencesPopup.SetActive(false);
     }
 

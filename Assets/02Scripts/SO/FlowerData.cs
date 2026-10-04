@@ -9,15 +9,16 @@ public struct BlockRow
 [CreateAssetMenu(fileName = "FlowerData", menuName = "Puzzle/FlowerData", order = 1)]
 public class FlowerData : ScriptableObject
 {
+    /// <summary>꽃 색: 색상환 6색(빨강/주황/노랑/파랑/보라/분홍) + 흰색.</summary>
     public enum Color
     {
         Red,
-        Blue,
+        Orange,
         Yellow,
-        Black,
-        Green,
-        white,
-        Purple
+        Blue,
+        Purple,
+        Pink,
+        White
     }
 
     /// <summary>꽃꽂이 디자인 역할(라인/매스/폼/필러).</summary>

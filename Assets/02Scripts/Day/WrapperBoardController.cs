@@ -36,12 +36,23 @@ public class WrapperBoardController : MonoBehaviour
     private const float IdleAlpha = 0.45f;
     private const float HoverAlpha = 0.90f;
     private const float FilledAlpha = 1f;
-    private const int CollapseDiff = 3;
+    private const int CollapseDiff = 2;
+
+    [Header("기울기: 좌우 꽃 개수가 1개 차이일 때 많은 쪽으로 기운다(Lerp로 서서히)")]
+    [SerializeField] private RectTransform wrapperImage; // 기울이는 대상(포장지 이미지만. 칸/꽃 이미지는 그대로)
+    [SerializeField] private float tiltAngle = 8f;
+    [SerializeField] private float tiltLerpSpeed = 4f;
+    [Header("붕괴: 더 무거운 쪽으로 쓰러진다(Lerp, 기울기보다 빠르게)")]
+    [SerializeField] private float collapseAngle = 80f;
+    [SerializeField] private float collapseLerpSpeed = 10f;
 
     private readonly List<WrapperSlot> regions = new();
     private readonly List<FlowerData> placementHistory = new();
 
     private WrapperSlot hoveredRegion;
+    private float baseAngle;  // 에디터에 배치된 기본 z 회전
+    private float tiltTarget; // 기본 회전에서 더 기울 각도
+    private bool collapsing;  // 붕괴로 쓰러지는 중이면 더 빠른 속도로 기운다
 
     /// <summary>꽃이 영역에 배치될 때마다 발행.</summary>
     public event Action OnFlowerPlaced;
@@ -51,6 +62,21 @@ public class WrapperBoardController : MonoBehaviour
     private void Awake()
     {
         Instance = this;
+        if (wrapperImage != null) baseAngle = Mathf.DeltaAngle(0f, wrapperImage.localEulerAngles.z);
+    }
+
+    private void Update()
+    {
+        if (wrapperImage == null) return;
+        float current = Mathf.DeltaAngle(0f, wrapperImage.localEulerAngles.z);
+        wrapperImage.localRotation = Quaternion.Euler(0f, 0f, Mathf.Lerp(current, baseAngle + tiltTarget, (collapsing ? collapseLerpSpeed : tiltLerpSpeed) * Time.deltaTime));
+    }
+
+    /// <summary>붕괴: 꽃이 더 많은 쪽(더 무거운 쪽)으로 collapseAngle만큼 빠르게 쓰러진다. 다음 BuildLevel에서 원래대로 돌아온다.</summary>
+    public void PlayCollapse()
+    {
+        collapsing = true;
+        tiltTarget = -Mathf.Sign(RightMinusLeft()) * collapseAngle; // 오른쪽이 많으면 시계 방향(-z)
     }
 
     /// <summary>프리셋에 적힌 칸만 켜고 태그 색과 꽃 이미지를 채운다. 프리셋에 없는 칸은 끈다.</summary>
@@ -59,6 +85,8 @@ public class WrapperBoardController : MonoBehaviour
         placementHistory.Clear();
         regions.Clear();
         hoveredRegion = null;
+        tiltTarget = 0f;
+        collapsing = false;
 
         WrapperPresetData preset = CurrentPreset();
         if (preset == null) return;
@@ -130,6 +158,7 @@ public class WrapperBoardController : MonoBehaviour
         if (region == hoveredRegion) hoveredRegion = null;
 
         placementHistory.Add(flower);
+        tiltTarget = -Mathf.Clamp(RightMinusLeft(), -1, 1) * tiltAngle; // 오른쪽이 많으면 시계 방향(-z)
         OnFlowerPlaced?.Invoke();
         return true;
     }
@@ -197,8 +226,8 @@ public class WrapperBoardController : MonoBehaviour
         return WrapperSlot.Quadrant.BottomRight;
     }
 
-    /// <summary>한쪽(좌/우) 사분면들에 채워진 꽃 개수가 반대쪽보다 CollapseDiff개 이상 많은가.</summary>
-    public bool IsCollapsed()
+    /// <summary>오른쪽 사분면들에 채워진 꽃 개수 - 왼쪽 사분면들에 채워진 꽃 개수.</summary>
+    private int RightMinusLeft()
     {
         int left = 0, right = 0;
         foreach (var r in regions)
@@ -206,19 +235,19 @@ public class WrapperBoardController : MonoBehaviour
             if (r.quadrant == WrapperSlot.Quadrant.TopLeft || r.quadrant == WrapperSlot.Quadrant.BottomLeft) left += r.FilledCount;
             else if (r.quadrant == WrapperSlot.Quadrant.TopRight || r.quadrant == WrapperSlot.Quadrant.BottomRight) right += r.FilledCount;
         }
-        return Mathf.Abs(left - right) >= CollapseDiff;
+        return right - left;
     }
 
-    /// <summary>놓은 순서대로 연속된 두 꽃의 색 조합 보너스 총합.</summary>
-    public int ComputeColorBonus()
+    /// <summary>한쪽(좌/우)에 채워진 꽃이 반대쪽보다 CollapseDiff개 이상 많은가.
+    /// 완성 판정(IsComplete)이 먼저라, 프리셋 자체가 좌우 2개 이상 차이 나도 완성하는 순간에는 붕괴로 보지 않는다.
+    /// 미완성인 동안에는 계속 판정한다.</summary>
+    public bool IsCollapsed()
     {
-        int bonus = 0;
-        for (int i = 0; i < placementHistory.Count - 1; i++)
-        {
-            bonus += ColorCompatDatabase.GetBonus(placementHistory[i].color, placementHistory[i + 1].color);
-        }
-        return bonus;
+        return Mathf.Abs(RightMinusLeft()) >= CollapseDiff;
     }
+
+    /// <summary>꽃을 놓은 순서(정산에서 색 조합 점수를 계산하는 데 쓴다).</summary>
+    public IReadOnlyList<FlowerData> PlacementHistory => placementHistory;
 
     public IReadOnlyList<WrapperSlot> AllSlots => regions;
 }

@@ -5,9 +5,10 @@ using UnityEngine;
 /// 게임 재화 및 상태 관리 (싱글톤)
 /// 현재 금액, 일수, 보유 포장지, 획득한 꽃, 요청한 꽃 등을 추적
 /// </summary>
-public class CurrencyManager : Singleton<CurrencyManager>
+public class CurrencyManager : Singleton<CurrencyManager>, IWallet
 {
     [SerializeField] private int initialMoney = 0;
+    [SerializeField] private int initialFlowerStock = 5; // 초기 꽃 4종의 시작 보유 수량
 
     // ========== 기본 상태 ==========
     private int currentMoney;
@@ -18,6 +19,7 @@ public class CurrencyManager : Singleton<CurrencyManager>
 
     // ========== 꽃 (Flower) ==========
     private Dictionary<int, bool> obtainedFlowers = new();  // ID → 획득 여부
+    private Dictionary<int, int> flowerStock = new();       // ID → 보유 수량(해금 여부와는 별개)
 
     // ========== 일일 요청 ==========
     private List<int> requestedFlowerIdsForTonight = new();  // 오늘 밤에 얻을 꽃
@@ -28,6 +30,7 @@ public class CurrencyManager : Singleton<CurrencyManager>
     // ========== 프로퍼티 (읽기 전용) ==========
     public int CurrentMoney => currentMoney;
     public int CurrentDay => currentDay;
+    public int TodayEarned { get; private set; } // 오늘 번 돈 합계(날짜가 넘어가면 0으로 돌아간다)
     public IReadOnlyCollection<int> OwnedWrappers => ownedWrappers;
     public IReadOnlyDictionary<int, bool> ObtainedFlowers => obtainedFlowers;
     public CustomerRequirementGenerator.CustomerRequirement CurrentRequirement => currentRequirement;
@@ -60,6 +63,8 @@ public class CurrencyManager : Singleton<CurrencyManager>
         obtainedFlowers[4] = true;
         obtainedFlowers[8] = true;
 
+        foreach (int id in new[] { 1, 3, 4, 8 }) flowerStock[id] = initialFlowerStock;
+
         requestedFlowerIdsForTonight.Clear();
 
         Debug.Log($"[CurrencyManager] 초기화 완료 - 금액: {currentMoney}, 일수: {currentDay}");
@@ -73,6 +78,7 @@ public class CurrencyManager : Singleton<CurrencyManager>
     public void AddMoney(int amount)
     {
         currentMoney = Mathf.Max(0, currentMoney + amount);
+        if (amount > 0) TodayEarned += amount;
         EventBus.RaiseMoneyChanged(currentMoney);
         Debug.Log($"[CurrencyManager] 금액 변경: +{amount} → {currentMoney}");
     }
@@ -136,6 +142,18 @@ public class CurrencyManager : Singleton<CurrencyManager>
     /// <summary>
     /// 꽃 획득
     /// </summary>
+    /// <summary>보유 수량(없으면 0).</summary>
+    public int GetFlowerStock(int flowerId)
+    {
+        return flowerStock.TryGetValue(flowerId, out int n) ? n : 0;
+    }
+
+    /// <summary>보유 수량을 amount만큼 늘리거나(음수면 줄인다). 꽃 선택에서 보유보다 많이 고르면 마이너스가 될 수 있다.</summary>
+    public void AddFlowerStock(int flowerId, int amount)
+    {
+        flowerStock[flowerId] = GetFlowerStock(flowerId) + amount; // 임시: 0 아래(마이너스)도 허용하고 표시만 0으로 한다
+    }
+
     public void ObtainFlower(int flowerId)
     {
         if (!obtainedFlowers.ContainsKey(flowerId))
@@ -196,6 +214,7 @@ public class CurrencyManager : Singleton<CurrencyManager>
     public void AdvanceDay()
     {
         currentDay++;
+        TodayEarned = 0;
         requestedFlowerIdsForTonight.Clear();
 
         EventBus.RaiseDayAdvanced(currentDay);
@@ -211,17 +230,23 @@ public class CurrencyManager : Singleton<CurrencyManager>
         if (GUILayout.Button("Debug: 포장지 2 언락"))
             UnlockWrapper(2);
 
-        if (GUILayout.Button("Debug: 꽃 8 획득"))
-            ObtainFlower(8);
-
         if (GUILayout.Button("Debug: 다음 날"))
             AdvanceDay();
 
         if (GUILayout.Button("Debug: 하루 시간 -1분") && DayClock.Instance != null)
             DayClock.Instance.SkipDayTime(60f);
 
+        if (GUILayout.Button("Debug: 밤 퍼즐 스킵(성공)") && GameFlowController.Instance != null)
+            GameFlowController.Instance.DebugSkipNightPuzzle();
+
+        if (GUILayout.Button("Debug: 밤 시간 -1분") && DayClock.Instance != null)
+            DayClock.Instance.SkipNightTime(60f);
+
         if (GUILayout.Button("Debug: 손님 기분 -20%") && DayClock.Instance != null)
             DayClock.Instance.DrainMood(0.2f);
+
+        if (GUILayout.Button("Debug: 리롤 횟수 +1"))
+            FindFirstObjectByType<GachaManager>()?.AddRerolls(1);
 
         GUILayout.Label($"현재 금액: {CurrentMoney}\n현재 일수: {CurrentDay}\n보유 포장지: {ownedWrappers.Count}개");
     }

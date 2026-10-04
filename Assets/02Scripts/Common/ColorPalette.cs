@@ -10,13 +10,13 @@ public static class ColorPalette
     {
         switch (color)
         {
-            case FlowerData.Color.Red: return new Color(0.90f, 0.25f, 0.25f);
-            case FlowerData.Color.Blue: return new Color(0.25f, 0.45f, 0.95f);
-            case FlowerData.Color.Yellow: return new Color(0.98f, 0.82f, 0.20f);
-            case FlowerData.Color.Black: return new Color(0.20f, 0.20f, 0.22f);
-            case FlowerData.Color.Green: return new Color(0.30f, 0.75f, 0.35f);
-            case FlowerData.Color.white: return new Color(0.95f, 0.95f, 0.95f);
-            case FlowerData.Color.Purple: return new Color(0.65f, 0.35f, 0.85f);
+            case FlowerData.Color.Red: return new Color(0.88f, 0.35f, 0.30f);
+            case FlowerData.Color.Orange: return new Color(0.95f, 0.62f, 0.22f);
+            case FlowerData.Color.Yellow: return new Color(0.95f, 0.80f, 0.28f);
+            case FlowerData.Color.Blue: return new Color(0.35f, 0.58f, 0.88f);
+            case FlowerData.Color.Purple: return new Color(0.62f, 0.50f, 0.82f);
+            case FlowerData.Color.Pink: return new Color(0.93f, 0.55f, 0.70f);
+            case FlowerData.Color.White: return new Color(0.97f, 0.97f, 0.97f);
             default: return Color.gray;
         }
     }
@@ -38,12 +38,12 @@ public static class ColorPalette
         switch (color)
         {
             case FlowerData.Color.Red: return "빨간";
-            case FlowerData.Color.Blue: return "파란";
+            case FlowerData.Color.Orange: return "주황";
             case FlowerData.Color.Yellow: return "노란";
-            case FlowerData.Color.Black: return "검은";
-            case FlowerData.Color.Green: return "초록";
-            case FlowerData.Color.white: return "흰";
+            case FlowerData.Color.Blue: return "파란";
             case FlowerData.Color.Purple: return "보라";
+            case FlowerData.Color.Pink: return "분홍";
+            case FlowerData.Color.White: return "흰";
             default: return "알 수 없는";
         }
     }

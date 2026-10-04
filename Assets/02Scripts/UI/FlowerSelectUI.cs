@@ -18,7 +18,6 @@ public class FlowerSelectUI : MonoBehaviour
     private class Shelf
     {
         public FlowerData.FlowerRole role;
-        public int maxCount;
         public TMP_Text label;
         public RectTransform slotParent;
     }
@@ -44,10 +43,10 @@ public class FlowerSelectUI : MonoBehaviour
     [SerializeField] private GameObject flowerPopup;
     [SerializeField] private RectTransform slotPrefab;
     [SerializeField] private Shelf[] shelves;
-    [SerializeField] private Button flowerBucketButton;
 
     private readonly Dictionary<FlowerData, int> counts = new();
     private readonly Dictionary<FlowerData, SlotView> views = new();
+    private readonly Dictionary<FlowerData.FlowerRole, int> limits = new(); // 역할별로 담아야 하는 개수(= 고른 프리셋의 속성별 칸 수)
     private bool wrapperChosen;
 
     private void Start()
@@ -56,8 +55,6 @@ public class FlowerSelectUI : MonoBehaviour
         if (wrapperPopup != null) wrapperPopup.SetActive(true);
         if (flowerPopup != null) flowerPopup.SetActive(false);
         ClearSlots(); // 에디터에서 배치 확인용으로 미리 넣어둔 슬롯은 시작할 때 지운다
-
-        if (flowerBucketButton != null) flowerBucketButton.onClick.AddListener(OnConfirm);
 
         RefreshLabels();
         BuildWrapperChoices();
@@ -107,13 +104,28 @@ public class FlowerSelectUI : MonoBehaviour
 
         if (headerText != null)
         {
-            headerText.text = "포장지 확정! 역할별로 사용할 꽃을 골라 담으세요";
+            headerText.text = "역할별로 사용할 꽃을 고르세요";
         }
 
         if (wrapperPopup != null) wrapperPopup.SetActive(false);
         if (flowerPopup != null) flowerPopup.SetActive(true);
 
+        LoadRoleLimits(order);
         BuildFlowerChoices();
+    }
+
+    /// <summary>고른 프리셋의 속성별 칸 수가 역할별로 담아야 하는 꽃 개수다. 모두 채우면 바로 퍼즐로 넘어간다.</summary>
+    private void LoadRoleLimits(DayPuzzleGenerator.DayOrder order)
+    {
+        limits.Clear();
+        WrapperData data = WrapperRegistry.Instance != null ? WrapperRegistry.Instance.GetById(order.wrapperId) : null;
+        bool valid = data != null && order.presetIndex >= 0 && order.presetIndex < data.presets.Count;
+        foreach (var shelf in shelves) limits[shelf.role] = valid ? data.presets[order.presetIndex].CountByTag(shelf.role) : 0;
+    }
+
+    private int Limit(FlowerData.FlowerRole role)
+    {
+        return limits.TryGetValue(role, out int v) ? v : 0;
     }
 
     /// <summary>포장지 단계/보유 여부와 상관없이 등록된 모든 꽃을 후보로 보여준다.</summary>
@@ -175,12 +187,14 @@ public class FlowerSelectUI : MonoBehaviour
         if (shelf == null) return;
 
         counts.TryGetValue(block, out int n);
-        if (RoleTotal(shelf.role) < shelf.maxCount) counts[block] = n + 1;
+        if (RoleTotal(shelf.role) < Limit(shelf.role)) counts[block] = n + 1;
         else if (n > 0) counts.Remove(block);
         else return;
 
         RefreshSlot(block);
         RefreshLabels();
+
+        if (shelves.All(s => RoleTotal(s.role) >= Limit(s.role))) ConfirmSelection();
     }
 
     private int RoleTotal(FlowerData.FlowerRole role)
@@ -199,8 +213,9 @@ public class FlowerSelectUI : MonoBehaviour
 
         if (view.badge != null)
         {
-            view.badge.transform.parent.gameObject.SetActive(n > 0);
-            view.badge.text = $"x{n}";
+            // 보유 수량은 퍼즐이 끝난 뒤에 소모된다(선택 중에는 그대로). 마이너스는 임시로 0으로 표시한다.
+            int owned = Mathf.Max(0, CurrencyManager.Instance != null ? CurrencyManager.Instance.GetFlowerStock(block.blockID) : 0);
+            view.badge.text = n > 0 ? $"{n}/{owned}" : $"x{owned}"; // 평소엔 보유 수량만, 담으면 선택/보유
         }
     }
 
@@ -217,11 +232,11 @@ public class FlowerSelectUI : MonoBehaviour
                 FlowerData.FlowerRole.Form => "폼",
                 _ => "필러",
             };
-            shelf.label.text = $"{roleName}({RoleTotal(shelf.role)}/{shelf.maxCount})";
+            shelf.label.text = $"{roleName}({RoleTotal(shelf.role)}/{Limit(shelf.role)})";
         }
     }
 
-    private void OnConfirm()
+    private void ConfirmSelection()
     {
         if (!wrapperChosen || GameFlowController.Instance == null || counts.Count == 0) return;
         var pool = counts.SelectMany(kv => Enumerable.Repeat(kv.Key, kv.Value)).ToList();

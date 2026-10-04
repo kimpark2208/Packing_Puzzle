@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::FlowerData
   blockID: 13
   flowerName: "\uBAA9\uB828"
-  color: 5
+  color: 6
   flowerRole: 2
   shapeGrid:
   - cols: 000100

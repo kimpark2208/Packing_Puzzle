@@ -20,24 +20,14 @@ public class EventBus : Singleton<EventBus>
     /// <summary>하루 시간이 모두 소진됨</summary>
     public static event Action OnDayTimeUp;
 
+    /// <summary>밤 시간이 모두 소진됨</summary>
+    public static event Action OnNightTimeUp;
+
     public static void RaiseAscensionMoment(string description) => OnAscensionMoment?.Invoke(description);
     public static void RaiseMoneyChanged(int newAmount) => OnMoneyChanged?.Invoke(newAmount);
     public static void RaiseDayAdvanced(int newDay) => OnDayAdvanced?.Invoke(newDay);
     public static void RaiseDayTimeUp() => OnDayTimeUp?.Invoke();
-}
-
-/// <summary>낮 퍼즐 검증 결과</summary>
-public struct PuzzleValidationResult
-{
-    public bool success;                         // 모든 태그 영역을 알맞게 채워 꽃다발을 완성했는가
-    public int mostUsedColorId;                  // 가장 많이 사용된 색상 ID
-    public int mostUsedFlowerId;                 // 가장 많이 사용된 꽃 ID
-    public int colorBonus;                       // 인접 슬롯 색 조합 보너스 합계
-    public bool requirementMet;                  // 고객 요구사항 충족 여부
-    public int requirementBonus;                 // 고객 요구사항 보너스
-    public int totalEarnings;                    // 색 조합 보너스 + 요구사항 보너스 (실패 시 0)
-    public Dictionary<int, int> colorCounts;     // 색상ID -> 사용 개수 (전체)
-    public Dictionary<int, int> flowerCounts;    // 꽃(blockID) -> 사용 개수 (전체)
+    public static void RaiseNightTimeUp() => OnNightTimeUp?.Invoke();
 }
 
 /// <summary>절차적으로 생성된 밤 퍼즐 데이터</summary>

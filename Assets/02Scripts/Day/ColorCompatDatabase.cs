@@ -10,33 +10,26 @@ public static class ColorCompatDatabase
 
     private static readonly List<((FlowerData.Color, FlowerData.Color) pair, int bonus)> Entries = new()
     {
-        // 동색(모노톤) 조합
-        ((FlowerData.Color.Red, FlowerData.Color.Red), 10),
-        ((FlowerData.Color.Blue, FlowerData.Color.Blue), 10),
-        ((FlowerData.Color.Yellow, FlowerData.Color.Yellow), 10),
-        ((FlowerData.Color.Black, FlowerData.Color.Black), 8),
-        ((FlowerData.Color.Green, FlowerData.Color.Green), 10),
-        ((FlowerData.Color.white, FlowerData.Color.white), 8),
-        ((FlowerData.Color.Purple, FlowerData.Color.Purple), 10),
+        // 보색 조합 (색상환에서 마주 보는 색: 빨강-파랑, 주황-보라, 노랑-분홍)
+        ((FlowerData.Color.Red, FlowerData.Color.Blue), 25),
+        ((FlowerData.Color.Orange, FlowerData.Color.Purple), 25),
+        ((FlowerData.Color.Yellow, FlowerData.Color.Pink), 25),
 
-        // 보색 조합 (RYB 색상환 기준)
-        ((FlowerData.Color.Red, FlowerData.Color.Green), 25),
-        ((FlowerData.Color.Yellow, FlowerData.Color.Purple), 25),
+        // 유사색 조합 (색상환에서 이웃한 색)
+        ((FlowerData.Color.Red, FlowerData.Color.Orange), 15),
+        ((FlowerData.Color.Orange, FlowerData.Color.Yellow), 15),
+        ((FlowerData.Color.Yellow, FlowerData.Color.Blue), 15),
+        ((FlowerData.Color.Blue, FlowerData.Color.Purple), 15),
+        ((FlowerData.Color.Purple, FlowerData.Color.Pink), 15),
+        ((FlowerData.Color.Pink, FlowerData.Color.Red), 15),
 
-        // 유사색 조합
-        ((FlowerData.Color.Red, FlowerData.Color.Yellow), 15),
-        ((FlowerData.Color.Blue, FlowerData.Color.Green), 15),
-        ((FlowerData.Color.Blue, FlowerData.Color.Purple), 18),
-
-        // 클래식 조합
-        ((FlowerData.Color.Red, FlowerData.Color.white), 18),
-        ((FlowerData.Color.Black, FlowerData.Color.white), 20),
-        ((FlowerData.Color.Yellow, FlowerData.Color.white), 15),
-        ((FlowerData.Color.Blue, FlowerData.Color.white), 15),
-        ((FlowerData.Color.Green, FlowerData.Color.white), 15),
-        ((FlowerData.Color.Purple, FlowerData.Color.white), 15),
-        ((FlowerData.Color.Red, FlowerData.Color.Black), 12),
-        ((FlowerData.Color.Black, FlowerData.Color.Purple), 12),
+        // 흰색은 어느 색과도 잘 어울린다
+        ((FlowerData.Color.Red, FlowerData.Color.White), 10),
+        ((FlowerData.Color.Orange, FlowerData.Color.White), 10),
+        ((FlowerData.Color.Yellow, FlowerData.Color.White), 10),
+        ((FlowerData.Color.Blue, FlowerData.Color.White), 10),
+        ((FlowerData.Color.Purple, FlowerData.Color.White), 10),
+        ((FlowerData.Color.Pink, FlowerData.Color.White), 10),
     };
 
     static ColorCompatDatabase()

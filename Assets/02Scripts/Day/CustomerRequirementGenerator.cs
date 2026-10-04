@@ -43,7 +43,7 @@ public static class CustomerRequirementGenerator
     private static bool TryGenerateColor(ref CustomerRequirement requirement, WrapperPresetData preset)
     {
         var colors = new List<int>();
-        for (int c = 0; c < 7; c++)  // 0~6: Red, Blue, Yellow, Black, Green, White, Purple
+        for (int c = 0; c < System.Enum.GetValues(typeof(FlowerData.Color)).Length; c++)  // 0~6: Red, Orange, Yellow, Blue, Purple, Pink, White
         {
             if (ColorCapacity(preset, (FlowerData.Color)c) >= 2) colors.Add(c);
         }
@@ -97,17 +97,5 @@ public static class CustomerRequirementGenerator
     {
         if (preset == null) return int.MaxValue;
         return ObtainedFlowers().Where(f => f.color == color).Select(f => f.flowerRole).Distinct().Sum(role => preset.CountByTag(role));
-    }
-
-    /// <summary>
-    /// 요구사항 충족 여부 확인. PuzzleValidationResult의 전체 색상/꽃별 개수를 사용해 minCount까지 정확히 검사한다.
-    /// </summary>
-    public static bool IsRequirementMet(CustomerRequirement requirement, PuzzleValidationResult result)
-    {
-        var counts = requirement.type == RequirementType.Color ? result.colorCounts : result.flowerCounts;
-        if (counts == null) return false;
-
-        counts.TryGetValue(requirement.targetId, out int used);
-        return used >= requirement.minCount;
     }
 }
