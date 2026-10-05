@@ -5,7 +5,7 @@ using UnityEngine;
 
 /// <summary>
 /// 튜토리얼 안내: 안내 배너(화면 위) + 손가락 + 눌러야 할 곳만 밝게 살리고 나머지는 어둡게 한다.
-/// 화면 오른쪽 아래의 확인 버튼을 눌러야 사라지고(단계가 더 있으면 다음 단계로), 같은 id는 한 번만 보여 준다(실행 중에만 기억).
+/// 배너 오른쪽 아래의 확인 버튼을 눌러야 사라지고(단계가 더 있으면 다음 단계로), 같은 id는 한 번만 보여 준다(실행 중에만 기억).
 /// 하이라키에 미리 배치된 프리팹(TutorialOverlay)을 쓰고, 평소엔 Content가 꺼져 있다.
 /// 안내가 떠 있는 동안은 하루/밤 시간이 멈춘다.
 /// </summary>
@@ -26,7 +26,8 @@ public class TutorialOverlay : MonoBehaviour
     }
 
     private const string EmphasisColor = "#C8501E";
-    private const float ConfirmMargin = 60f; // 확인 버튼과 화면 가장자리/밝은 영역 사이의 간격
+    private const float ConfirmGap = 20f; // 확인 버튼과 밝은 영역 사이의 간격
+    private const float ConfirmBelowBanner = -10f; // 배너 아래 가장자리에서 버튼 위쪽까지의 거리(음수면 배너 그림자 쪽으로 파고들어 더 위로 붙는다)
     private const float HandBobPixels = 12f;
     private const float HandBobSpeed = 6f;
 
@@ -155,15 +156,22 @@ public class TutorialOverlay : MonoBehaviour
         PlaceConfirm(hole);
     }
 
-    /// <summary>확인 버튼은 오른쪽 아래에 둔다(앵커가 오른쪽 아래라 x는 음수). 밝은 영역(대상)과 겹치면 그 왼쪽으로 비켜서 대상을 가리지 않게 한다.</summary>
+    /// <summary>
+    /// 확인 버튼은 안내 배너의 오른쪽 아래 모서리 바로 밑에 붙여 둔다(버튼의 오른쪽 위 모서리가 기준).
+    /// 밝은 영역(대상)과 겹치면 그 왼쪽으로 비켜서 대상을 가리지 않게 한다.
+    /// </summary>
     private void PlaceConfirm(Rect? hole)
     {
         var rt = (RectTransform)confirmButton.transform;
-        Rect all = content.rect;
-        var pos = new Vector2(-ConfirmMargin, ConfirmMargin);
+        var banner = (RectTransform)bannerText.transform.parent;
 
-        var rect = new Rect(all.xMax + pos.x - rt.rect.width, all.yMin + pos.y, rt.rect.width, rt.rect.height);
-        if (hole.HasValue && rect.Overlaps(hole.Value)) pos.x = hole.Value.xMin - ConfirmMargin - all.xMax;
+        var corners = new Vector3[4];
+        banner.GetWorldCorners(corners); // 0 왼쪽 아래, 1 왼쪽 위, 2 오른쪽 위, 3 오른쪽 아래
+        Vector3 bannerBottomRight = content.InverseTransformPoint(corners[3]);
+        var pos = new Vector2(bannerBottomRight.x, bannerBottomRight.y - ConfirmBelowBanner);
+
+        var rect = new Rect(pos.x - rt.rect.width, pos.y - rt.rect.height, rt.rect.width, rt.rect.height);
+        if (hole.HasValue && rect.Overlaps(hole.Value)) pos.x = hole.Value.xMin - ConfirmGap;
 
         rt.anchoredPosition = pos;
     }

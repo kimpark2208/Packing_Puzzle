@@ -216,6 +216,7 @@ MonoBehaviour:
   dontDestroyOnLoad: 1
   initialMoney: 0
   initialFlowerStock: 20
+  outOfStockFlowerIds: 050000000a0000000b0000000c0000000d0000000e0000000f000000100000001100000012000000130000001400000015000000
 --- !u!4 &438470799
 Transform:
   m_ObjectHideFlags: 0
@@ -451,9 +452,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::DayClock
   dontDestroyOnLoad: 1
-  dayDurationSeconds: 300
+  dayDurationSeconds: 210
   moodDurationSeconds: 60
-  nightDurationSeconds: 180
+  nightDurationSeconds: 210
 --- !u!4 &1513376232
 Transform:
   m_ObjectHideFlags: 0
