@@ -5,7 +5,7 @@ using UnityEngine;
 
 /// <summary>
 /// 튜토리얼 안내: 안내 배너(화면 위) + 손가락 + 눌러야 할 곳만 밝게 살리고 나머지는 어둡게 한다.
-/// 아무 곳이나 클릭하면 사라지고(단계가 더 있으면 다음 단계로), 같은 id는 한 번만 보여 준다(실행 중에만 기억).
+/// 화면 오른쪽 아래의 확인 버튼을 눌러야 사라지고(단계가 더 있으면 다음 단계로), 같은 id는 한 번만 보여 준다(실행 중에만 기억).
 /// 하이라키에 미리 배치된 프리팹(TutorialOverlay)을 쓰고, 평소엔 Content가 꺼져 있다.
 /// 안내가 떠 있는 동안은 하루/밤 시간이 멈춘다.
 /// </summary>
@@ -15,15 +15,18 @@ public class TutorialOverlay : MonoBehaviour
     {
         public RectTransform target; // null이면 어둡게 하지 않고 배너만 보여 준다
         public string text;
+        public bool blocksInput;     // false면 어두운 영역도 클릭을 막지 않는다(바로 드래그해야 하는 안내용)
 
-        public Step(RectTransform target, string text)
+        public Step(RectTransform target, string text, bool blocksInput = true)
         {
             this.target = target;
             this.text = text;
+            this.blocksInput = blocksInput;
         }
     }
 
     private const string EmphasisColor = "#C8501E";
+    private const float ConfirmMargin = 60f; // 확인 버튼과 화면 가장자리/밝은 영역 사이의 간격
     private const float HandBobPixels = 12f;
     private const float HandBobSpeed = 6f;
 
@@ -39,11 +42,14 @@ public class TutorialOverlay : MonoBehaviour
     [SerializeField] private RectTransform dimBottom;
     [SerializeField] private RectTransform dimLeft;
     [SerializeField] private RectTransform dimRight;
+    [SerializeField] private RectTransform holeBlocker; // 밝은 영역 위에 깔리는 투명 막: 클릭을 막는 안내에서만 켠다
     [SerializeField] private RectTransform hand;
     [SerializeField] private TMP_Text bannerText;
+    [SerializeField] private UnityEngine.UI.Button confirmButton;
     [SerializeField] private float padding = 12f; // 밝게 살린 영역을 대상보다 조금 크게 잡는 여백
 
     private readonly Queue<Step[]> pending = new();
+    private bool confirmed; // 확인 버튼을 눌렀는가
     private Vector2 handBase;
     private Vector2 handDirection; // 손가락이 가리키는 쪽의 반대 방향(흔들리는 방향)
 
@@ -59,6 +65,7 @@ public class TutorialOverlay : MonoBehaviour
     {
         Instance = this;
         content.gameObject.SetActive(false);
+        confirmButton.onClick.AddListener(() => confirmed = true);
     }
 
     private void OnDestroy()
@@ -92,9 +99,10 @@ public class TutorialOverlay : MonoBehaviour
         {
             foreach (Step step in pending.Dequeue())
             {
-                yield return null; // 레이아웃이 자리 잡은 뒤에 위치를 계산한다(이 단계를 띄운 클릭과 겹치지도 않는다)
+                yield return null; // 레이아웃이 자리 잡은 뒤에 위치를 계산한다
+                confirmed = false;
                 Show(step);
-                yield return new WaitUntil(() => Input.GetMouseButtonDown(0));
+                yield return new WaitUntil(() => confirmed);
             }
         }
 
@@ -114,7 +122,21 @@ public class TutorialOverlay : MonoBehaviour
         dimLeft.gameObject.SetActive(hasTarget);
         dimRight.gameObject.SetActive(hasTarget);
         hand.gameObject.SetActive(hasTarget);
-        if (!hasTarget) return;
+        holeBlocker.gameObject.SetActive(hasTarget && step.blocksInput);
+        if (!hasTarget)
+        {
+            // 대상이 없는 안내(배너만): 화면을 어둡게 하진 않지만, 확인을 누르기 전엔 뒤의 화면이 눌리지 않게 투명 막으로 덮는다.
+            holeBlocker.gameObject.SetActive(step.blocksInput);
+            Rect screen = content.rect;
+            Place(holeBlocker, screen.xMin, screen.yMin, screen.width, screen.height);
+            PlaceConfirm(null);
+            return;
+        }
+
+        foreach (RectTransform dim in new[] { dimTop, dimBottom, dimLeft, dimRight })
+        {
+            dim.GetComponent<UnityEngine.UI.Image>().raycastTarget = step.blocksInput;
+        }
 
         Rect hole = ToLocalRect(step.target);
         hole.xMin -= padding;
@@ -127,8 +149,23 @@ public class TutorialOverlay : MonoBehaviour
         Place(dimBottom, all.xMin, all.yMin, all.width, hole.yMin - all.yMin);
         Place(dimLeft, all.xMin, hole.yMin, hole.xMin - all.xMin, hole.height);
         Place(dimRight, hole.xMax, hole.yMin, all.xMax - hole.xMax, hole.height);
+        Place(holeBlocker, hole.xMin, hole.yMin, hole.width, hole.height);
 
         PlaceHand(hole, all);
+        PlaceConfirm(hole);
+    }
+
+    /// <summary>확인 버튼은 오른쪽 아래에 둔다(앵커가 오른쪽 아래라 x는 음수). 밝은 영역(대상)과 겹치면 그 왼쪽으로 비켜서 대상을 가리지 않게 한다.</summary>
+    private void PlaceConfirm(Rect? hole)
+    {
+        var rt = (RectTransform)confirmButton.transform;
+        Rect all = content.rect;
+        var pos = new Vector2(-ConfirmMargin, ConfirmMargin);
+
+        var rect = new Rect(all.xMax + pos.x - rt.rect.width, all.yMin + pos.y, rt.rect.width, rt.rect.height);
+        if (hole.HasValue && rect.Overlaps(hole.Value)) pos.x = hole.Value.xMin - ConfirmMargin - all.xMax;
+
+        rt.anchoredPosition = pos;
     }
 
     /// <summary>손가락은 밝은 영역 아래에서 위를 가리킨다. 아래 공간이 모자라면 위에서 아래를 가리킨다.</summary>

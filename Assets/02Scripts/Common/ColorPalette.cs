@@ -21,12 +21,12 @@ public static class ColorPalette
         }
     }
 
-    /// <summary>꽃 역할(속성)의 상징 색(기획서): 라인=주황, 매스=파랑, 폼=핑크, 필러=노랑.</summary>
+    /// <summary>꽃 역할(속성)의 상징 색: 라인=빨강, 매스=파랑, 폼=핑크, 필러=노랑.</summary>
     public static Color ToRoleColor(FlowerData.FlowerRole role)
     {
         switch (role)
         {
-            case FlowerData.FlowerRole.Line: return new Color(0.96f, 0.62f, 0.45f);
+            case FlowerData.FlowerRole.Line: return new Color(0.93f, 0.40f, 0.38f);
             case FlowerData.FlowerRole.Mass: return new Color(0.55f, 0.75f, 0.95f);
             case FlowerData.FlowerRole.Form: return new Color(0.95f, 0.60f, 0.75f);
             default: return new Color(0.98f, 0.78f, 0.35f);

@@ -166,7 +166,7 @@ public class GachaManager : MonoBehaviour
         {
             Wilt(draggable, view);
             TutorialOverlay.Play("wilted", new TutorialOverlay.Step((RectTransform)block.transform,
-                $"회색 꽃은 {TutorialOverlay.Em("시든 꽃")}이에요. 놓을 수 없어요.\n{TutorialOverlay.Em("[다시 뽑기]")}를 누르거나 다른 꽃을 놓으면 새 꽃이 나와요."));
+                $"회색 꽃은 {TutorialOverlay.Em("시든 꽃")}이에요. 놓을 수 없어요.\n{TutorialOverlay.Em("[다시 뽑기]")}를 누르거나 다른 꽃을 놓으면 새 꽃이 나와요.", blocksInput: false));
         }
 
         shown.Add(block);

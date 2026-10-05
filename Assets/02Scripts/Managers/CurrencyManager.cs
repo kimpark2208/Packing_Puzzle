@@ -8,8 +8,8 @@ using UnityEngine;
 public class CurrencyManager : Singleton<CurrencyManager>
 {
     [SerializeField] private int initialMoney = 0;
-    [SerializeField] private int initialFlowerStock = 10; // 모든 꽃의 시작 보유 수량
-    [SerializeField] private int[] outOfStockFlowerIds = { 9, 5, 2, 6 }; // 시작 보유 수량이 0인 꽃(역할별 하나씩: 라인 백합, 매스 라벤더, 폼 수국, 필러 팬지)
+    [SerializeField] private int initialFlowerStock = 20; // 모든 꽃의 시작 보유 수량
+    [SerializeField] private int[] outOfStockFlowerIds = { 5, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21 }; // 시작 보유 수량이 0인 꽃: 라벤더와 5칸짜리 전부(밤 퍼즐을 만들기 어려운 꽃). 밤 요청 목록에서도 빠진다
 
     // ========== 기본 상태 ==========
     private int currentMoney;
@@ -131,6 +131,12 @@ public class CurrencyManager : Singleton<CurrencyManager>
     }
 
     // ========== 꽃 (Flower) 관리 ==========
+
+    /// <summary>시작 재고가 0으로 막아 둔 꽃인가(꽃 선택에서 못 쓰고 밤 요청 목록에도 나오지 않는다).</summary>
+    public bool IsStartingOutOfStock(int flowerId)
+    {
+        return System.Array.IndexOf(outOfStockFlowerIds, flowerId) >= 0;
+    }
 
     /// <summary>보유 수량(없으면 0).</summary>
     public int GetFlowerStock(int flowerId)

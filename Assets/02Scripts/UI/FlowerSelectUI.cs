@@ -26,9 +26,10 @@ public class FlowerSelectUI : MonoBehaviour
     {
         public Image icon;
         public TMP_Text badge;
+        public readonly List<(Graphic graphic, Color baseColor)> shaded = new(); // 그림자를 씌울 나머지 그림과 글자(원래 색)
     }
 
-    private static readonly Color SelectedColor = new(0.65f, 0.85f, 0.70f);
+    private static readonly Color UnselectedShade = new(0.35f, 0.35f, 0.35f); // 같은 역할에서 한 꽃이 선택되면 선택되지 않은 꽃에 씌우는 그림자(곱해서 어둡게)
     private const float SelectedLift = 30f; // 담긴 꽃이 화병에서 살짝 올라오는 높이
     private const int ExampleWrapperId = 3; // 고를 수 없는 예시로 보여 주는 포장지
 
@@ -183,7 +184,7 @@ public class FlowerSelectUI : MonoBehaviour
 
         TutorialOverlay.Play("flowers",
             new TutorialOverlay.Step(firstLabel,
-                $"꽃은 {TutorialOverlay.Em("라인-폼-매스-필러")} 네 가지 역할로 나뉘어요.\n이름표의 (0/1) 숫자를 모두 채울 만큼 꽃을 골라야 해요."),
+                $"꽃은 {TutorialOverlay.Em("라인-폼-매스-필러")} 네 가지 역할로 나뉘어요.\n역할마다 꽃을 {TutorialOverlay.Em("하나씩")} 골라야 해요."),
             new TutorialOverlay.Step(firstPickable,
                 $"{TutorialOverlay.Em("x숫자")}는 남은 꽃 개수예요. 재고가 0인 꽃은 고를 수 없어요.\n주문서에 맞는 꽃을 눌러 담으세요."));
     }
@@ -211,7 +212,12 @@ public class FlowerSelectUI : MonoBehaviour
         view.Apply(block, block.stemSprite, false);
 
         Transform badgeT = FindIn(slot, "CountBadge");
-        views[block] = new SlotView { icon = view.Icon, badge = badgeT != null ? badgeT.GetComponentInChildren<TMP_Text>(true) : null };
+        var slotView = new SlotView { icon = view.Icon, badge = badgeT != null ? badgeT.GetComponentInChildren<TMP_Text>(true) : null };
+        foreach (Graphic graphic in slot.GetComponentsInChildren<Graphic>(true))
+        {
+            if (graphic != view.Icon) slotView.shaded.Add((graphic, graphic.color));
+        }
+        views[block] = slotView;
         RefreshSlot(block);
 
         var btn = slot.GetComponentInChildren<Button>(true);
@@ -232,18 +238,19 @@ public class FlowerSelectUI : MonoBehaviour
         {
             if (Limit(shelf.role) == 0) return; // 이 프리셋엔 이 역할의 칸이 없다
             if (CurrencyManager.Instance != null && CurrencyManager.Instance.GetFlowerStock(block.blockID) <= 0) return; // 재고가 없는 꽃은 고를 수 없다
-            foreach (FlowerData other in counts.Keys.Where(k => k.flowerRole == shelf.role).ToList())
-            {
-                counts.Remove(other);
-                RefreshSlot(other);
-            }
+            foreach (FlowerData other in counts.Keys.Where(k => k.flowerRole == shelf.role).ToList()) counts.Remove(other);
             counts[block] = 1;
         }
 
-        RefreshSlot(block);
+        RefreshRole(shelf.role); // 선택이 바뀌면 같은 역할의 다른 꽃들의 그림자도 달라진다
         RefreshLabels();
 
         if (shelves.All(s => RoleTotal(s.role) >= Limit(s.role))) ConfirmSelection();
+    }
+
+    private void RefreshRole(FlowerData.FlowerRole role)
+    {
+        foreach (FlowerData flower in views.Keys.Where(f => f.flowerRole == role).ToList()) RefreshSlot(flower);
     }
 
     private int RoleTotal(FlowerData.FlowerRole role)
@@ -256,8 +263,11 @@ public class FlowerSelectUI : MonoBehaviour
         if (!views.TryGetValue(block, out var view)) return;
 
         counts.TryGetValue(block, out int n);
-        Color tint = ColorPalette.ToUnityColor(block.color);
-        view.icon.color = n > 0 ? tint * SelectedColor : tint;
+
+        // 같은 역할에서 다른 꽃이 선택됐으면 이 꽃(선택되지 않은 꽃)은 어둡게 한다.
+        Color shade = RoleTotal(block.flowerRole) > 0 && n == 0 ? UnselectedShade : Color.white;
+        view.icon.color = ColorPalette.ToUnityColor(block.color) * shade;
+        foreach (var (graphic, baseColor) in view.shaded) graphic.color = baseColor * shade;
         view.icon.rectTransform.anchoredPosition = new Vector2(0f, n > 0 ? SelectedLift : 0f);
 
         if (view.badge != null)
@@ -281,7 +291,7 @@ public class FlowerSelectUI : MonoBehaviour
                 FlowerData.FlowerRole.Form => "폼",
                 _ => "필러",
             };
-            shelf.label.text = $"{roleName}({RoleTotal(shelf.role)}/{Limit(shelf.role)})";
+            shelf.label.text = roleName;
         }
     }
 

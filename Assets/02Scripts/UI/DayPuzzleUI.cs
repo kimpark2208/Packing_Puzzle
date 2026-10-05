@@ -66,7 +66,7 @@ public class DayPuzzleUI : MonoBehaviour
         if (gacha != null)
         {
             TutorialOverlay.Play("puzzle-match", new TutorialOverlay.Step(gacha.Bucket,
-                $"바구니에 나온 꽃을 끌어서 꽃의 {TutorialOverlay.Em("오른쪽 위 마커")}와 {TutorialOverlay.Em("같은 색 영역")}에 놓으세요.\n주황=라인 · 핑크=폼 · 파랑=매스 · 노랑=필러"));
+                $"바구니에 나온 꽃을 끌어서 꽃의 {TutorialOverlay.Em("오른쪽 위 마커")}와 {TutorialOverlay.Em("같은 색 영역")}에 놓으세요.\n빨강=라인 · 핑크=폼 · 파랑=매스 · 노랑=필러"));
         }
     }
 
@@ -82,8 +82,8 @@ public class DayPuzzleUI : MonoBehaviour
         if (gacha != null)
         {
             TutorialOverlay.Play("puzzle-balance",
-                new TutorialOverlay.Step(board.BoardArea, $"양쪽에 꽃을 고르게 놓으세요.\n한쪽이 2개 이상 많아지면 꽃다발이 {TutorialOverlay.Em("무너져요!")}"),
-                new TutorialOverlay.Step(gacha.RerollButton, $"원하는 꽃이 안 나오면 {TutorialOverlay.Em("[다시 뽑기]")}를 누르세요.\n파란 숫자는 남은 횟수예요."));
+                new TutorialOverlay.Step(board.BoardArea, $"양쪽에 꽃을 고르게 놓으세요.\n한쪽이 2개 이상 많아지면 꽃다발이 {TutorialOverlay.Em("무너져요!")}", blocksInput: false),
+                new TutorialOverlay.Step(gacha.RerollButton, $"원하는 꽃이 안 나오면 {TutorialOverlay.Em("[다시 뽑기]")}를 누르세요.\n파란 숫자는 남은 횟수예요.", blocksInput: false));
         }
 
         if (board.IsComplete)
@@ -129,6 +129,10 @@ public class DayPuzzleUI : MonoBehaviour
         if (resultText != null) resultText.text = SettlementFormatter.Breakdown(result.Ledger);
         if (resultMoneyText != null) resultMoneyText.text = $"획득한 돈: {result.Payout}";
         if (resultPopup != null) resultPopup.SetActive(true);
+
+        // 보유 수량은 이 퍼즐이 끝난 지금 차감됐다(Settle). 처음 결과를 볼 때 알려 준다.
+        TutorialOverlay.Play("stock-used", new TutorialOverlay.Step(null,
+            $"퍼즐에 놓은 꽃의 개수만큼 {TutorialOverlay.Em("보유 수량")}이 줄어요.\n보유 수량이 0이 되면 그 꽃은 다시 고를 수 없어요."));
     }
 
     private static bool IsCustomerLate()

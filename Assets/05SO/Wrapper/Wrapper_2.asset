@@ -16,7 +16,7 @@ MonoBehaviour:
   colorName: "\uC8FC\uD669"
   color: {r: 0.98, g: 0.55, b: 0.15, a: 1}
   ringCount: 2
-  flowersPerDraw: 2
+  flowersPerDraw: 3
   presets:
   - {fileID: 11400000, guid: 2204be2b86419c943b4bcf6d808a560a, type: 2}
   - {fileID: 11400000, guid: 762461f11820b774e86364a163ea1269, type: 2}
