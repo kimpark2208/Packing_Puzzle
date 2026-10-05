@@ -33,10 +33,30 @@ public class WrapperSlot : MonoBehaviour
     public bool IsFull => placed.Count > 0; // 칸당 꽃 한 송이
 
     private Image background;
+    private Outline hoverOutline; // 에디터에서 칸마다 붙여 둔다(평소엔 꺼짐). 놓을 칸을 흰 테두리로 맥박치게 해서 손가락 근처에서도 보이게 한다
+
+    private const float PulseSpeed = 8f;
 
     private void Awake()
     {
         background = GetComponent<Image>();
+        hoverOutline = GetComponent<Outline>();
+        if (hoverOutline != null) hoverOutline.enabled = false;
+    }
+
+    private void Update()
+    {
+        if (hoverOutline == null || !hoverOutline.enabled) return;
+
+        Color c = hoverOutline.effectColor;
+        c.a = Mathf.Lerp(0.55f, 1f, (Mathf.Sin(Time.unscaledTime * PulseSpeed) + 1f) * 0.5f);
+        hoverOutline.effectColor = c;
+    }
+
+    /// <summary>드래그 중인 꽃을 놓을 수 있는 칸으로 가리킬 때 테두리를 켠다.</summary>
+    public void SetHover(bool on)
+    {
+        if (hoverOutline != null) hoverOutline.enabled = on;
     }
 
     /// <summary>하이라이트 색을 지정한다(태그 색 + 투명도).</summary>

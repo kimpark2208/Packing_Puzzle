@@ -167,6 +167,10 @@ MonoBehaviour:
   artifactsIndexButton: {fileID: 714311790}
   wrapperIndexButton: {fileID: 1433575819}
   furnitureIndexButton: {fileID: 1444243546}
+  characterImage: {fileID: 1411078887}
+  dayCharacterSprite: {fileID: 1452140193048647749, guid: e89cd7f9723b2b448aa511cde15409e4, type: 3}
+  lanternImage: {fileID: 984253942}
+  dayLanternSprite: {fileID: 8456872963467847136, guid: 7e274df733ef5274ba1284f52faacc37, type: 3}
 --- !u!4 &139048042
 Transform:
   m_ObjectHideFlags: 0
@@ -792,8 +796,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: "\uB9D0\uC744\uC880\uD574\uBCF4\uC138\uC694"
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: dd35f66b92794cf4ca8a7ced24876b18, type: 2}
-  m_sharedMaterial: {fileID: -4855490300548686756, guid: dd35f66b92794cf4ca8a7ced24876b18, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: 1ec9ef128e327f546beae92e0cae3cde, type: 2}
+  m_sharedMaterial: {fileID: 2614528909555845940, guid: 1ec9ef128e327f546beae92e0cae3cde, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -2743,7 +2747,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
   m_Material: {fileID: 0}
-  m_Color: {r: 1, g: 1, b: 1, a: 0.78039217}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1

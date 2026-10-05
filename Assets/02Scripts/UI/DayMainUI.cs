@@ -42,12 +42,21 @@ public class DayMainUI : MonoBehaviour
     [SerializeField] private GameObject wrapperPage;
     [SerializeField] private GameObject furniturePage;
 
-    [Header("하루 시간 종료 연출 (밤 메인에서 사용)")]
+    [Header("하루 시간 종료 연출")]
     [SerializeField] private GameObject bubbleContainer;
     [SerializeField] private GameObject characterRoot;
     [SerializeField] private Button artifactsIndexButton;
     [SerializeField] private Button wrapperIndexButton;
     [SerializeField] private Button furnitureIndexButton;
+
+    [Header("하루 시간이 끝났을 때 낮 모습으로 바꿀 이미지 (밤 메인에서만 지정)")]
+    [SerializeField] private Image characterImage;
+    [SerializeField] private Sprite dayCharacterSprite;
+    [SerializeField] private Image lanternImage;
+    [SerializeField] private Sprite dayLanternSprite;
+    [SerializeField] private float lanternDelay = 0.5f; // 전등을 누른 뒤 밤 요청 화면으로 넘어가기까지의 시간
+
+    private Sprite nightLanternSprite; // 전등이 씬에 놓인 모습(밤). 낮 모습으로 바꾼 전등을 누르면 이걸로 되돌린다
 
     private DayPuzzleGenerator.DayOrder order;
     private bool initialized;
@@ -74,10 +83,11 @@ public class DayMainUI : MonoBehaviour
         if (lanternButton != null)
         {
             lanternButton.interactable = false; // 하루 시간이 끝나고 손님이 사라진 뒤에야 누를 수 있다(HideCustomer)
+            if (lanternImage != null) nightLanternSprite = lanternImage.sprite; // 씬에 놓인 모습(밤 전등)을 기억해 둔다
             lanternButton.onClick.AddListener(() =>
             {
                 if (nightMode || nightEnding) return; // 밤 손님을 만나는 중에는 전등으로 밤을 다시 시작하지 않는다
-                if (GameFlowController.Instance != null) GameFlowController.Instance.ProceedToNightMain();
+                StartCoroutine(LightLanternThenProceed());
             });
         }
 
@@ -105,7 +115,10 @@ public class DayMainUI : MonoBehaviour
         if (nightFlowers != null)
         {
             nightMode = true;
-            if (bubbleText != null) bubbleText.text = $"이 물건을 수리해주시면 {nightFlowers}을(를) 만들어드릴게요";
+            if (bubbleText != null)
+            {
+                bubbleText.text = $"저기요… 제 꽃이 <b>{nightFlowers}</b>인데요. 자꾸 시드네요. 이 꽃을 고쳐주시면 똑같이 만들어 드릴게요. 유령에게는 신비한 능력이 있거든요.";
+            }
             return;
         }
 
@@ -126,8 +139,7 @@ public class DayMainUI : MonoBehaviour
         bool timeUp = GameFlowController.Instance != null && GameFlowController.Instance.ConsumeDayTimeUp();
         if (timeUp)
         {
-            if (bubbleText != null) bubbleText.text = TimeUpLine;
-            EndConversation();
+            BeginDayEnd();
         }
         else if (!showingAngryLine)
         {
@@ -169,6 +181,28 @@ public class DayMainUI : MonoBehaviour
         if (GameFlowController.Instance != null) GameFlowController.Instance.GoToFlowerSelect();
     }
 
+    /// <summary>전등을 누르면 밤 전등 모습으로 바뀌고, 잠시 뒤 밤 요청(부적) 화면으로 넘어간다.</summary>
+    private System.Collections.IEnumerator LightLanternThenProceed()
+    {
+        lanternButton.interactable = false; // 기다리는 동안 다시 누르지 못한다
+        if (lanternImage != null && nightLanternSprite != null) lanternImage.sprite = nightLanternSprite;
+
+        yield return new WaitForSeconds(lanternDelay);
+        if (GameFlowController.Instance != null) GameFlowController.Instance.ProceedToNightMain();
+    }
+
+    /// <summary>하루 시간이 끝났을 때: 아직 낮이므로 캐릭터와 전등을 낮 모습으로 바꾸고, 손님이 마무리 대사를 한 뒤 잠시 후(또는 응답 버튼을 누르면) 사라진다. 사라지면 전등을 누를 수 있다.</summary>
+    public void BeginDayEnd()
+    {
+        if (closing) return;
+
+        if (characterImage != null && dayCharacterSprite != null) characterImage.sprite = dayCharacterSprite;
+        if (lanternImage != null && dayLanternSprite != null) lanternImage.sprite = dayLanternSprite;
+
+        if (bubbleText != null) bubbleText.text = TimeUpLine;
+        EndConversation();
+    }
+
     /// <summary>밤 시간이 끝났을 때: 손님이 "해가 뜨면 저는 죽어요!!"라고 외치고, 낮 시간 종료 때와 같은 방식(응답 버튼을 누르거나 시간이 지나면)으로 사라진다. 사라지면 낮으로 넘어간다.</summary>
     public void BeginNightEnd()
     {
@@ -196,7 +230,10 @@ public class DayMainUI : MonoBehaviour
         StopAllCoroutines();
         if (bubbleContainer != null) bubbleContainer.SetActive(false);
         if (characterRoot != null) characterRoot.SetActive(false);
-        if (lanternButton != null && !nightEnding) lanternButton.interactable = true; // 하루 시간 종료 손님이 사라졌으니 전등으로 밤을 시작할 수 있다
+        if (lanternButton != null && !nightEnding)
+        {
+            lanternButton.interactable = true; // 하루 시간 종료 손님이 사라졌으니 전등으로 밤을 시작할 수 있다
+        }
 
         if (nightEnding && GameFlowController.Instance != null) GameFlowController.Instance.EndNight(); // 손님이 사라지면 하루 결산 화면으로
     }

@@ -20,8 +20,7 @@ public class WrapperBoardController : MonoBehaviour
     /// <summary>에디터에 칸 오브젝트가 배치된 링 수. 3·4링 칸을 씬에 배치하면 이 값을 올린다(포장지는 최대 4링).</summary>
     public const int SupportedRings = 2;
 
-    [SerializeField] private RectTransform slotArea;
-    [SerializeField] private RectTransform flowerArea; // 칸과 같은 이름의 꽃 이미지를 두는 곳 (SlotArea와 같은 위치/크기)
+    [SerializeField] private RectTransform slotArea;    [SerializeField] private RectTransform flowerArea; // 칸과 같은 이름의 꽃 이미지를 두는 곳 (SlotArea와 같은 위치/크기)
     [SerializeField] private float centerRadius = 70f;
     [SerializeField] private float ringSpacing = 100f;
     [Header("씬 단독 실행용 기본 포장지/프리셋 (주문이 확정돼 있으면 주문의 프리셋을 쓴다)")]
@@ -32,11 +31,12 @@ public class WrapperBoardController : MonoBehaviour
     [Header("FlowerArea의 꽃 이미지에 채울 태그별 이미지 (FlowerRole 순서: Line, Mass, Form, Filler)")]
     [SerializeField] private Sprite[] tagSprites;
 
-    // 태그 색(기획서): 라인=주황, 매스=파랑, 폼=핑크, 필러=노랑. 비어있음/미리보기/채움은 투명도로만 구분한다.
+    // 태그 색: 라인=빨강, 매스=파랑, 폼=핑크, 필러=노랑. 비어있음/미리보기/채움은 투명도로만 구분한다.
     private const float IdleAlpha = 0.45f;
     private const float HoverAlpha = 0.90f;
     private const float FilledAlpha = 0f; // 꽃이 놓인 칸은 뒤의 셀 배경을 숨긴다
     private const int CollapseDiff = 2;
+    private const int OverlapSamples = 5; // 꽃 사각형 한 변에 찍는 표본점 수(칸과의 겹침을 어림하는 데 쓴다)
 
     [Header("기울기: 좌우 꽃 개수가 1개 차이일 때 많은 쪽으로 기운다(Lerp로 서서히)")]
     [SerializeField] private RectTransform wrapperImage; // 기울이는 대상(포장지 이미지만. 칸/꽃 이미지는 그대로)
@@ -148,10 +148,14 @@ public class WrapperBoardController : MonoBehaviour
     /// <summary>화면 좌표를 중심 기준 반지름/사분면으로 변환해 알맞은 영역을 찾아 배치를 시도한다(꽃의 역할과 칸의 태그가 같아야 한다).</summary>
     public bool TryPlaceAtScreenPoint(FlowerData flower, Vector2 screenPoint, Camera eventCamera)
     {
-        if (!TryGetBoardPoint(screenPoint, eventCamera, out Vector2 local)) return false;
+        return TryPlaceAtScreenRect(flower, new Rect(screenPoint, Vector2.zero), eventCamera);
+    }
 
-        WrapperSlot region = ResolveRegion(local);
-        if (region == null || !region.CanAccept(flower)) return false;
+    /// <summary>꽃이 화면에서 차지하는 사각형과 겹치는 칸 중 꽃을 받을 수 있는 칸에 놓는다(가장 많이 겹친 칸).</summary>
+    public bool TryPlaceAtScreenRect(FlowerData flower, Rect screenRect, Camera eventCamera)
+    {
+        WrapperSlot region = ResolveByOverlap(flower, screenRect, eventCamera);
+        if (region == null) return false;
 
         region.Fill(flower);
         region.SetHighlightAlpha(FilledAlpha);
@@ -161,6 +165,7 @@ public class WrapperBoardController : MonoBehaviour
             flowerImage.GetComponent<Image>().color = ColorPalette.ToUnityColor(flower.color); // 칸 이미지가 흰색이라 놓은 꽃의 색으로 물들인다
             flowerImage.gameObject.SetActive(true);
         }
+        region.SetHover(false);
         if (region == hoveredRegion) hoveredRegion = null;
 
         placementHistory.Add(flower);
@@ -169,24 +174,61 @@ public class WrapperBoardController : MonoBehaviour
         return true;
     }
 
-    /// <summary>드래그 중 호출: 현재 포인터 아래 영역을 반투명 파란색으로 미리 보여준다.</summary>
     public void PreviewHover(FlowerData flower, Vector2 screenPoint, Camera eventCamera)
     {
-        WrapperSlot region = null;
-        if (TryGetBoardPoint(screenPoint, eventCamera, out Vector2 local))
-        {
-            region = ResolveRegion(local);
-        }
+        PreviewHover(flower, new Rect(screenPoint, Vector2.zero), eventCamera);
+    }
+
+    /// <summary>드래그 중 호출: 꽃과 겹친 칸(꽃을 받을 수 있는 칸 중 가장 많이 겹친 칸)을 강조해서 보여준다.</summary>
+    public void PreviewHover(FlowerData flower, Rect screenRect, Camera eventCamera)
+    {
+        WrapperSlot region = ResolveByOverlap(flower, screenRect, eventCamera);
 
         if (region == hoveredRegion) return;
 
         ClearHoverPreview();
 
-        if (region != null && region.CanAccept(flower))
+        if (region != null)
         {
             region.SetHighlightAlpha(HoverAlpha);
+            region.SetHover(true);
             hoveredRegion = region;
         }
+    }
+
+    /// <summary>
+    /// 꽃의 화면 사각형 안에 표본점을 촘촘히 찍어 각 점이 속한 칸을 센다. 꽃을 받을 수 있는 칸만 세고, 가장 많이 겹친 칸을 돌려준다.
+    /// 칸이 부채꼴이라 겹침 면적을 직접 구하는 대신 표본점으로 어림한다. 사각형 크기가 0이면 한 점으로 판정한다.
+    /// </summary>
+    private WrapperSlot ResolveByOverlap(FlowerData flower, Rect screenRect, Camera eventCamera)
+    {
+        var counts = new Dictionary<WrapperSlot, int>();
+        WrapperSlot best = null;
+        int bestCount = 0;
+
+        for (int i = 0; i < OverlapSamples; i++)
+        {
+            for (int j = 0; j < OverlapSamples; j++)
+            {
+                var p = new Vector2(
+                    Mathf.Lerp(screenRect.xMin, screenRect.xMax, i / (float)(OverlapSamples - 1)),
+                    Mathf.Lerp(screenRect.yMin, screenRect.yMax, j / (float)(OverlapSamples - 1)));
+                if (!TryGetBoardPoint(p, eventCamera, out Vector2 local)) continue;
+
+                WrapperSlot region = ResolveRegion(local);
+                if (region == null || !region.CanAccept(flower)) continue;
+
+                counts.TryGetValue(region, out int n);
+                counts[region] = ++n;
+                if (n > bestCount)
+                {
+                    best = region;
+                    bestCount = n;
+                }
+            }
+        }
+
+        return best;
     }
 
     /// <summary>드래그가 끝나면(놓았든 반려됐든) 남아있는 미리보기 강조를 지운다.</summary>
@@ -196,6 +238,7 @@ public class WrapperBoardController : MonoBehaviour
         {
             hoveredRegion.SetHighlightAlpha(IdleAlpha);
         }
+        if (hoveredRegion != null) hoveredRegion.SetHover(false);
         hoveredRegion = null;
     }
 

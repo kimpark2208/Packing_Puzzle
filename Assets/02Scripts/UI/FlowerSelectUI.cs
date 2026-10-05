@@ -26,10 +26,12 @@ public class FlowerSelectUI : MonoBehaviour
     {
         public Image icon;
         public TMP_Text badge;
+        public readonly List<(Graphic graphic, Color baseColor)> shaded = new(); // 그림자를 씌울 나머지 그림과 글자(원래 색)
     }
 
-    private static readonly Color SelectedColor = new(0.65f, 0.85f, 0.70f);
+    private static readonly Color UnselectedShade = new(0.35f, 0.35f, 0.35f); // 같은 역할에서 한 꽃이 선택되면 선택되지 않은 꽃에 씌우는 그림자(곱해서 어둡게)
     private const float SelectedLift = 30f; // 담긴 꽃이 화병에서 살짝 올라오는 높이
+    private const int ExampleWrapperId = 3; // 고를 수 없는 예시로 보여 주는 포장지
 
 
     [SerializeField] private TMP_Text headerText;
@@ -45,8 +47,7 @@ public class FlowerSelectUI : MonoBehaviour
     [SerializeField] private Shelf[] shelves;
 
     private readonly Dictionary<FlowerData, int> counts = new();
-    private readonly Dictionary<FlowerData, SlotView> views = new();
-    private readonly Dictionary<FlowerData.FlowerRole, int> limits = new(); // 역할별로 담는 개수: 고른 프리셋에 그 역할의 칸이 있으면 1, 없으면 0
+    private readonly Dictionary<FlowerData, SlotView> views = new();    private readonly Dictionary<FlowerData.FlowerRole, int> limits = new(); // 역할별로 담는 개수: 고른 프리셋에 그 역할의 칸이 있으면 1, 없으면 0
     private bool wrapperChosen;
 
     private void Start()
@@ -66,29 +67,37 @@ public class FlowerSelectUI : MonoBehaviour
         if (wrapperArea == null || wrapperItemTemplate == null) return;
 
         var owned = CurrencyManager.Instance.OwnedWrappers;
-        foreach (int wrapperId in owned)
+        foreach (int wrapperId in owned) AddWrapperItem(wrapperId, selectable: true);
+
+        // 포장지마다 크기가 다르다는 걸 보여 주는 예시: 아직 없는 3번 포장지를 고를 수 없게 옆에 둔다.
+        if (!owned.Contains(ExampleWrapperId)) AddWrapperItem(ExampleWrapperId, selectable: false);
+    }
+
+    private void AddWrapperItem(int wrapperId, bool selectable)
+    {
+        var item = ShopManager.Instance.GetItemById(wrapperId);
+        string label = item.HasValue ? item.Value.itemName : $"포장지 {wrapperId}";
+
+        // 손님이 말하는 포장지 색과 같은 색/이름을 보여준다(WrapperData의 색)
+        WrapperData data = WrapperRegistry.Instance != null ? WrapperRegistry.Instance.GetById(wrapperId) : null;
+        if (data != null) label = $"{data.colorName}색 {label}";
+
+        RectTransform itemRT = Instantiate(wrapperItemTemplate, wrapperArea);
+        itemRT.gameObject.SetActive(true);
+        itemRT.name = $"Wrapper_{wrapperId}";
+
+        var img = itemRT.Find("WrapperImage") != null ? itemRT.Find("WrapperImage").GetComponent<Image>() : null;
+        if (img != null && data != null) img.color = data.color;
+
+        var confirmBtnT = itemRT.Find("ConfirmBTN");
+        var confirmBtn = confirmBtnT != null ? confirmBtnT.GetComponent<Button>() : null;
+        var confirmLabel = confirmBtn != null ? confirmBtn.GetComponentInChildren<TMP_Text>() : null;
+        if (confirmLabel != null) confirmLabel.text = label;
+
+        if (confirmBtn != null)
         {
-            var item = ShopManager.Instance.GetItemById(wrapperId);
-            string label = item.HasValue ? item.Value.itemName : $"포장지 {wrapperId}";
-
-            // 손님이 말하는 포장지 색과 같은 색/이름을 보여준다(WrapperData의 색)
-            WrapperData data = WrapperRegistry.Instance != null ? WrapperRegistry.Instance.GetById(wrapperId) : null;
-            if (data != null) label = $"{data.colorName}색 {label}";
-
-            RectTransform itemRT = Instantiate(wrapperItemTemplate, wrapperArea);
-            itemRT.gameObject.SetActive(true);
-            itemRT.name = $"Wrapper_{wrapperId}";
-
-            var img = itemRT.Find("WrapperImage") != null ? itemRT.Find("WrapperImage").GetComponent<Image>() : null;
-            if (img != null && data != null) img.color = data.color;
-
-            var confirmBtnT = itemRT.Find("ConfirmBTN");
-            var confirmBtn = confirmBtnT != null ? confirmBtnT.GetComponent<Button>() : null;
-            var confirmLabel = confirmBtn != null ? confirmBtn.GetComponentInChildren<TMP_Text>() : null;
-            if (confirmLabel != null) confirmLabel.text = label;
-
-            int capturedId = wrapperId;
-            if (confirmBtn != null) confirmBtn.onClick.AddListener(() => OnWrapperChosen(capturedId));
+            confirmBtn.interactable = selectable;
+            if (selectable) confirmBtn.onClick.AddListener(() => OnWrapperChosen(wrapperId));
         }
     }
 
@@ -173,7 +182,12 @@ public class FlowerSelectUI : MonoBehaviour
         view.Apply(block, block.stemSprite, false);
 
         Transform badgeT = FindIn(slot, "CountBadge");
-        views[block] = new SlotView { icon = view.Icon, badge = badgeT != null ? badgeT.GetComponentInChildren<TMP_Text>(true) : null };
+        var slotView = new SlotView { icon = view.Icon, badge = badgeT != null ? badgeT.GetComponentInChildren<TMP_Text>(true) : null };
+        foreach (Graphic graphic in slot.GetComponentsInChildren<Graphic>(true))
+        {
+            if (graphic != view.Icon) slotView.shaded.Add((graphic, graphic.color));
+        }
+        views[block] = slotView;
         RefreshSlot(block);
 
         var btn = slot.GetComponentInChildren<Button>(true);
@@ -193,18 +207,20 @@ public class FlowerSelectUI : MonoBehaviour
         else
         {
             if (Limit(shelf.role) == 0) return; // 이 프리셋엔 이 역할의 칸이 없다
-            foreach (FlowerData other in counts.Keys.Where(k => k.flowerRole == shelf.role).ToList())
-            {
-                counts.Remove(other);
-                RefreshSlot(other);
-            }
+            if (CurrencyManager.Instance != null && CurrencyManager.Instance.GetFlowerStock(block.blockID) <= 0) return; // 재고가 없는 꽃은 고를 수 없다
+            foreach (FlowerData other in counts.Keys.Where(k => k.flowerRole == shelf.role).ToList()) counts.Remove(other);
             counts[block] = 1;
         }
 
-        RefreshSlot(block);
+        RefreshRole(shelf.role); // 선택이 바뀌면 같은 역할의 다른 꽃들의 그림자도 달라진다
         RefreshLabels();
 
         if (shelves.All(s => RoleTotal(s.role) >= Limit(s.role))) ConfirmSelection();
+    }
+
+    private void RefreshRole(FlowerData.FlowerRole role)
+    {
+        foreach (FlowerData flower in views.Keys.Where(f => f.flowerRole == role).ToList()) RefreshSlot(flower);
     }
 
     private int RoleTotal(FlowerData.FlowerRole role)
@@ -217,8 +233,11 @@ public class FlowerSelectUI : MonoBehaviour
         if (!views.TryGetValue(block, out var view)) return;
 
         counts.TryGetValue(block, out int n);
-        Color tint = ColorPalette.ToUnityColor(block.color);
-        view.icon.color = n > 0 ? tint * SelectedColor : tint;
+
+        // 같은 역할에서 다른 꽃이 선택됐으면 이 꽃(선택되지 않은 꽃)은 어둡게 한다.
+        Color shade = RoleTotal(block.flowerRole) > 0 && n == 0 ? UnselectedShade : Color.white;
+        view.icon.color = ColorPalette.ToUnityColor(block.color) * shade;
+        foreach (var (graphic, baseColor) in view.shaded) graphic.color = baseColor * shade;
         view.icon.rectTransform.anchoredPosition = new Vector2(0f, n > 0 ? SelectedLift : 0f);
 
         if (view.badge != null)
@@ -242,7 +261,7 @@ public class FlowerSelectUI : MonoBehaviour
                 FlowerData.FlowerRole.Form => "폼",
                 _ => "필러",
             };
-            shelf.label.text = $"{roleName}({RoleTotal(shelf.role)}/{Limit(shelf.role)})";
+            shelf.label.text = roleName;
         }
     }
 

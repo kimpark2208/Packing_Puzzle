@@ -215,7 +215,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::CurrencyManager
   dontDestroyOnLoad: 1
   initialMoney: 0
-  initialFlowerStock: 5
+  initialFlowerStock: 20
 --- !u!4 &438470799
 Transform:
   m_ObjectHideFlags: 0

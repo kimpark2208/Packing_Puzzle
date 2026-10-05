@@ -28,9 +28,9 @@ public class DayPuzzleUI : MonoBehaviour
     [SerializeField] private MoneyRuleSettings moneySettings;
 
     private const float CollapseAutoProceedDelay = 1.2f;
-    private const string RequirementNotMetLine = "이게뭐예요!!";
+    private const string RequirementNotMetLine = "주문이랑 다른데요. 유명한 곳이라고 들었는데… 실망이네요.";
     private const string RequirementNotMetRejectResponse = "알긴 아시나보죠?";
-    private const string GoodResultLine = "좋네요!";
+    private const string GoodResultLine = "우와, 좋네요! 친구가 분명 좋아할 거예요.";
     private const string LateLine = "늦으셨네요."; // 손님 기분이 다 닳은 뒤에 퍼즐이 끝났을 때(성공 여부와 무관)
 
     private WrapperBoardController board;
