@@ -24,16 +24,10 @@ public class DayMainUI : MonoBehaviour
 
     [SerializeField] private float TimeUpHideDelay = 5f;
 
-    [SerializeField] private TMP_Text moneyText;
     [SerializeField] private TMP_Text bubbleText;
     [SerializeField] private Button askButton;
     [SerializeField] private Button acceptButton;
     [SerializeField] private Button lanternButton;
-
-    [Header("설정 팝업")]
-    [SerializeField] private Button preferencesButton;
-    [SerializeField] private GameObject preferencesPopup;
-    [SerializeField] private Button preferencesCloseButton;
 
     [Header("카탈로그 팝업 (전화 버튼으로 열고 닫기)")]
     [SerializeField] private Button telephoneButton;
@@ -74,9 +68,6 @@ public class DayMainUI : MonoBehaviour
 
         order = dayOrder;
 
-        var currency = CurrencyManager.Instance;
-        if (moneyText != null) moneyText.text = currency != null ? $"{currency.CurrentMoney}원" : "0원";
-
         if (askButton != null) askButton.onClick.AddListener(OnRejectClicked);
         if (acceptButton != null) acceptButton.onClick.AddListener(OnAcceptClicked);
 
@@ -90,10 +81,6 @@ public class DayMainUI : MonoBehaviour
                 StartCoroutine(LightLanternThenProceed());
             });
         }
-
-        if (preferencesButton != null) preferencesButton.onClick.AddListener(OpenPreferences);
-        if (preferencesCloseButton != null) preferencesCloseButton.onClick.AddListener(ClosePreferences);
-        if (preferencesPopup != null) preferencesPopup.SetActive(false);
 
         if (telephoneButton != null) telephoneButton.onClick.AddListener(ToggleCatalog);
         if (artifactsIndexButton != null) artifactsIndexButton.onClick.AddListener(() => SwitchCatalogTab(CatalogTab.Artifacts));
@@ -249,18 +236,6 @@ public class DayMainUI : MonoBehaviour
         }
 
         bubbleText.text = CustomerDialogue.OrderLine(order);
-    }
-
-    private void OpenPreferences()
-    {
-        DayClock.Instance?.SetPaused(true);
-        if (preferencesPopup != null) preferencesPopup.SetActive(true);
-    }
-
-    private void ClosePreferences()
-    {
-        DayClock.Instance?.SetPaused(false);
-        if (preferencesPopup != null) preferencesPopup.SetActive(false);
     }
 
     private void ToggleCatalog()

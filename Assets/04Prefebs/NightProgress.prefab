@@ -167,3 +167,7 @@ MonoBehaviour:
   kind: 2
   fillImage: {fileID: 8188257843542047726}
   slider: {fileID: 0}
+  faceImage: {fileID: 0}
+  happyFace: {fileID: 0}
+  normalFace: {fileID: 0}
+  badFace: {fileID: 0}
