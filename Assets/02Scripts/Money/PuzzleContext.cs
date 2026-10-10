@@ -12,11 +12,11 @@ public enum PuzzleEndKind
 /// </summary>
 public readonly struct PuzzleContext
 {
-    public PuzzleContext(PuzzleEndKind endKind, IReadOnlyList<FlowerData.Color> placedColors,
+    public PuzzleContext(PuzzleEndKind endKind, IReadOnlyDictionary<WrapperRegionPosition, FlowerData.Color> placedCells,
         CustomerRequirementGenerator.CustomerRequirement requirement, int requirementUsed, float moodRatio, int collapseCount)
     {
         EndKind = endKind;
-        PlacedColors = placedColors;
+        PlacedCells = placedCells;
         Requirement = requirement;
         RequirementUsed = requirementUsed;
         MoodRatio = moodRatio;
@@ -25,8 +25,8 @@ public readonly struct PuzzleContext
 
     public PuzzleEndKind EndKind { get; }
 
-    /// <summary>꽃을 놓은 순서대로의 색.</summary>
-    public IReadOnlyList<FlowerData.Color> PlacedColors { get; }
+    /// <summary>꽃이 놓인 칸과 그 꽃의 색(빈 칸은 없다).</summary>
+    public IReadOnlyDictionary<WrapperRegionPosition, FlowerData.Color> PlacedCells { get; }
 
     public CustomerRequirementGenerator.CustomerRequirement Requirement { get; }
 

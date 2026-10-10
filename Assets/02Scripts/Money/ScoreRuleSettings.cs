@@ -9,8 +9,8 @@ public class ScoreRuleSettings : ScriptableObject
     public int requirementMetScore = 15;
     [Tooltip("요구 개수보다 더 쓴 꽃 1송이당 가산 점수")]
     public int overAchievePerExtra = 3;
-    [Tooltip("요구 미충족 시, 충족 점수의 몇 %를 감산할까(0~1)")]
-    [Range(0f, 1f)] public float missedPenaltyRatio = 0.5f;
+    [Tooltip("요구 미충족 시 감산 점수. 2링 포장지(9칸)에서 다른 항목을 모두 잘해도(꽃의 빛 최대 +30, 기분 +8) 합계가 기본 보상 구간의 끝(+24) 아래에 머문다. 꽃의 빛은 포장지 크기와 상관없이 -20~+30이다.")]
+    public int requirementMissedPenalty = 25;
 
     [Header("손님 기분 (퍼즐 종료 시 남은 비율)")]
     [Range(0f, 1f)] public float goodMoodRatio = 0.7f;

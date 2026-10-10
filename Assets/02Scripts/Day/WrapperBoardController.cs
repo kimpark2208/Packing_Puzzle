@@ -38,6 +38,9 @@ public class WrapperBoardController : MonoBehaviour
     private const int CollapseDiff = 2;
     private const int OverlapSamples = 5; // 꽃 사각형 한 변에 찍는 표본점 수(칸과의 겹침을 어림하는 데 쓴다)
 
+    [Header("꽃의 빛: 흐림은 더 투명하게, 빛남은 FlowerArea 꽃 이미지의 Outline(색·굵기는 에디터에서)을 켠다")]
+    [SerializeField, Range(0f, 1f)] private float dimAlpha = 0.4f;
+
     [Header("기울기: 좌우 꽃 개수가 1개 차이일 때 많은 쪽으로 기운다(Lerp로 서서히)")]
     [SerializeField] private RectTransform wrapperImage; // 기울이는 대상(포장지 이미지만. 칸/꽃 이미지는 그대로)
     [SerializeField] private float tiltAngle = 8f;
@@ -170,9 +173,31 @@ public class WrapperBoardController : MonoBehaviour
         if (region == hoveredRegion) hoveredRegion = null;
 
         placementHistory.Add(flower);
+        RefreshGlow();
         tiltTarget = -Mathf.Clamp(RightMinusLeft(), -1, 1) * tiltAngle; // 오른쪽이 많으면 시계 방향(-z)
         OnFlowerPlaced?.Invoke();
         return true;
+    }
+
+    /// <summary>놓인 꽃마다 이웃과의 관계 합계로 상태를 다시 구해 보여 준다: 흐림=투명하게, 선명=그대로, 빛남=Outline 켬. 꽃을 놓을 때마다 이웃의 상태도 바뀐다.</summary>
+    private void RefreshGlow()
+    {
+        var cells = PlacedCells();
+        foreach (WrapperSlot region in regions)
+        {
+            if (!region.IsFull) continue;
+            Transform flowerImage = FlowerImageOf(region);
+            if (flowerImage == null) continue;
+
+            FlowerGlow glow = FlowerLight.GlowOf(FlowerLight.RelationSum(region.position, cells));
+            Image image = flowerImage.GetComponent<Image>();
+            Color c = image.color;
+            c.a = glow == FlowerGlow.Dim ? dimAlpha : 1f;
+            image.color = c;
+
+            Outline outline = flowerImage.GetComponent<Outline>();
+            if (outline != null) outline.enabled = glow == FlowerGlow.Bright;
+        }
     }
 
     public void PreviewHover(FlowerData flower, Vector2 screenPoint, Camera eventCamera)
@@ -296,8 +321,14 @@ public class WrapperBoardController : MonoBehaviour
         return Mathf.Abs(RightMinusLeft()) >= CollapseDiff;
     }
 
-    /// <summary>꽃을 놓은 순서(정산에서 색 조합 점수를 계산하는 데 쓴다).</summary>
+    /// <summary>꽃을 놓은 순서(소모할 꽃을 세는 데 쓴다).</summary>
     public IReadOnlyList<FlowerData> PlacementHistory => placementHistory;
+
+    /// <summary>꽃이 놓인 칸과 그 꽃의 색(정산의 '꽃의 빛'이 이웃 칸과의 관계를 계산하는 데 쓴다).</summary>
+    public Dictionary<WrapperRegionPosition, FlowerData.Color> PlacedCells()
+    {
+        return regions.Where(r => r.IsFull).ToDictionary(r => r.position, r => r.PlacedFlowers[0].color);
+    }
 
     public IReadOnlyList<WrapperSlot> AllSlots => regions;
 }

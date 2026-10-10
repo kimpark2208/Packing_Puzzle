@@ -42,14 +42,14 @@ public class PuzzleSettlement
         rules = new IScoreRule[]
         {
             // 가산
-            new ColorComboRule(),
+            new FlowerLightRule(),
             new RequirementMetRule(s.requirementMetScore),
             new RequirementOverRule(s.overAchievePerExtra),
             new CustomerMoodGoodRule(s.goodMoodRatio, s.goodMoodBonus),
             // 감산
             new CollapsePenaltyRule(s.collapsePenalty),
             new CustomerMoodBadRule(s.badMoodRatio, s.badMoodPenalty),
-            new RequirementMissedRule(s.requirementMetScore, s.missedPenaltyRatio),
+            new RequirementMissedRule(s.requirementMissedPenalty),
         };
     }
 

@@ -1,16 +1,11 @@
 // 점수 가감 규칙들. 규칙 하나가 클래스 하나이고, 서로를 모른다. 새 규칙은 IScoreRule을 구현해 PuzzleSettlement의 규칙 목록에 추가한다.
 
-/// <summary>[가산] 놓은 순서대로 이웃한 두 꽃의 색 조합 점수 합.</summary>
-public class ColorComboRule : IScoreRule
+/// <summary>[가산/감산] 꽃의 빛: 꽃마다 이웃 칸과의 색 관계로 정해진 상태 점수의 평균 × 10(-20~+30).</summary>
+public class FlowerLightRule : IScoreRule
 {
     public void Evaluate(PuzzleContext context, ScoreLedger ledger)
     {
-        int sum = 0;
-        for (int i = 0; i < context.PlacedColors.Count - 1; i++)
-        {
-            sum += ColorCompatDatabase.GetBonus(context.PlacedColors[i], context.PlacedColors[i + 1]);
-        }
-        ledger.Add(ScoreReason.ColorCombo, sum);
+        ledger.Add(ScoreReason.FlowerLight, FlowerLight.Score(context.PlacedCells));
     }
 }
 
@@ -100,21 +95,19 @@ public class CustomerMoodBadRule : IScoreRule
     }
 }
 
-/// <summary>[감산] 요구조건을 못 채웠을 때, 충족 점수의 일정 비율.</summary>
+/// <summary>[감산] 요구조건을 못 채웠을 때 정해진 점수. 크게 정해서 다른 항목을 모두 잘해도 기본 보상 정도에 그친다.</summary>
 public class RequirementMissedRule : IScoreRule
 {
-    private readonly int metScore;
-    private readonly float ratio;
+    private readonly int penalty;
 
-    public RequirementMissedRule(int metScore, float ratio)
+    public RequirementMissedRule(int penalty)
     {
-        this.metScore = metScore;
-        this.ratio = ratio;
+        this.penalty = penalty;
     }
 
     public void Evaluate(PuzzleContext context, ScoreLedger ledger)
     {
         if (context.RequirementMet) return;
-        ledger.Add(ScoreReason.RequirementMissed, -UnityEngine.Mathf.RoundToInt(metScore * ratio));
+        ledger.Add(ScoreReason.RequirementMissed, -penalty);
     }
 }

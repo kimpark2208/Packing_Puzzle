@@ -27,7 +27,7 @@ public class GachaManager : MonoBehaviour
     private readonly List<GameObject> shown = new();
     private List<FlowerData> pool = new();
     private int rerollCount;
-    private TMP_Text rerollBadge; // 리롤 버튼의 CountBadge 텍스트(남은 횟수)
+    private TMP_Text rerollBadge; // 리롤 버튼 안의 텍스트(남은 횟수)
 
     public int RerollsLeft => Mathf.Max(0, maxRerolls - rerollCount);
 
@@ -54,8 +54,7 @@ public class GachaManager : MonoBehaviour
         }
 
         if (gachaButton != null) gachaButton.onClick.AddListener(Reroll);
-        Transform badge = gachaButton != null ? gachaButton.transform.Find("CountBadge") : null;
-        rerollBadge = badge != null ? badge.GetComponentInChildren<TMP_Text>(true) : null;
+        rerollBadge = gachaButton != null ? gachaButton.GetComponentInChildren<TMP_Text>(true) : null; // 버튼 안의 글자(이름이 바뀌어도 찾는다)
         RefreshBadge();
 
         // 낮 퍼즐 씬 진입 시, 꽃 선택 화면에서 고른 풀을 스스로 가져온다.

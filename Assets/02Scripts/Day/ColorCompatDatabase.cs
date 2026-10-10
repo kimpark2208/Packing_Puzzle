@@ -1,50 +1,17 @@
-using System.Collections.Generic;
-
 /// <summary>
-/// 꽃 색상 간 조합(궁합) 점수표. 실제 색 이론(보색/유사색/클래식 조합)을 참고해 만든
-/// 예시 수치이며, 인접한 슬롯에 이 조합으로 꽃을 놓으면 추가 점수를 준다(패널티 없음).
-/// 점수는 결과창 게이지(-100~+100) 기준이고, 보색 &gt; 유사색 &gt; 흰색 순서(5 : 3 : 2)를 유지한다.
+/// 이웃한 두 꽃의 색 관계 점수(FlowerLight가 쓴다). FlowerData.Color의 선언 순서가 색상환 순서(빨강-주황-노랑-파랑-보라-분홍)이고 흰색이 맨 뒤다.
+/// 조화(색상환에서 바로 옆 색) +2, 대비(맞은편 색) +2, 중재(한쪽이 흰색) +1, 그 외(같은 색 포함) 0. 감점은 없다.
 /// </summary>
 public static class ColorCompatDatabase
 {
-    private static readonly Dictionary<(FlowerData.Color, FlowerData.Color), int> Table = new();
+    private const int Harmony = 2, Contrast = 2, Mediation = 1;
 
-    private static readonly List<((FlowerData.Color, FlowerData.Color) pair, int bonus)> Entries = new()
-    {
-        // 보색 조합 (색상환에서 마주 보는 색: 빨강-파랑, 주황-보라, 노랑-분홍)
-        ((FlowerData.Color.Red, FlowerData.Color.Blue), 5),
-        ((FlowerData.Color.Orange, FlowerData.Color.Purple), 5),
-        ((FlowerData.Color.Yellow, FlowerData.Color.Pink), 5),
-
-        // 유사색 조합 (색상환에서 이웃한 색)
-        ((FlowerData.Color.Red, FlowerData.Color.Orange), 3),
-        ((FlowerData.Color.Orange, FlowerData.Color.Yellow), 3),
-        ((FlowerData.Color.Yellow, FlowerData.Color.Blue), 3),
-        ((FlowerData.Color.Blue, FlowerData.Color.Purple), 3),
-        ((FlowerData.Color.Purple, FlowerData.Color.Pink), 3),
-        ((FlowerData.Color.Pink, FlowerData.Color.Red), 3),
-
-        // 흰색은 어느 색과도 잘 어울린다
-        ((FlowerData.Color.Red, FlowerData.Color.White), 2),
-        ((FlowerData.Color.Orange, FlowerData.Color.White), 2),
-        ((FlowerData.Color.Yellow, FlowerData.Color.White), 2),
-        ((FlowerData.Color.Blue, FlowerData.Color.White), 2),
-        ((FlowerData.Color.Purple, FlowerData.Color.White), 2),
-        ((FlowerData.Color.Pink, FlowerData.Color.White), 2),
-    };
-
-    static ColorCompatDatabase()
-    {
-        foreach (var entry in Entries)
-        {
-            Table[entry.pair] = entry.bonus;
-            Table[(entry.pair.Item2, entry.pair.Item1)] = entry.bonus;
-        }
-    }
-
-    /// <summary>두 색상의 조합 보너스 점수. 표에 없으면 0(패널티 없음).</summary>
+    /// <summary>두 색상의 관계 점수.</summary>
     public static int GetBonus(FlowerData.Color a, FlowerData.Color b)
     {
-        return Table.TryGetValue((a, b), out int bonus) ? bonus : 0;
+        if (a == FlowerData.Color.White || b == FlowerData.Color.White) return Mediation;
+
+        int gap = System.Math.Abs((int)a - (int)b); // 색상환 위 거리: 1·5 = 바로 옆, 3 = 맞은편
+        return gap == 1 || gap == 5 ? Harmony : gap == 3 ? Contrast : 0;
     }
 }

@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ScoreRuleSettings
   requirementMetScore: 15
   overAchievePerExtra: 3
-  missedPenaltyRatio: 0.5
+  requirementMissedPenalty: 25
   goodMoodRatio: 0.7
   goodMoodBonus: 8
   badMoodRatio: 0.3

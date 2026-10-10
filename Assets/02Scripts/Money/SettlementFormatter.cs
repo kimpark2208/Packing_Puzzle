@@ -5,7 +5,7 @@ public static class SettlementFormatter
     {
         switch (reason)
         {
-            case ScoreReason.ColorCombo: return "색 조합 보너스";
+            case ScoreReason.FlowerLight: return "꽃의 빛";
             case ScoreReason.RequirementMet: return "요구사항 달성";
             case ScoreReason.RequirementOver: return "요구사항 초과 달성";
             case ScoreReason.MoodGood: return "손님 기분 좋음";

@@ -4,7 +4,7 @@ using System.Linq;
 /// <summary>점수가 가감된 이유. 선언 순서가 같은 부호끼리의 표시 순서다.</summary>
 public enum ScoreReason
 {
-    ColorCombo,          // 가산: 색 조합
+    FlowerLight,         // 꽃의 빛: 이웃 꽃과의 색 관계(-20~+30)
     RequirementMet,      // 가산: 주문 요구조건 충족
     RequirementOver,     // 가산: 요구보다 더 많이 사용
     MoodGood,            // 가산: 손님 기분 좋음

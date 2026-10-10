@@ -14,6 +14,9 @@ public class ResultGauge : MonoBehaviour
     [SerializeField] private RectTransform fillNegative; // 0에서 왼쪽으로 차는 채우기(오른쪽 끝이 기준)
     [SerializeField] private RectTransform fillPositive; // 0에서 오른쪽으로 차는 채우기(왼쪽 끝이 기준)
     [SerializeField] private TMP_Text valueText;
+    [Header("채우기 안의 줄무늬: 크기가 고정이고 채우기의 RectMask2D가 잘라 보여 준다. 채우기 이미지의 색(빨강/초록)을 그대로 입는다")]
+    [SerializeField] private Image patternNegative;
+    [SerializeField] private Image patternPositive;
 
     [Header("구간 라벨 (점수가 속한 구간을 강조. 기본 보상 라벨은 늘 같은 모습이다)")]
     [SerializeField] private Band[] bands;
@@ -47,6 +50,8 @@ public class ResultGauge : MonoBehaviour
 
         Color negativeColor = fillNegative.GetComponent<Image>().color;
         Color positiveColor = fillPositive.GetComponent<Image>().color;
+        if (patternNegative != null) patternNegative.color = negativeColor;
+        if (patternPositive != null) patternPositive.color = positiveColor;
 
         if (valueText != null)
         {
