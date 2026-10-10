@@ -188,8 +188,13 @@ public class CurrencyManager : Singleton<CurrencyManager>
     }
 
 #if UNITY_EDITOR
+    private bool debugOpen;
+
     private void OnGUI()
     {
+        if (GUILayout.Button(debugOpen ? "Debug ▲ 닫기" : "Debug ▼ 열기")) debugOpen = !debugOpen;
+        if (!debugOpen) return;
+
         if (GUILayout.Button("Debug: +1000 금액"))
             AddMoney(1000);
 
@@ -199,20 +204,26 @@ public class CurrencyManager : Singleton<CurrencyManager>
         if (GUILayout.Button("Debug: 다음 날"))
             AdvanceDay();
 
-        if (GUILayout.Button("Debug: 하루 시간 -1분") && DayClock.Instance != null)
-            DayClock.Instance.SkipDayTime(60f);
+        if (GUILayout.Button("Debug: 하루 시간 -1분") && GameClock.Instance != null)
+            GameClock.Instance.SkipDayTime(60f);
 
         if (GUILayout.Button("Debug: 밤 퍼즐 스킵(성공)") && GameFlowController.Instance != null)
             GameFlowController.Instance.DebugSkipNightPuzzle();
 
-        if (GUILayout.Button("Debug: 밤 시간 -1분") && DayClock.Instance != null)
-            DayClock.Instance.SkipNightTime(60f);
+        if (GUILayout.Button("Debug: 밤 시간 -1분") && GameClock.Instance != null)
+            GameClock.Instance.SkipNightTime(60f);
 
-        if (GUILayout.Button("Debug: 손님 기분 -20%") && DayClock.Instance != null)
-            DayClock.Instance.DrainMood(0.2f);
+        if (GUILayout.Button("Debug: 손님 기분 -20%") && GameClock.Instance != null)
+            GameClock.Instance.DrainMood(0.2f);
 
         if (GUILayout.Button("Debug: 리롤 횟수 +1"))
             FindFirstObjectByType<GachaManager>()?.AddRerolls(1);
+
+        if (GUILayout.Button("Debug: 낮 퍼즐 강제 제출"))
+            FindFirstObjectByType<DayPuzzleUI>()?.DebugForceSubmit();
+
+        if (GUILayout.Button("Debug: 캐릭터 새로 뽑기"))
+            FindFirstObjectByType<CharacterGenerator>()?.Randomize();
 
         GUILayout.Label($"현재 금액: {CurrentMoney}\n현재 일수: {CurrentDay}\n보유 포장지: {ownedWrappers.Count}개");
     }

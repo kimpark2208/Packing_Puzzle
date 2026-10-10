@@ -91,7 +91,7 @@ public class GameFlowController : Singleton<GameFlowController>
     /// <summary>결과 팝업에서 확인을 누르면 밤 요청(꽃 선택) 화면으로 이동한다.</summary>
     public void ProceedToNightMain()
     {
-        DayClock.Instance?.BeginNight(); // 밤이 시작된다(밤 시간이 가득 차서 흐르기 시작)
+        GameClock.Instance?.BeginNight(); // 밤이 시작된다(밤 시간이 가득 차서 흐르기 시작)
         SceneManager.LoadScene(SceneDayToNight);
     }
 

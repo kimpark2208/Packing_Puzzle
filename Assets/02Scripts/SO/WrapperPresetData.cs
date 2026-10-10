@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 
@@ -25,33 +24,29 @@ public static class WrapperRegionPositionExtensions
     public static bool IsFaceB(this WrapperRegionPosition p) => p != WrapperRegionPosition.Center && ((int)p - 1) % 4 >= 2;
 }
 
-[System.Serializable]
-public struct WrapperRegion
-{
-    public WrapperRegionPosition position;
-    public FlowerData.FlowerRole tag;
-}
-
+/// <summary>
+/// 포장지 한 판의 칸별 역할. 빈 칸은 없다: 모든 칸이 역할을 하나씩 가지고, 퍼즐은 모든 칸을 꽃으로 채워야 끝난다.
+/// 역할은 WrapperRegionPosition 순서대로(중앙, 1링 A상·A하·B상·B하, 2링 …) 나열하므로 칸 수는 1 + 4 × 링 수(2링 = 9칸)다.
+/// </summary>
 [CreateAssetMenu(fileName = "WrapperPreset", menuName = "Puzzle/WrapperPresetData", order = 3)]
 public class WrapperPresetData : ScriptableObject
 {
-    [Header("이 프리셋이 요구하는 영역 (영역당 꽃 한 송이)")]
-    public List<WrapperRegion> regions = new();
+    [Header("칸별 역할 (순서: 중앙, 1링 A상·A하·B상·B하, 2링 A상·A하·B상·B하 …)")]
+    public FlowerData.FlowerRole[] cellRoles = new FlowerData.FlowerRole[1];
 
-    public int CountByTag(FlowerData.FlowerRole tag) => regions.Count(r => r.tag == tag);
+    /// <summary>칸 수가 1 + 4 × 링 수(링 1 이상) 모양인가.</summary>
+    public bool IsWellFormed => cellRoles.Length >= 5 && (cellRoles.Length - 1) % 4 == 0;
 
-    public int FaceACount => regions.Count(r => r.position.IsFaceA());
+    /// <summary>이 프리셋의 링 수(칸 수에서 계산한다).</summary>
+    public int MaxRing => (cellRoles.Length - 1) / 4;
 
-    public int FaceBCount => regions.Count(r => r.position.IsFaceB());
+    public FlowerData.FlowerRole RoleAt(WrapperRegionPosition position) => cellRoles[(int)position];
 
-    public int MaxRing => regions.Count == 0 ? 0 : regions.Max(r => r.position.Ring());
+    public int CountByTag(FlowerData.FlowerRole tag) => cellRoles.Count(r => r == tag);
 
     private void OnValidate()
     {
-        foreach (var dup in regions.GroupBy(r => r.position).Where(g => g.Count() > 1))
-            Debug.LogWarning($"[{name}] 같은 영역이 중복됨: {dup.Key}", this);
-
-        if (Mathf.Abs(FaceACount - FaceBCount) > 2)
-            Debug.LogWarning($"[{name}] A면({FaceACount})과 B면({FaceBCount}) 영역 수 차이가 2를 넘음 (클리어 불가)", this);
+        if (!IsWellFormed)
+            Debug.LogWarning($"[{name}] 칸 수가 {cellRoles.Length}개입니다. 1 + 4 × 링 수(2링 = 9칸)여야 합니다.", this);
     }
 }

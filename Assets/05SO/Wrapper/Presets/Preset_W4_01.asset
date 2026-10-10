@@ -12,14 +12,4 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a910dacb593499640a5380c6628e52f2, type: 3}
   m_Name: Preset_W4_01
   m_EditorClassIdentifier: Assembly-CSharp::WrapperPresetData
-  regions:
-  - position: 0
-    tag: 0
-  - position: 1
-    tag: 1
-  - position: 4
-    tag: 1
-  - position: 5
-    tag: 2
-  - position: 8
-    tag: 3
+  cellRoles: 00000000010000000100000001000000010000000200000003000000020000000300000000000000000000000000000000000000

@@ -1,0 +1,45 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ca2f4583c8278c645a21cf930bc23a69, type: 3}
+  m_Name: Hair_Black
+  m_EditorClassIdentifier: Assembly-CSharp::CharacterHairData
+  bodyType: 1
+  color: 0
+  back:
+  - {fileID: 21300000, guid: 730c11fa566b66548be06685bb9c0e3c, type: 3}
+  - {fileID: 21300000, guid: f0cb918c3e7f99d4ba764859a2d63e01, type: 3}
+  - {fileID: 21300000, guid: 33624f915345363418bdf38d85098e1b, type: 3}
+  - {fileID: 21300000, guid: dadd9afb50a797f46ac6d77f749ee3bf, type: 3}
+  - {fileID: 21300000, guid: 76c82b9dd18dfb64ca434abd6bb91b91, type: 3}
+  - {fileID: 21300000, guid: 9af00be1e12aaeb4ebf96908ba23f370, type: 3}
+  - {fileID: 21300000, guid: 1f59adfca10051947b900a6cbdbb9a06, type: 3}
+  - {fileID: 21300000, guid: d3873d1ba447b304cb9b990e10d24288, type: 3}
+  front:
+  - {fileID: 21300000, guid: 7436544b765c6b94ca975ee38abb44df, type: 3}
+  - {fileID: 21300000, guid: 06cada0e033d86a47897507d43e9609d, type: 3}
+  - {fileID: 21300000, guid: 5a3915e1ecab79b46aa2a38d316a31e7, type: 3}
+  - {fileID: 21300000, guid: 5c9e345f38a337144a7abc5f1a1daffd, type: 3}
+  - {fileID: 21300000, guid: d72ab81f592acd2479f2fc5768471ba7, type: 3}
+  - {fileID: 21300000, guid: db5fc8bdb95dae7438bef4e7baff99b2, type: 3}
+  - {fileID: 21300000, guid: 83bc025c746ce23449c8973f2ab536fb, type: 3}
+  - {fileID: 21300000, guid: 445bced24c84d8e4ca761a35acb2c1df, type: 3}
+  side:
+  - {fileID: 21300000, guid: 2bfff5c2d4055ff42b0e569ad9cebafb, type: 3}
+  - {fileID: 21300000, guid: c7a3c21d25343fd478245391e5ffc4d7, type: 3}
+  - {fileID: 21300000, guid: 3370761495785ef4ebaa3cb045d16f48, type: 3}
+  tie:
+  - sprite: {fileID: 21300000, guid: ea71efe2c3e11e14683a0b13b36e8dad, type: 3}
+    spriteL: {fileID: 21300000, guid: d8fb8439c53a01b4ca735c5efc567d0c, type: 3}
+  - sprite: {fileID: 21300000, guid: de5c9d1582d4a2a449d08391fc633adc, type: 3}
+    spriteL: {fileID: 0}
+  - sprite: {fileID: 21300000, guid: 4c6ff6766eb5b7c45af2dc6d9937fc25, type: 3}
+    spriteL: {fileID: 21300000, guid: de1d8d746886a2d4ebf797108e246d54, type: 3}

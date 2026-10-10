@@ -15,7 +15,7 @@ public static class PuzzleContextBuilder
         var usedCounts = requirement.type == CustomerRequirementGenerator.RequirementType.Color ? counts.colorCounts : counts.flowerCounts;
         usedCounts.TryGetValue(requirement.targetId, out int used);
 
-        float mood = DayClock.Instance != null ? DayClock.Instance.MoodRatio : 1f;
+        float mood = GameClock.Instance != null ? GameClock.Instance.MoodRatio : 1f;
 
         return new PuzzleContext(endKind, placedColors, requirement, used, mood, collapseCount);
     }

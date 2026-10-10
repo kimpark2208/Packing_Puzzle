@@ -22,13 +22,16 @@ public static class CustomerRequirementGenerator
         public RequirementType type;     // 색상/꽃 기반
         public int targetId;             // 색상 ID (0~6) 또는 꽃 ID
         public int minCount;             // 최소 개수
-        public int bonusAmount;          // 충족 시 보너스
+        public int baseAmount;           // 이 퍼즐의 기본 금액(정산 점수 구간의 배율이 곱해진다)
     }
+
+    /// <summary>퍼즐 기본 금액(임시: 모든 주문이 같다). 100 = 초반에 0~25점 꽃다발 1개를 판매한 정도.</summary>
+    private const int BaseAmount = 100;
 
     /// <param name="preset">null이면 제한 없이 만든다(씬 단독 실행 등).</param>
     public static CustomerRequirement GenerateRandomRequirement(int day, WrapperPresetData preset = null)
     {
-        var requirement = new CustomerRequirement { requirementId = day };
+        var requirement = new CustomerRequirement { requirementId = day, baseAmount = BaseAmount };
 
         bool colorFirst = Random.value > 0.5f;
         bool made = colorFirst
@@ -36,7 +39,7 @@ public static class CustomerRequirementGenerator
             : TryGenerateFlower(ref requirement, preset) || TryGenerateColor(ref requirement, preset);
         if (!made) TryGenerateColor(ref requirement, null); // 풀 수 있는 요구사항이 없으면 제한 없이 만든다(시작 꽃이 모든 역할을 덮으므로 거의 없다)
 
-        Debug.Log($"[CustomerRequirementGenerator] Day {day} 요구사항: {requirement.description} (보너스: {requirement.bonusAmount})");
+        Debug.Log($"[CustomerRequirementGenerator] Day {day} 요구사항: {requirement.description} (기본 금액: {requirement.baseAmount})");
         return requirement;
     }
 
@@ -53,7 +56,6 @@ public static class CustomerRequirementGenerator
         requirement.targetId = colors[Random.Range(0, colors.Count)];
         int capacity = ColorCapacity(preset, (FlowerData.Color)requirement.targetId);
         requirement.minCount = Random.Range(2, Mathf.Min(4, capacity) + 1);  // 2~4개
-        requirement.bonusAmount = Random.Range(100, 301);  // 100~300
 
         string colorName = ColorPalette.ToKoreanName((FlowerData.Color)requirement.targetId);
         requirement.description = $"<b>{colorName}</b>색 꽃을 <b>{requirement.minCount}개</b> 이상 사용하세요";
@@ -69,7 +71,6 @@ public static class CustomerRequirementGenerator
         requirement.type = RequirementType.Flower;
         requirement.targetId = flower.blockID;
         requirement.minCount = Random.Range(1, Mathf.Min(3, FlowerCapacity(preset, flower)) + 1);  // 1~3개
-        requirement.bonusAmount = Random.Range(150, 351);  // 150~350
 
         string flowerName = !string.IsNullOrEmpty(flower.flowerName) ? flower.flowerName : $"꽃 ID {flower.blockID}";
         requirement.description = $"<b>{flowerName}</b>을(를) <b>{requirement.minCount}개</b> 사용하세요";

@@ -12,22 +12,4 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a910dacb593499640a5380c6628e52f2, type: 3}
   m_Name: Preset_W3_01_FaceAHeavy
   m_EditorClassIdentifier: Assembly-CSharp::WrapperPresetData
-  regions:
-  - position: 0
-    tag: 2
-  - position: 1
-    tag: 1
-  - position: 2
-    tag: 1
-  - position: 4
-    tag: 1
-  - position: 5
-    tag: 2
-  - position: 6
-    tag: 0
-  - position: 7
-    tag: 0
-  - position: 10
-    tag: 3
-  - position: 11
-    tag: 3
+  cellRoles: 02000000010000000100000001000000010000000200000000000000000000000000000003000000030000000300000003000000

@@ -7,7 +7,8 @@ using UnityEngine.UI;
 
 /// <summary>
 /// 꽃 선택 화면. "포장지 선택 -> 꽃 선택" 순서를 그대로 따른다.
-/// 1단계: WrapperPopup에서 보유한 포장지 중 이번 주문에 쓸 것을 하나 고른다 (목표 점수/정답 레시피가 이때 확정됨).
+/// 1단계: WrapperPopup의 포장지 박스 7개 중 쓸 수 있는 것을 눌러 고르고 '선택 완료'를 누른다 (목표 점수/정답 레시피가 이때 확정됨).
+///        쓸 수 없는 포장지(보유하지 않았거나 퍼즐이 아직 지원하지 않는 링 수)는 속이 빈 어두운 박스로만 보인다.
 /// 2단계: 포장지를 고르면 FlowerPopup(역할별 선반 4개)으로 전환되고, 역할(라인/폼/매스/필러)마다
 /// 꽃을 하나씩 골라 가챠 풀(최대 4종)로 만든다. 같은 역할에서 다른 꽃을 누르면 바꿔 담는다.
 /// 포장지 목록과 꽃 선택 슬롯은 모두 개수가 가변적이라 템플릿(프리팹)을 복제해서 만든다.
@@ -22,6 +23,16 @@ public class FlowerSelectUI : MonoBehaviour
         public RectTransform slotParent;
     }
 
+    [Serializable]
+    private class WrapperBox
+    {
+        public int wrapperId;
+        public Button button;
+        public Image box;   // 박스 그림(눌렀을 때 밝아진다)
+        public Image rolls; // 박스 안 포장지 롤(포장지 색으로 물든다, 쓸 수 없는 포장지면 숨긴다)
+        [NonSerialized] public Vector2 rollsBasePosition; // 씬에 놓인 롤의 자리(고르면 여기서 위로 올라온다)
+    }
+
     private class SlotView
     {
         public Image icon;
@@ -31,73 +42,86 @@ public class FlowerSelectUI : MonoBehaviour
 
     private static readonly Color UnselectedShade = new(0.35f, 0.35f, 0.35f); // 같은 역할에서 한 꽃이 선택되면 선택되지 않은 꽃에 씌우는 그림자(곱해서 어둡게)
     private const float SelectedLift = 30f; // 담긴 꽃이 화병에서 살짝 올라오는 높이
-    private const int ExampleWrapperId = 3; // 고를 수 없는 예시로 보여 주는 포장지
-
+    private const float WrapperRollLift = 30f; // 고른 포장지(박스 안 롤)가 살짝 올라오는 높이
+    private static readonly Color IdleBoxColor = new(0.78f, 0.78f, 0.78f);     // 고르지 않은 박스
+    private static readonly Color SelectedBoxColor = new(0.86f, 0.86f, 0.86f); // 고른 박스(고르지 않은 박스보다 살짝만 밝게, 하얗지 않게)
+    private static readonly Color UnusableBoxColor = new(0.5f, 0.5f, 0.5f);   // 쓸 수 없는 박스
 
     [SerializeField] private TMP_Text headerText;
 
-    [Header("포장지 선택 팝업")]
+    [Header("포장지 선택 팝업 (박스 7개 + 선택 완료)")]
     [SerializeField] private GameObject wrapperPopup;
-    [SerializeField] private RectTransform wrapperArea;
-    [SerializeField] private RectTransform wrapperItemTemplate;
+    [SerializeField] private WrapperBox[] wrapperBoxes;
+    [SerializeField] private Button wrapperConfirmButton;
 
-    [Header("꽃 선택 팝업 (역할별 선반, 슬롯은 템플릿을 복제해서 생성)")]
+    [Header("꽃 선택 팝업 (역할별 선반. 꽃 수만큼 에디터에 슬롯을 놓아 두고, 그 자리를 그대로 쓴다)")]
     [SerializeField] private GameObject flowerPopup;
-    [SerializeField] private RectTransform slotPrefab;
     [SerializeField] private Shelf[] shelves;
 
     private readonly Dictionary<FlowerData, int> counts = new();
     private readonly Dictionary<FlowerData, SlotView> views = new();    private readonly Dictionary<FlowerData.FlowerRole, int> limits = new(); // 역할별로 담는 개수: 고른 프리셋에 그 역할의 칸이 있으면 1, 없으면 0
     private bool wrapperChosen;
+    private int selectedWrapperId = -1;
+    private readonly Dictionary<Shelf, List<RectTransform>> spots = new(); // 선반마다 에디터에 놓아 둔 슬롯 자리(위치는 에디터에서 정한 그대로 쓴다)
 
     private void Start()
     {
-        if (wrapperItemTemplate != null) wrapperItemTemplate.gameObject.SetActive(false);
         if (wrapperPopup != null) wrapperPopup.SetActive(true);
         if (flowerPopup != null) flowerPopup.SetActive(false);
-        ClearSlots(); // 에디터에서 배치 확인용으로 미리 넣어둔 슬롯은 시작할 때 지운다
+        CollectSpots(); // 에디터에 놓아 둔 슬롯은 자리로 기억해 두고, 꽃을 넣기 전까지 숨긴다
 
         RefreshLabels();
-        BuildWrapperChoices();
+        SetUpWrapperBoxes();
     }
 
-    private void BuildWrapperChoices()
+    /// <summary>박스마다 쓸 수 있는지 정한다. 쓸 수 있으면 롤을 포장지 색으로 물들여 보여 주고, 아니면 빈 어두운 박스로 두고 누를 수 없게 한다.</summary>
+    private void SetUpWrapperBoxes()
     {
-        if (CurrencyManager.Instance == null || ShopManager.Instance == null) return;
-        if (wrapperArea == null || wrapperItemTemplate == null) return;
-
-        var owned = CurrencyManager.Instance.OwnedWrappers;
-        foreach (int wrapperId in owned) AddWrapperItem(wrapperId, selectable: true);
-
-        // 포장지마다 크기가 다르다는 걸 보여 주는 예시: 아직 없는 3번 포장지를 고를 수 없게 옆에 둔다.
-        if (!owned.Contains(ExampleWrapperId)) AddWrapperItem(ExampleWrapperId, selectable: false);
-    }
-
-    private void AddWrapperItem(int wrapperId, bool selectable)
-    {
-        var item = ShopManager.Instance.GetItemById(wrapperId);
-        string label = item.HasValue ? item.Value.itemName : $"포장지 {wrapperId}";
-
-        // 손님이 말하는 포장지 색과 같은 색/이름을 보여준다(WrapperData의 색)
-        WrapperData data = WrapperRegistry.Instance != null ? WrapperRegistry.Instance.GetById(wrapperId) : null;
-        if (data != null) label = $"{data.colorName}색 {label}";
-
-        RectTransform itemRT = Instantiate(wrapperItemTemplate, wrapperArea);
-        itemRT.gameObject.SetActive(true);
-        itemRT.name = $"Wrapper_{wrapperId}";
-
-        var img = itemRT.Find("WrapperImage") != null ? itemRT.Find("WrapperImage").GetComponent<Image>() : null;
-        if (img != null && data != null) img.color = data.color;
-
-        var confirmBtnT = itemRT.Find("ConfirmBTN");
-        var confirmBtn = confirmBtnT != null ? confirmBtnT.GetComponent<Button>() : null;
-        var confirmLabel = confirmBtn != null ? confirmBtn.GetComponentInChildren<TMP_Text>() : null;
-        if (confirmLabel != null) confirmLabel.text = label;
-
-        if (confirmBtn != null)
+        if (wrapperConfirmButton != null)
         {
-            confirmBtn.interactable = selectable;
-            if (selectable) confirmBtn.onClick.AddListener(() => OnWrapperChosen(wrapperId));
+            wrapperConfirmButton.interactable = false; // 박스를 골라야 누를 수 있다
+            wrapperConfirmButton.onClick.AddListener(() => OnWrapperChosen(selectedWrapperId));
+        }
+
+        foreach (WrapperBox box in wrapperBoxes)
+        {
+            box.rollsBasePosition = box.rolls.rectTransform.anchoredPosition;
+            bool usable = IsWrapperUsable(box.wrapperId);
+            box.button.interactable = usable;
+            box.rolls.gameObject.SetActive(usable);
+            if (usable)
+            {
+                box.rolls.color = WrapperRegistry.Instance.GetById(box.wrapperId).color;
+                int id = box.wrapperId;
+                box.button.onClick.AddListener(() => SelectWrapper(id));
+            }
+        }
+        RefreshWrapperBoxes();
+    }
+
+    /// <summary>보유한 포장지이고, 퍼즐이 지원하는 링 수의 프리셋이 있어야 쓸 수 있다.</summary>
+    private static bool IsWrapperUsable(int wrapperId)
+    {
+        if (CurrencyManager.Instance == null || WrapperRegistry.Instance == null) return false;
+        WrapperData data = WrapperRegistry.Instance.GetById(wrapperId);
+        return data != null && CurrencyManager.Instance.OwnedWrappers.Contains(wrapperId)
+            && data.presets.Count > 0 && data.ringCount <= WrapperBoardController.SupportedRings;
+    }
+
+    private void SelectWrapper(int wrapperId)
+    {
+        selectedWrapperId = wrapperId;
+        if (wrapperConfirmButton != null) wrapperConfirmButton.interactable = true;
+        RefreshWrapperBoxes();
+    }
+
+    private void RefreshWrapperBoxes()
+    {
+        foreach (WrapperBox box in wrapperBoxes)
+        {
+            bool selected = box.wrapperId == selectedWrapperId;
+            box.box.color = !box.button.interactable ? UnusableBoxColor : selected ? SelectedBoxColor : IdleBoxColor;
+            box.rolls.rectTransform.anchoredPosition = box.rollsBasePosition + (selected ? new Vector2(0f, WrapperRollLift) : Vector2.zero); // 박스는 가만히, 고른 포장지만 올라온다
         }
     }
 
@@ -146,25 +170,42 @@ public class FlowerSelectUI : MonoBehaviour
 
         if (BlockRegistry.Instance == null) return;
 
-        ClearSlots();
-
         foreach (var shelf in shelves)
         {
+            List<RectTransform> shelfSpots = spots[shelf];
+            int i = 0;
             foreach (var flower in BlockRegistry.Instance.AllBlocks.Where(b => b.flowerRole == shelf.role))
             {
-                RectTransform slot = Instantiate(slotPrefab, shelf.slotParent);
+                if (i >= shelfSpots.Count)
+                {
+                    Debug.LogWarning($"[FlowerSelectUI] {shelf.role} 선반의 슬롯 자리({shelfSpots.Count}개)보다 꽃이 많습니다: {flower.flowerName}"); // 꽃 수와 에디터의 자리 수는 같아야 한다
+                    break;
+                }
+
+                RectTransform slot = shelfSpots[i];
+                slot.gameObject.SetActive(true);
                 slot.name = $"Slot_{flower.blockID}";
                 BindFlowerSlot(slot, flower);
+                i++;
             }
+            for (; i < shelfSpots.Count; i++) shelfSpots[i].gameObject.SetActive(false); // 꽃이 모자라는 자리는 비워 둔다
         }
     }
 
-    private void ClearSlots()
+    private void CollectSpots()
     {
         foreach (var shelf in shelves)
         {
-            if (shelf.slotParent == null) continue;
-            foreach (Transform old in shelf.slotParent) Destroy(old.gameObject);
+            var list = new List<RectTransform>();
+            if (shelf.slotParent != null)
+            {
+                foreach (Transform child in shelf.slotParent)
+                {
+                    list.Add((RectTransform)child);
+                    child.gameObject.SetActive(false);
+                }
+            }
+            spots[shelf] = list;
         }
     }
 
@@ -190,8 +231,16 @@ public class FlowerSelectUI : MonoBehaviour
         views[block] = slotView;
         RefreshSlot(block);
 
-        var btn = slot.GetComponentInChildren<Button>(true);
-        if (btn != null) btn.onClick.AddListener(() => OnSlotClicked(block));
+        // 화병 앞면·뱃지처럼 안쪽 버튼 위에 겹친 그림이 클릭을 먼저 받으면 안쪽 버튼에는 클릭이 닿지 않는다.
+        // 그래서 클릭은 슬롯 맨 위에서 받고(자식 그림이 받은 클릭은 위로 올라온다), 안쪽 버튼은 꺼 둔다.
+        foreach (Button inner in slot.GetComponentsInChildren<Button>(true)) inner.enabled = false;
+        Button click = slot.GetComponent<Button>();
+        if (click == null)
+        {
+            click = slot.gameObject.AddComponent<Button>();
+            click.transition = Selectable.Transition.None;
+        }
+        click.onClick.AddListener(() => OnSlotClicked(block));
     }
 
     /// <summary>역할당 꽃 하나만 담는다. 담은 꽃을 다시 누르면 비우고, 같은 역할의 다른 꽃을 누르면 바꿔 담는다.</summary>
@@ -244,7 +293,7 @@ public class FlowerSelectUI : MonoBehaviour
         {
             // 보유 수량은 퍼즐이 끝난 뒤에 소모된다(선택 중에는 그대로). 마이너스는 임시로 0으로 표시한다.
             int owned = Mathf.Max(0, CurrencyManager.Instance != null ? CurrencyManager.Instance.GetFlowerStock(block.blockID) : 0);
-            view.badge.text = n > 0 ? $"{n}/{owned}" : $"x{owned}"; // 평소엔 보유 수량만, 담으면 선택/보유
+            view.badge.text = $"x{owned}"; // 담아도 "1/보유"로 바꾸지 않는다(한 송이만 쓸 수 있다고 헷갈리므로). 담은 꽃은 위로 올라오는 것으로만 보여 준다
         }
     }
 

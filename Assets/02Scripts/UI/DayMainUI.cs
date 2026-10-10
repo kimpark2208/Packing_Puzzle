@@ -15,8 +15,6 @@ using UnityEngine.UI;
 /// </summary>
 public class DayMainUI : MonoBehaviour
 {
-    private enum CatalogTab { Artifacts, Wrapper, Furniture }
-
     private const string RejectLine = "거절할순없으세요";
     private const string DefaultForceAcceptLine = "그래요라고 하세요";
     private const string TimeUpLine = "시간이 늦었네요 가봐야겠어요";
@@ -32,16 +30,10 @@ public class DayMainUI : MonoBehaviour
     [Header("카탈로그 팝업 (전화 버튼으로 열고 닫기)")]
     [SerializeField] private Button telephoneButton;
     [SerializeField] private GameObject catalogPopup;
-    [SerializeField] private GameObject artifactsPage;
-    [SerializeField] private GameObject wrapperPage;
-    [SerializeField] private GameObject furniturePage;
 
     [Header("하루 시간 종료 연출")]
     [SerializeField] private GameObject bubbleContainer;
     [SerializeField] private GameObject characterRoot;
-    [SerializeField] private Button artifactsIndexButton;
-    [SerializeField] private Button wrapperIndexButton;
-    [SerializeField] private Button furnitureIndexButton;
 
     [Header("하루 시간이 끝났을 때 낮 모습으로 바꿀 이미지 (밤 메인에서만 지정)")]
     [SerializeField] private Image characterImage;
@@ -54,7 +46,6 @@ public class DayMainUI : MonoBehaviour
 
     private DayPuzzleGenerator.DayOrder order;
     private bool initialized;
-    private bool catalogOpen;
     private bool showingAngryLine;
     private string forceAcceptLine = DefaultForceAcceptLine;
     private bool closing; // 하루 시간이 끝나 손님이 퇴장하는 중
@@ -82,13 +73,8 @@ public class DayMainUI : MonoBehaviour
             });
         }
 
-        if (telephoneButton != null) telephoneButton.onClick.AddListener(ToggleCatalog);
-        if (artifactsIndexButton != null) artifactsIndexButton.onClick.AddListener(() => SwitchCatalogTab(CatalogTab.Artifacts));
-        if (wrapperIndexButton != null) wrapperIndexButton.onClick.AddListener(() => SwitchCatalogTab(CatalogTab.Wrapper));
-        if (furnitureIndexButton != null) furnitureIndexButton.onClick.AddListener(() => SwitchCatalogTab(CatalogTab.Furniture));
-        catalogOpen = false;
+        if (telephoneButton != null && catalogPopup != null) telephoneButton.onClick.AddListener(() => catalogPopup.SetActive(!catalogPopup.activeSelf)); // 팝업의 닫기 버튼도 스스로 끄므로 열림 상태를 따로 들고 있지 않는다
         if (catalogPopup != null) catalogPopup.SetActive(false);
-        SwitchCatalogTab(CatalogTab.Wrapper);
 
         // 밤 시간이 끝나서 온 것이면: 마지막 손님이 외치고 떠난다(낮 시간 종료 때와 같은 연출).
         if (GameFlowController.Instance != null && GameFlowController.Instance.ConsumeNightEnd())
@@ -128,9 +114,9 @@ public class DayMainUI : MonoBehaviour
         {
             BeginDayEnd();
         }
-        else if (!showingAngryLine)
+        else
         {
-            DayClock.Instance?.StartMood(); // 반응 대사 없이 바로 새 주문이 시작된다
+            GameClock.Instance?.ResetMood(); // 새 손님: 기분 시간은 가득 차 있고, 주문을 수락해야 줄어들기 시작한다
         }
     }
 
@@ -160,11 +146,11 @@ public class DayMainUI : MonoBehaviour
         if (showingAngryLine)
         {
             showingAngryLine = false;
-            DayClock.Instance?.StartMood(); // 반응 대사가 끝나고 다음 주문이 시작되는 순간 기분 시간이 가득 찬다
             RefreshBubbleText();
             return;
         }
 
+        GameClock.Instance?.StartMood(); // 주문을 수락하는 순간부터 손님 기분 시간이 줄어든다
         if (GameFlowController.Instance != null) GameFlowController.Instance.GoToFlowerSelect();
     }
 
@@ -236,18 +222,5 @@ public class DayMainUI : MonoBehaviour
         }
 
         bubbleText.text = CustomerDialogue.OrderLine(order);
-    }
-
-    private void ToggleCatalog()
-    {
-        catalogOpen = !catalogOpen;
-        if (catalogPopup != null) catalogPopup.SetActive(catalogOpen);
-    }
-
-    private void SwitchCatalogTab(CatalogTab tab)
-    {
-        if (artifactsPage != null) artifactsPage.SetActive(tab == CatalogTab.Artifacts);
-        if (wrapperPage != null) wrapperPage.SetActive(tab == CatalogTab.Wrapper);
-        if (furniturePage != null) furniturePage.SetActive(tab == CatalogTab.Furniture);
     }
 }

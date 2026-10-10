@@ -18,12 +18,12 @@ public class PreferencesPanel : MonoBehaviour
     private void Open()
     {
         popup.SetActive(true);
-        DayClock.Instance?.SetPaused(true); // 설정 창이 열려 있는 동안 시간이 멈춘다
+        GameClock.Instance?.SetPaused(true); // 설정 창이 열려 있는 동안 시간이 멈춘다
     }
 
     private void Close()
     {
         popup.SetActive(false);
-        DayClock.Instance?.SetPaused(false);
+        GameClock.Instance?.SetPaused(false);
     }
 }

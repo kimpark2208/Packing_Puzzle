@@ -80,7 +80,7 @@ public class WrapperBoardController : MonoBehaviour
         tiltTarget = -Mathf.Sign(RightMinusLeft()) * collapseAngle; // 오른쪽이 많으면 시계 방향(-z)
     }
 
-    /// <summary>프리셋에 적힌 칸만 켜고 태그 색과 꽃 이미지를 채운다. 프리셋에 없는 칸은 끈다.</summary>
+    /// <summary>포장지의 모든 칸을 켜고 프리셋이 정한 역할의 색과 꽃 이미지를 채운다. 포장지 링 수보다 바깥에 있는 칸은 끈다.</summary>
     public void BuildLevel()
     {
         placementHistory.Clear();
@@ -96,12 +96,13 @@ public class WrapperBoardController : MonoBehaviour
         {
             Transform flowerImage = FlowerImageOf(slot);
             if (flowerImage != null) flowerImage.gameObject.SetActive(false); // 칸이 채워질 때 켠다
-            int i = preset.regions.FindIndex(r => r.position == slot.position);
-            slot.gameObject.SetActive(i >= 0);
-            if (i < 0) continue;
+            int i = (int)slot.position;
+            bool inWrapper = i < preset.cellRoles.Length; // 이 포장지의 링 수보다 바깥 칸만 없다. 포장지 안의 칸은 모두 쓰인다(빈 칸 없음)
+            slot.gameObject.SetActive(inWrapper);
+            if (!inWrapper) continue;
 
             slot.Clear();
-            slot.tag = preset.regions[i].tag;
+            slot.tag = preset.cellRoles[i];
             slot.SetHighlightColor(TagColor(slot.tag));
             if (flowerImage != null) flowerImage.GetComponent<Image>().sprite = tagSprites[(int)slot.tag];
             regions.Add(slot);

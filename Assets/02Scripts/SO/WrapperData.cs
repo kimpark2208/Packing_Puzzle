@@ -23,8 +23,8 @@ public class WrapperData : ScriptableObject
 
     private void OnValidate()
     {
-        var valid = presets.Where(p => p != null).ToList();
-        foreach (var p in valid.Where(p => p.MaxRing > ringCount))
-            Debug.LogWarning($"[{name}] 프리셋 {p.name}이(가) 링 {p.MaxRing}을 쓰지만 ringCount는 {ringCount}", this);
+        // 빈 칸이 없어야 하므로, 프리셋의 칸 수가 이 포장지의 모든 칸(1 + 4 × 링 수)과 같아야 한다.
+        foreach (var p in presets.Where(p => p != null && p.cellRoles.Length != 1 + 4 * ringCount))
+            Debug.LogWarning($"[{name}] 프리셋 {p.name}의 칸이 {p.cellRoles.Length}개인데 ringCount {ringCount}는 {1 + 4 * ringCount}칸입니다", this);
     }
 }

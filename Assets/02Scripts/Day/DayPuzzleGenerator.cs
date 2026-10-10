@@ -95,6 +95,6 @@ public static class DayPuzzleGenerator
 
     private static bool IsPlayable(WrapperPresetData preset)
     {
-        return preset != null && preset.MaxRing <= WrapperBoardController.SupportedRings;
+        return preset != null && preset.IsWellFormed && preset.MaxRing <= WrapperBoardController.SupportedRings;
     }
 }

@@ -48,6 +48,7 @@ public class GachaManager : MonoBehaviour
         // 버켓에 미리 배치된 자식은 자리 표시용 템플릿이라 숨겨두고, 뽑을 때마다 복제해서 쓴다.
         foreach (Transform slot in bucket)
         {
+            if (gachaButton != null && slot == gachaButton.transform) continue; // 리롤 버튼이 버켓 안에 있어도 자리 템플릿이 아니다
             slotTemplates.Add(slot.gameObject);
             slot.gameObject.SetActive(false);
         }

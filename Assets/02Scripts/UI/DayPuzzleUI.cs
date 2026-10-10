@@ -1,31 +1,24 @@
-using TMPro;
 using UnityEngine;
-using UnityEngine.UI;
+using UnityEngine.Serialization;
 
 /// <summary>
 /// 낮 퍼즐(포장) 화면의 흐름 담당.
 /// - 씬 시작 시 오늘의 포장지 레벨로 보드를 만든다.
-/// - 꽃이 놓일 때마다 완성/붕괴 여부를 판정하고, 끝나면 정산(Money 폴더)해 결과를 보여준다.
-/// - 완성 결과는 결과 팝업으로, 붕괴는 붕괴 팝업으로 보여준다.
-/// 팝업은 하이라키에 미리 배치되어 있고 평소엔 비활성 상태다.
+/// - 꽃이 놓일 때마다 완성/붕괴 여부를 판정하고, 끝나면 점수로 정산(Money 폴더)해 결과를 보여준다.
+/// - 완성 결과는 결과 화면(DayResultView)으로, 붕괴는 붕괴 팝업으로 보여준다.
+/// 결과 화면과 팝업은 하이라키에 미리 배치되어 있고 평소엔 비활성 상태다.
 /// </summary>
 public class DayPuzzleUI : MonoBehaviour
 {
-    [Header("결과 팝업")]
-    [SerializeField] private GameObject resultPopup;
-    [SerializeField] private TMP_Text resultText;       // 보너스요소/감점요소 내역
-    [SerializeField] private TMP_Text resultMoneyText;  // 획득한 돈
-    [SerializeField] private Button resultConfirmButton;
+    [Header("결과 화면 (점수 사유가 하나씩 나오는 오버레이)")]
+    [SerializeField] private DayResultView resultView;
 
     [Header("붕괴 팝업")]
     [SerializeField] private GameObject collapsePopup;
-    [SerializeField] private Button collapseConfirmButton;
 
-    [Header("강제 제출")]
-    [SerializeField] private Button compulsionButton;
-
-    [Header("퍼즐 금액 정산 규칙 수치")]
-    [SerializeField] private MoneyRuleSettings moneySettings;
+    [Header("퍼즐 점수 정산 규칙 수치")]
+    [FormerlySerializedAs("moneySettings")]
+    [SerializeField] private ScoreRuleSettings scoreSettings;
 
     private const float CollapseAutoProceedDelay = 1.2f;
     private const string RequirementNotMetLine = "주문이랑 다른데요. 유명한 곳이라고 들었는데… 실망이네요.";
@@ -47,7 +40,7 @@ public class DayPuzzleUI : MonoBehaviour
         board = WrapperBoardController.Instance;
         gacha = FindFirstObjectByType<GachaManager>();
 
-        settlement = new PuzzleSettlement(moneySettings); // 규칙 수치는 설정 에셋
+        settlement = new PuzzleSettlement(scoreSettings); // 규칙 수치는 설정 에셋
 
         if (board != null)
         {
@@ -55,13 +48,9 @@ public class DayPuzzleUI : MonoBehaviour
             board.OnFlowerPlaced += HandleFlowerPlaced;
         }
 
-        if (resultPopup != null) resultPopup.SetActive(false);
-        if (resultConfirmButton != null) resultConfirmButton.onClick.AddListener(OnResultConfirmed);
+        if (resultView != null) resultView.gameObject.SetActive(false);
 
         if (collapsePopup != null) collapsePopup.SetActive(false);
-        if (collapseConfirmButton != null) collapseConfirmButton.onClick.AddListener(OnCollapseConfirmed);
-
-        if (compulsionButton != null) compulsionButton.onClick.AddListener(OnCompulsionClicked);
     }
 
     private void OnDestroy()
@@ -76,7 +65,7 @@ public class DayPuzzleUI : MonoBehaviour
         if (board.IsComplete)
         {
             roundEnded = true;
-            ShowResultPopup(Settle(PuzzleEndKind.Completed));
+            ShowResult(Settle(PuzzleEndKind.Completed));
             return;
         }
 
@@ -90,12 +79,12 @@ public class DayPuzzleUI : MonoBehaviour
         }
     }
 
-    /// <summary>CompulsionBTN: 완성 여부와 상관없이 지금까지 놓인 꽃으로 강제 제출한다.</summary>
-    private void OnCompulsionClicked()
+    /// <summary>디버그용(CurrencyManager의 디버그 버튼): 완성 여부와 상관없이 지금까지 놓인 꽃으로 강제 제출한다.</summary>
+    public void DebugForceSubmit()
     {
         if (roundEnded || board == null) return;
         roundEnded = true;
-        ShowResultPopup(Settle(PuzzleEndKind.ForcedSubmit));
+        ShowResult(Settle(PuzzleEndKind.ForcedSubmit));
     }
 
     /// <summary>퍼즐이 끝난 순간 정산한다(손님 기분 판정에 쓰이므로 기분 시간을 멈추기 전에 계산한다).</summary>
@@ -104,22 +93,27 @@ public class DayPuzzleUI : MonoBehaviour
         customerLate = IsCustomerLate();
         SettlementResult result = settlement.Settle(endKind, collapseCount);
         GameFlowController.Instance?.ConsumeUsedFlowers(board.PlacementHistory); // 퍼즐이 끝났으니 놓은 꽃이 소모된다(붕괴 재시작은 끝이 아니다)
-        DayClock.Instance?.StopMood(); // 퍼즐이 끝났으니 기분 시간은 다음 주문까지 멈춘다
+        GameClock.Instance?.StopMood(); // 퍼즐이 끝났으니 기분 시간은 다음 주문까지 멈춘다
         return result;
     }
 
-    private void ShowResultPopup(SettlementResult result)
+    private void ShowResult(SettlementResult result)
     {
         lastRequirementMet = result.RequirementMet;
+        GameClock.Instance?.SetPaused(true); // 결과를 보는 동안 하루 시간도 멈춘다(기분 시간은 정산에서 이미 멈췄다)
 
-        if (resultText != null) resultText.text = SettlementFormatter.Breakdown(result.Ledger);
-        if (resultMoneyText != null) resultMoneyText.text = $"획득한 돈: {result.Payout}";
-        if (resultPopup != null) resultPopup.SetActive(true);
+        if (resultView == null) // 결과 화면이 연결되지 않았으면 알림 없이 바로 넘어간다
+        {
+            OnResultConfirmed();
+            return;
+        }
+
+        resultView.Show(result, OnResultConfirmed); // 마지막에 한 번 더 누르면 닫히고 OnResultConfirmed로 이어진다
     }
 
     private static bool IsCustomerLate()
     {
-        return DayClock.Instance != null && DayClock.Instance.MoodRemaining <= 0f;
+        return GameClock.Instance != null && GameClock.Instance.MoodRemaining <= 0f;
     }
 
     private void ShowCollapsePopup()
@@ -161,7 +155,7 @@ public class DayPuzzleUI : MonoBehaviour
 
     private void OnResultConfirmed()
     {
-        if (resultPopup != null) resultPopup.SetActive(false);
+        GameClock.Instance?.SetPaused(false);
         if (GameFlowController.Instance == null) return;
 
         // 손님 기분이 다 닳은 뒤에 끝났으면 "늦으셨네요.", 아니면 요구사항을 못 채웠으면 손님이 화내고,
