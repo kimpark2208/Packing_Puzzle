@@ -110,7 +110,7 @@ public class CatalogPopup : MonoBehaviour
             card.gameObject.SetActive(true);
             card.name = $"Item_{item.itemId}";
             card.Find("Name").GetComponent<TMP_Text>().text = item.itemName;
-            card.Find("Desc").GetComponent<TMP_Text>().text = item.description;
+            card.Find("Name/Desc").GetComponent<TMP_Text>().text = item.description; // Desc는 Name의 자식이다
             card.Find("PriceText").GetComponent<TMP_Text>().text = item.price.ToString("N0");
 
             var order = card.Find("OrderBTN").GetComponent<Button>();
