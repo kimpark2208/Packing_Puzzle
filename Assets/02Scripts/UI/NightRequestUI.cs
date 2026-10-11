@@ -8,7 +8,7 @@ using UnityEngine.UI;
 /// 밤 메인 화면: 오늘 밤 우선적으로 손질(획득)하고 싶은 꽃을 요청한다.
 /// 확인을 누르면 GameManager가 요청 꽃 기반의 메인 스테이지 + 잉여 스테이지 큐를 생성한다.
 /// 목록 항목은 하이라키에 미리 배치된 템플릿을 복제해서 만든다.
-/// 목록에는 막아 둔 꽃(라벤더, 5칸짜리)을 뺀 모든 꽃이 보유 수량이 적은 순으로 나오고, 항목마다 보유 수량이 보인다.
+/// 목록에는 막아 둔 꽃(라벤더)을 뺀 모든 꽃이 보유 수량이 적은 순으로 나오고, 항목마다 보유 수량이 보인다.
 /// </summary>
 public class NightRequestUI : MonoBehaviour
 {
@@ -32,7 +32,7 @@ public class NightRequestUI : MonoBehaviour
 
         if (CurrencyManager.Instance != null && BlockRegistry.Instance != null && listArea != null && itemTemplate != null)
         {
-            // 임시: 막아 둔 꽃(라벤더, 5칸짜리)을 뺀 모든 꽃을 보유 수량이 적은 순으로 보여 준다.
+            // 임시: 막아 둔 꽃(라벤더)을 뺀 모든 꽃을 보유 수량이 적은 순으로 보여 준다.
             var ids = BlockRegistry.Instance.AllBlocks
                 .Where(b => !CurrencyManager.Instance.IsStartingOutOfStock(b.blockID))
                 .OrderBy(b => CurrencyManager.Instance.GetFlowerStock(b.blockID))

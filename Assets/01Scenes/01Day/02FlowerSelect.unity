@@ -634,17 +634,18 @@ MonoBehaviour:
   flowerPopup: {fileID: 2080710008}
   shelves:
   - role: 0
-    label: {fileID: 0}
+    label: {fileID: 761973454}
     slotParent: {fileID: 822450725}
   - role: 2
-    label: {fileID: 0}
+    label: {fileID: 1387265477}
     slotParent: {fileID: 131801226}
   - role: 1
-    label: {fileID: 0}
+    label: {fileID: 1056219454}
     slotParent: {fileID: 1143544823}
   - role: 3
-    label: {fileID: 0}
+    label: {fileID: 1109100397}
     slotParent: {fileID: 368386991}
+  flowerConfirmButton: {fileID: 0}
 --- !u!4 &240128195
 Transform:
   m_ObjectHideFlags: 0

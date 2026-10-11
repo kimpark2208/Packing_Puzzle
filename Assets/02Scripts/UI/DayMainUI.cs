@@ -101,10 +101,11 @@ public class DayMainUI : MonoBehaviour
         {
             BeginDayEnd();
         }
-        else
+        else if (!showingAngryLine)
         {
             GameClock.Instance?.ResetMood(); // 새 손님: 기분 시간은 가득 차 있고, 주문을 수락해야 줄어들기 시작한다
         }
+        // 이전 손님의 반응 대사 중이면 기분 시간은 끝난 그대로 멈춰 둔다(다음 손님이 올 때 채운다: OnAcceptClicked)
     }
 
     private void OnEnable()
@@ -141,6 +142,7 @@ public class DayMainUI : MonoBehaviour
         {
             showingAngryLine = false;
             Speech.ShowOrder(order);
+            GameClock.Instance?.ResetMood(); // 반응 대사가 끝나고 다음 손님이 왔다: 기분 시간이 가득 찬다(수락하면 줄어들기 시작한다)
             return;
         }
 

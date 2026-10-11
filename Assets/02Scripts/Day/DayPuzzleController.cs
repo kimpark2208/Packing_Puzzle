@@ -38,8 +38,9 @@ public class DayPuzzleController : MonoBehaviour
     private const int CollapseDiff = 2;
     private const int OverlapSamples = 5; // 꽃 사각형 한 변에 찍는 표본점 수(칸과의 겹침을 어림하는 데 쓴다)
 
-    [Header("꽃의 빛: 흐림은 더 투명하게, 빛남은 FlowerArea 꽃 이미지의 Outline(색·굵기는 에디터에서)을 켠다")]
+    [Header("꽃의 빛: 흐림은 더 투명하게, 빛남은 꽃 뒤의 글로우 이미지(GlowArea)를 켠다. 글로우 이미지는 꽃과 같은 그림을 쓰고 셰이더(UI/FlowerGlow)가 번지게 한다")]
     [SerializeField, Range(0f, 1f)] private float dimAlpha = 0.4f;
+    [SerializeField] private RectTransform glowArea; // 칸과 같은 이름의 글로우 이미지를 두는 곳(FlowerArea와 같은 위치/크기이고 꽃보다 먼저 그려진다). 없으면 후광 없이 동작한다
 
     [Header("기울기: 좌우 꽃 개수가 1개 차이일 때 많은 쪽으로 기운다(Lerp로 서서히)")]
     [SerializeField] private RectTransform wrapperImage; // 기울이는 대상(포장지 이미지만. 칸/꽃 이미지는 그대로)
@@ -99,6 +100,8 @@ public class DayPuzzleController : MonoBehaviour
         {
             Transform flowerImage = FlowerImageOf(slot);
             if (flowerImage != null) flowerImage.gameObject.SetActive(false); // 칸이 채워질 때 켠다
+            Image glowImage = GlowImageOf(slot);
+            if (glowImage != null) glowImage.gameObject.SetActive(false);     // 빛남일 때만 켠다
             int i = (int)slot.position;
             bool inWrapper = i < preset.cellRoles.Length; // 이 포장지의 링 수보다 바깥 칸만 없다. 포장지 안의 칸은 모두 쓰인다(빈 칸 없음)
             slot.gameObject.SetActive(inWrapper);
@@ -108,6 +111,7 @@ public class DayPuzzleController : MonoBehaviour
             slot.tag = preset.cellRoles[i];
             slot.SetHighlightColor(TagColor(slot.tag));
             if (flowerImage != null) flowerImage.GetComponent<Image>().sprite = tagSprites[(int)slot.tag];
+            if (glowImage != null) glowImage.sprite = tagSprites[(int)slot.tag]; // 후광은 꽃 그림을 번지게 해서 그린다
             regions.Add(slot);
         }
     }
@@ -131,6 +135,13 @@ public class DayPuzzleController : MonoBehaviour
     private Transform FlowerImageOf(WrapperSlot slot)
     {
         return flowerArea.Find(slot.position.ToString());
+    }
+
+    /// <summary>글로우 이미지도 GlowArea 아래에 칸과 같은 이름으로 둔다(없으면 null).</summary>
+    private Image GlowImageOf(WrapperSlot slot)
+    {
+        Transform t = glowArea != null ? glowArea.Find(slot.position.ToString()) : null;
+        return t != null ? t.GetComponent<Image>() : null;
     }
 
     private static Color TagColor(FlowerData.FlowerRole tag)
@@ -172,7 +183,7 @@ public class DayPuzzleController : MonoBehaviour
         return true;
     }
 
-    /// <summary>놓인 꽃마다 이웃과의 관계 합계로 상태를 다시 구해 보여 준다: 흐림=투명하게, 선명=그대로, 빛남=Outline 켬. 꽃을 놓을 때마다 이웃의 상태도 바뀐다.</summary>
+    /// <summary>놓인 꽃마다 이웃과의 관계 합계로 상태를 다시 구해 보여 준다: 흐림=투명하게, 선명=그대로, 빛남=꽃 뒤에 후광. 꽃을 놓을 때마다 이웃의 상태도 바뀐다.</summary>
     private void RefreshGlow()
     {
         var cells = PlacedCells();
@@ -188,8 +199,8 @@ public class DayPuzzleController : MonoBehaviour
             c.a = glow == FlowerGlow.Dim ? dimAlpha : 1f;
             image.color = c;
 
-            Outline outline = flowerImage.GetComponent<Outline>();
-            if (outline != null) outline.enabled = glow == FlowerGlow.Bright;
+            Image glowImage = GlowImageOf(region);
+            if (glowImage != null) glowImage.gameObject.SetActive(glow == FlowerGlow.Bright);
         }
     }
 

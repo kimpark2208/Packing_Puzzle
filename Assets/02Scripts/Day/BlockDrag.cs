@@ -5,7 +5,7 @@ using UnityEngine.EventSystems;
 
 /// <summary>
 /// 트레이의 꽃 조각의 드래그 입력. 드래그해서 DayPuzzleController의 알맞은 태그 슬롯에 놓는다.
-/// 태그가 다르면 반려(원래 자리로 복귀)한다. 조각의 모양은 FlowerPieceView가 맡는다.
+/// 태그가 다르면 반려(원래 자리로 복귀)한다. 바구니의 꽃은 보관 칸(storeTarget)에 놓아 맡길 수도 있다. 조각의 모양은 FlowerPieceView가 맡는다.
 /// 드래그 중 꽃(아이콘)은 손가락 위쪽에 떠서 따라오고, 그 꽃이 겹친 칸이 강조되며 놓으면 그 칸에 들어간다
 /// (손가락이 놓일 칸을 가리지 않도록).
 /// </summary>
@@ -16,6 +16,12 @@ public class BlockDrag : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDra
     public FlowerData blockData;
 
     public event Action<GameObject> OnPlaced;
+
+    /// <summary>이 꽃을 맡길 수 있는 보관 칸(바구니의 꽃에만 GachaManager가 정해 준다). null이면 맡길 수 없다.</summary>
+    public FlowerStorageSlot storeTarget;
+
+    /// <summary>보드가 아니라 보관 칸에 놓았을 때 발행. 조각은 받는 쪽이 보관 칸으로 옮긴다(여기서 없애지 않는다).</summary>
+    public event Action<GameObject> OnStored;
 
     private const float LiftPixels = 150f; // 드래그 중 꽃이 손가락보다 위에 뜨는 거리(캔버스 단위)
 
@@ -79,6 +85,12 @@ public class BlockDrag : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDra
         {
             OnPlaced?.Invoke(gameObject);
             Destroy(gameObject);
+            return;
+        }
+
+        if (storeTarget != null && storeTarget.IsEmpty && storeTarget.IsOver(IconScreenRect(eventData.pressEventCamera).center, eventData.pressEventCamera))
+        {
+            OnStored?.Invoke(gameObject);
             return;
         }
 

@@ -7,9 +7,11 @@ using Random = UnityEngine.Random;
 
 /// <summary>
 /// 낮 퍼즐의 "꽃 가챠". FlowerBucket 안에 미리 배치해 둔 자리(자식 FlowerTemplate)만큼 꽃을 뽑아 보여준다.
-/// - 풀: 플레이어가 꽃 선택 화면에서 역할별로 하나씩 고른 꽃 종류(최대 4종). 놓아도 줄지 않는 무한 공급이다.
-/// - 꽃 하나를 놓으면 버켓의 나머지는 사라지고 풀에서 새로 무작위로 뽑는다.
+/// - 풀(FlowerPool): 플레이어가 꽃 선택 화면에서 고른 꽃 종류들. 뽑는 규칙(프리셋의 역할 비율, 재고 한도)은 FlowerPool이 정한다.
+/// - 꽃 하나를 놓으면 버켓의 나머지는 사라지고 풀에서 새로 뽑는다.
 /// - 뽑힌 꽃은 wiltChance 확률로 시든 꽃(회색)이 되어 놓을 수 없다. 시든 꽃은 리롤하거나 다른 꽃을 놓아 새로 뽑으면 사라진다.
+/// - 보관 칸: 바구니의 꽃 하나를 보관 칸에 맡기면(보드에 놓은 것과 같은 한 차례) 바구니는 새로 뽑힌다. 맡긴 꽃은 나중에 보드로 끌어와 놓을 수 있고,
+///   그때도 한 차례로 쳐서 바구니가 새로 뽑힌다. 보관 칸은 1개이고, 차 있는 동안은 다른 꽃을 맡길 수 없다. 바구니의 꽃은 다음 차례로 넘어가지 않는다.
 /// - 리롤: 버켓의 꽃을 모두 치우고 다른 꽃을 뽑는다. 퍼즐 전체에서 maxRerolls번.
 /// 모든 조각은 자리 템플릿을 복제해 데이터만 다르게 주입한다.
 /// </summary>
@@ -17,6 +19,7 @@ public class GachaManager : MonoBehaviour
 {
     [SerializeField] private Button gachaButton;     // 리롤 버튼
     [SerializeField] private RectTransform bucket;   // 자식 FlowerTemplate들이 꽃이 나올 자리
+    [SerializeField] private FlowerStorageSlot storageSlot; // 바구니 옆 보관 칸(1개). 없으면 보관 기능이 꺼진다
     [SerializeField] private int maxRerolls = 2;
     [SerializeField, Range(0f, 1f)] private float wiltChance = 0.08f; // 뽑힌 꽃 하나가 시든 꽃일 확률
     [SerializeField] private List<FlowerData> initialPool = new(); // 인스펙터 테스트용 기본 풀
@@ -25,7 +28,7 @@ public class GachaManager : MonoBehaviour
 
     private readonly List<GameObject> slotTemplates = new();
     private readonly List<GameObject> shown = new();
-    private List<FlowerData> pool = new();
+    private FlowerPool pool;
     private int rerollCount;
     private TMP_Text rerollBadge; // 리롤 버튼 안의 텍스트(남은 횟수)
 
@@ -40,7 +43,15 @@ public class GachaManager : MonoBehaviour
 
     private void Awake()
     {
-        pool = new List<FlowerData>(initialPool);
+        pool = NewPool(initialPool);
+    }
+
+    /// <summary>역할 비율은 오늘 확정된 프리셋을, 재고는 보유 수량을 따른다(씬 단독 실행 등으로 없으면 제한 없이).</summary>
+    private static FlowerPool NewPool(IEnumerable<FlowerData> flowers)
+    {
+        var order = GameManager.Instance != null ? GameManager.Instance.CurrentDayOrder : null;
+        System.Func<FlowerData, int> stockOf = CurrencyManager.Instance != null ? f => CurrencyManager.Instance.GetFlowerStock(f.blockID) : null;
+        return new FlowerPool(flowers, order != null ? order.preset : null, stockOf);
     }
 
     private void Start()
@@ -72,7 +83,8 @@ public class GachaManager : MonoBehaviour
     /// <summary>FlowerSelect 화면에서 플레이어가 고른 꽃으로 풀을 세팅하고 첫 꽃들을 뽑는다.</summary>
     public void SetPool(List<FlowerData> newPool)
     {
-        pool = new List<FlowerData>(newPool);
+        pool = NewPool(newPool);
+        if (storageSlot != null) storageSlot.Clear();
         rerollCount = 0;
         Draw(null);
         RefreshBadge();
@@ -81,12 +93,14 @@ public class GachaManager : MonoBehaviour
     /// <summary>붕괴로 퍼즐을 다시 시작할 때: 새로 뽑는다. 리롤 횟수는 돌아오지 않는다.</summary>
     public void Redraw()
     {
+        pool.ResetPlaced(); // 다시 시작하면 놓은 꽃(맡긴 꽃 포함)은 소모되지 않았다
+        if (storageSlot != null) storageSlot.Clear();
         Draw(null);
     }
 
     public void Reroll()
     {
-        if (rerollCount >= maxRerolls || pool.Count == 0) return;
+        if (rerollCount >= maxRerolls || pool.IsEmpty) return;
 
         rerollCount++;
         Draw(ShownFlowers());
@@ -104,18 +118,7 @@ public class GachaManager : MonoBehaviour
     {
         ClearShown();
 
-        var fresh = new List<FlowerData>(pool);
-        if (avoid != null) foreach (var f in avoid) fresh.Remove(f);
-
-        int count = DrawCount();
-        var picks = new List<FlowerData>();
-        TakeRandom(fresh, picks, count);
-
-        // 새 꽃이 모자라면 방금 보여준 꽃으로 채운다.
-        var rest = new List<FlowerData>(pool);
-        foreach (var f in picks) rest.Remove(f);
-        TakeRandom(rest, picks, count);
-
+        List<FlowerData> picks = pool.Draw(DrawCount(), avoid);
         for (int i = 0; i < picks.Count; i++) Spawn(slotTemplates[i], picks[i]);
     }
 
@@ -125,16 +128,6 @@ public class GachaManager : MonoBehaviour
         var order = GameManager.Instance != null ? GameManager.Instance.CurrentDayOrder : null;
         WrapperData data = order != null ? order.wrapper : null;
         return data != null ? Mathf.Min(data.flowersPerDraw, slotTemplates.Count) : slotTemplates.Count;
-    }
-
-    private static void TakeRandom(List<FlowerData> from, List<FlowerData> into, int total)
-    {
-        while (into.Count < total && from.Count > 0)
-        {
-            int i = Random.Range(0, from.Count);
-            into.Add(from[i]);
-            from.RemoveAt(i);
-        }
     }
 
     private void Spawn(GameObject template, FlowerData flower)
@@ -148,6 +141,8 @@ public class GachaManager : MonoBehaviour
 
         draggable.blockData = flower;
         draggable.OnPlaced += HandleBlockPlaced;
+        draggable.OnStored += HandleBlockStored;
+        draggable.storeTarget = storageSlot;
 
         FlowerPieceView view = FlowerPieceView.GetOrAdd(block);
         view.Apply(flower, flower.iconSprite != null ? flower.iconSprite : flower.dayPieceSprite, true);
@@ -169,10 +164,34 @@ public class GachaManager : MonoBehaviour
         view.Icon.color = WiltedColor;
     }
 
-    /// <summary>꽃 하나를 놓으면 버켓의 나머지는 사라지고 풀에서 새 꽃들을 무작위로 뽑는다(풀은 줄지 않는다).</summary>
+    /// <summary>꽃 하나를 놓으면 그만큼 재고에서 빼고, 버켓의 나머지는 사라지고 풀에서 새 꽃들을 뽑는다.</summary>
     private void HandleBlockPlaced(GameObject block)
     {
+        pool.MarkPlaced(block.GetComponent<BlockDrag>().blockData);
         shown.Remove(block);
+        Draw(null);
+    }
+
+    /// <summary>바구니의 꽃을 보관 칸에 맡겼다: 그 꽃은 재고에서 따로 잡아 두고(놓은 것으로 센다), 바구니의 나머지는 사라지고 새로 뽑는다.</summary>
+    private void HandleBlockStored(GameObject block)
+    {
+        BlockDrag draggable = block.GetComponent<BlockDrag>();
+        pool.MarkPlaced(draggable.blockData);
+
+        draggable.OnPlaced -= HandleBlockPlaced;
+        draggable.OnStored -= HandleBlockStored;
+        draggable.storeTarget = null; // 보관 칸의 꽃은 다시 맡길 수 없고, 보드에만 놓을 수 있다
+        draggable.OnPlaced += HandleStoredBlockPlaced;
+
+        shown.Remove(block);
+        storageSlot.Hold(block);
+        Draw(null);
+    }
+
+    /// <summary>보관 칸의 꽃을 보드에 놓았다: 칸이 비고, 바구니의 꽃 대신 놓은 한 차례이므로 바구니는 새로 뽑는다(재고는 맡길 때 이미 잡았다).</summary>
+    private void HandleStoredBlockPlaced(GameObject block)
+    {
+        storageSlot.Release();
         Draw(null);
     }
 

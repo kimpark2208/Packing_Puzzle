@@ -16,5 +16,6 @@ MonoBehaviour:
   colorName: "\uD30C\uB780"
   color: {r: 0.25, g: 0.5, b: 0.95, a: 1}
   ringCount: 3
+  maxFlowerTypes: 8
   flowersPerDraw: 3
   presets: []

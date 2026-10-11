@@ -57,9 +57,10 @@ public class FlowerSelectUI : MonoBehaviour
     [Header("꽃 선택 팝업 (역할별 선반. 꽃 수만큼 에디터에 슬롯을 놓아 두고, 그 자리를 그대로 쓴다)")]
     [SerializeField] private GameObject flowerPopup;
     [SerializeField] private Shelf[] shelves;
+    [SerializeField] private Button flowerConfirmButton; // 선택 완료. 없으면 더 담을 꽃이 없어지는 순간 자동으로 넘어간다
 
-    private readonly Dictionary<FlowerData, int> counts = new();
-    private readonly Dictionary<FlowerData, SlotView> views = new();    private readonly Dictionary<FlowerData.FlowerRole, int> limits = new(); // 역할별로 담는 개수: 고른 프리셋에 그 역할의 칸이 있으면 1, 없으면 0
+    private readonly Dictionary<FlowerData, SlotView> views = new();
+    private FlowerSelection selection; // 포장지를 고른 뒤에 만든다(역할별 한도와 전체 한도가 포장지와 프리셋에서 나온다)
     private bool wrapperChosen;
     private int selectedWrapperId = -1;
     private readonly Dictionary<Shelf, List<RectTransform>> spots = new(); // 선반마다 에디터에 놓아 둔 슬롯 자리(위치는 에디터에서 정한 그대로 쓴다)
@@ -135,36 +136,35 @@ public class FlowerSelectUI : MonoBehaviour
         var order = GameManager.Instance.CurrentDayOrder;
         if (order == null) return;
 
-        if (headerText != null)
-        {
-            headerText.text = "역할별로 사용할 꽃을 하나씩 고르세요";
-        }
-
         if (wrapperPopup != null) wrapperPopup.SetActive(false);
         if (flowerPopup != null) flowerPopup.SetActive(true);
 
-        LoadRoleLimits(order);
+        CreateSelection(order);
+        if (flowerConfirmButton != null) flowerConfirmButton.onClick.AddListener(ConfirmSelection);
         BuildFlowerChoices();
     }
 
-    /// <summary>고른 프리셋에 칸이 있는 역할마다 꽃을 하나씩 담는다. 모두 채우면 바로 퍼즐로 넘어간다.</summary>
-    private void LoadRoleLimits(DayPuzzleGenerator.DayOrder order)
+    /// <summary>고른 포장지와 프리셋에서 선택 규칙을 만든다: 역할별 한도는 그 역할의 칸 수, 전체 한도는 포장지의 maxFlowerTypes.</summary>
+    private void CreateSelection(DayPuzzleGenerator.DayOrder order)
     {
-        limits.Clear();
-        foreach (var shelf in shelves) limits[shelf.role] = order.preset != null && order.preset.CountByTag(shelf.role) > 0 ? 1 : 0;
+        var roleLimits = new Dictionary<FlowerData.FlowerRole, int>();
+        foreach (var shelf in shelves) roleLimits[shelf.role] = order.preset != null ? order.preset.CountByTag(shelf.role) : 0;
+
+        int totalLimit = order.wrapper != null ? order.wrapper.maxFlowerTypes : roleLimits.Count;
+        selection = new FlowerSelection(roleLimits, totalLimit, StockOf);
     }
 
-    private int Limit(FlowerData.FlowerRole role)
+    private static int StockOf(FlowerData flower)
     {
-        return limits.TryGetValue(role, out int v) ? v : 0;
+        return CurrencyManager.Instance != null ? CurrencyManager.Instance.GetFlowerStock(flower.blockID) : 0;
     }
 
     /// <summary>포장지 단계/보유 여부와 상관없이 등록된 모든 꽃을 후보로 보여준다.</summary>
     private void BuildFlowerChoices()
     {
         views.Clear();
-        counts.Clear();
         RefreshLabels();
+        RefreshConfirmButton();
 
         if (BlockRegistry.Instance == null) return;
 
@@ -240,60 +240,44 @@ public class FlowerSelectUI : MonoBehaviour
         click.onClick.AddListener(() => OnSlotClicked(block));
     }
 
-    /// <summary>역할당 꽃 하나만 담는다. 담은 꽃을 다시 누르면 비우고, 같은 역할의 다른 꽃을 누르면 바꿔 담는다.</summary>
+    /// <summary>꽃을 누르면 선택 규칙(FlowerSelection)에 따라 담거나 비우거나 바꿔 담는다. 선택이 바뀌면 모든 꽃의 그림자와 표시를 다시 그린다.</summary>
     private void OnSlotClicked(FlowerData block)
     {
-        Shelf shelf = shelves.FirstOrDefault(s => s.role == block.flowerRole);
-        if (shelf == null) return;
+        if (selection == null || !selection.Toggle(block)) return;
 
-        if (counts.ContainsKey(block))
-        {
-            counts.Remove(block);
-        }
-        else
-        {
-            if (Limit(shelf.role) == 0) return; // 이 프리셋엔 이 역할의 칸이 없다
-            if (CurrencyManager.Instance != null && CurrencyManager.Instance.GetFlowerStock(block.blockID) <= 0) return; // 재고가 없는 꽃은 고를 수 없다
-            foreach (FlowerData other in counts.Keys.Where(k => k.flowerRole == shelf.role).ToList()) counts.Remove(other);
-            counts[block] = 1;
-        }
-
-        RefreshRole(shelf.role); // 선택이 바뀌면 같은 역할의 다른 꽃들의 그림자도 달라진다
+        RefreshAllSlots(); // 한도가 차면 다른 꽃들도 담을 수 없게 되므로 전부 다시 그린다
         RefreshLabels();
+        RefreshConfirmButton();
 
-        if (shelves.All(s => RoleTotal(s.role) >= Limit(s.role))) ConfirmSelection();
+        if (flowerConfirmButton == null && selection.IsValid && !views.Keys.Any(selection.CanAdd)) ConfirmSelection(); // 선택 완료 버튼이 없으면, 더 담을 꽃이 없어지는 순간(한도가 차거나 재고가 없을 때) 넘어간다
     }
 
-    private void RefreshRole(FlowerData.FlowerRole role)
+    private void RefreshAllSlots()
     {
-        foreach (FlowerData flower in views.Keys.Where(f => f.flowerRole == role).ToList()) RefreshSlot(flower);
-    }
-
-    private int RoleTotal(FlowerData.FlowerRole role)
-    {
-        return counts.Where(kv => kv.Key.flowerRole == role).Sum(kv => kv.Value);
+        foreach (FlowerData flower in views.Keys.ToList()) RefreshSlot(flower);
     }
 
     private void RefreshSlot(FlowerData block)
     {
         if (!views.TryGetValue(block, out var view)) return;
 
-        counts.TryGetValue(block, out int n);
+        bool picked = selection != null && selection.Contains(block);
 
-        // 같은 역할에서 다른 꽃이 선택됐으면 이 꽃(선택되지 않은 꽃)은 어둡게 한다.
-        Color shade = RoleTotal(block.flowerRole) > 0 && n == 0 ? UnselectedShade : Color.white;
+        // 더 이상 담을 수 없는 꽃(역할/전체 한도가 찼거나 재고가 없는 꽃)은 어둡게 한다.
+        Color shade = !picked && selection != null && !selection.CanAdd(block) ? UnselectedShade : Color.white;
         view.icon.color = ColorPalette.ToUnityColor(block.color) * shade;
         foreach (var (graphic, baseColor) in view.shaded) graphic.color = baseColor * shade;
-        view.icon.rectTransform.anchoredPosition = new Vector2(0f, n > 0 ? SelectedLift : 0f);
+        view.icon.rectTransform.anchoredPosition = new Vector2(0f, picked ? SelectedLift : 0f);
 
         if (view.badge != null)
         {
             // 보유 수량은 퍼즐이 끝난 뒤에 소모된다(선택 중에는 그대로). 마이너스는 임시로 0으로 표시한다.
             int owned = Mathf.Max(0, CurrencyManager.Instance != null ? CurrencyManager.Instance.GetFlowerStock(block.blockID) : 0);
-            view.badge.text = $"x{owned}"; // 담아도 "1/보유"로 바꾸지 않는다(한 송이만 쓸 수 있다고 헷갈리므로). 담은 꽃은 위로 올라오는 것으로만 보여 준다
+            view.badge.text = $"x{owned}"; // 담은 꽃은 위로 올라오는 것으로만 보여 준다
         }
     }
 
+    /// <summary>선반 이름 옆에 고른 수/그 역할의 한도(예: "매스(2/4)")를, 맨 위 문구에 전체 고른 수/전체 한도를 보여 준다.</summary>
     private void RefreshLabels()
     {
         if (shelves == null) return;
@@ -307,14 +291,25 @@ public class FlowerSelectUI : MonoBehaviour
                 FlowerData.FlowerRole.Form => "폼",
                 _ => "필러",
             };
-            shelf.label.text = roleName;
+            int limit = selection != null ? selection.Limit(shelf.role) : 0;
+            shelf.label.text = limit > 0 ? $"{roleName}({selection.Count(shelf.role)}/{limit})" : roleName;
         }
+
+        if (headerText != null && selection != null)
+        {
+            string stockWarning = selection.HasStockShortfall ? "\n재고가 모자란 역할이 있어요" : "";
+            headerText.text = $"사용할 꽃을 고르세요 ({selection.Total}/{selection.TotalLimit}종){stockWarning}";
+        }
+    }
+
+    private void RefreshConfirmButton()
+    {
+        if (flowerConfirmButton != null && selection != null) flowerConfirmButton.interactable = selection.IsValid;
     }
 
     private void ConfirmSelection()
     {
-        if (!wrapperChosen || GameManager.Instance == null || counts.Count == 0) return;
-        var pool = counts.SelectMany(kv => Enumerable.Repeat(kv.Key, kv.Value)).ToList();
-        GameManager.Instance.ConfirmFlowerSelection(pool);
+        if (!wrapperChosen || GameManager.Instance == null || selection == null || !selection.IsValid) return;
+        GameManager.Instance.ConfirmFlowerSelection(selection.Picked.ToList());
     }
 }

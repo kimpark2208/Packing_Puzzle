@@ -15,6 +15,9 @@ public class WrapperData : ScriptableObject
     [Header("포장지 크기 (동심원 개수)")]
     [Range(1, 4)] public int ringCount = 3;
 
+    [Header("꽃 선택에서 고를 수 있는 꽃 종류의 전체 개수 (2링 6 / 3링 8 / 4링 10). 역할별로는 그 프리셋에서 그 역할의 칸 수까지다")]
+    [Min(4)] public int maxFlowerTypes = 6;
+
     [Header("가챠(버킷) 한 번에 나오는 꽃 개수 (버킷의 슬롯 수까지만 보인다)")]
     [Min(1)] public int flowersPerDraw = 3;
 

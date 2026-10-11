@@ -9,7 +9,7 @@ public class CurrencyManager : Singleton<CurrencyManager>
 {
     [SerializeField] private int initialMoney = 0;
     [SerializeField] private int initialFlowerStock = 20; // 모든 꽃의 시작 보유 수량
-    [SerializeField] private int[] outOfStockFlowerIds = { 5, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21 }; // 시작 보유 수량이 0인 꽃: 라벤더와 5칸짜리 전부(밤 퍼즐을 만들기 어려운 꽃). 밤 요청 목록에서도 빠진다
+    [SerializeField] private int[] outOfStockFlowerIds = { 5 }; // 시작 보유 수량이 0인 꽃(지금은 라벤더만. 5칸짜리는 임시로 재고에 넣었다). 밤 요청 목록에서도 빠진다
 
     // ========== 기본 상태 ==========
     private int currentMoney;
