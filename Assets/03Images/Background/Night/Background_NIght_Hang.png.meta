@@ -4,7 +4,7 @@ TextureImporter:
   internalIDToNameTable:
   - first:
       213: -600649378447911735
-    second: Background_NIght_Hang_0
+    second: Background_Night_Hang_0
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -126,7 +126,7 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: Background_NIght_Hang_0
+      name: Background_Night_Hang_0
       rect:
         serializedVersion: 2
         x: 0
@@ -161,7 +161,7 @@ TextureImporter:
     spriteCustomMetadata:
       entries: []
     nameFileIdTable:
-      Background_NIght_Hang_0: -600649378447911735
+      Background_Night_Hang_0: -600649378447911735
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

@@ -13,6 +13,16 @@ public class NightResultUI : MonoBehaviour
     [SerializeField] private TMP_Text resultText;
     [SerializeField] private Button confirmButton;
 
+    private void OnEnable()
+    {
+        EventBus.OnNightStageResult += Show;
+    }
+
+    private void OnDisable()
+    {
+        EventBus.OnNightStageResult -= Show;
+    }
+
     private void Start()
     {
         if (resultPopup != null) resultPopup.SetActive(false);
@@ -20,7 +30,7 @@ public class NightResultUI : MonoBehaviour
     }
 
     /// <param name="gains">꽃 이름 → 늘어난 수량</param>
-    public void Show(IEnumerable<KeyValuePair<string, int>> gains)
+    private void Show(IEnumerable<KeyValuePair<string, int>> gains)
     {
         var lines = new List<string> { "획득한 꽃", "" };
         foreach (var g in gains) lines.Add($"{g.Key}: {g.Value}개");
@@ -32,6 +42,6 @@ public class NightResultUI : MonoBehaviour
     private void OnConfirm()
     {
         if (resultPopup != null) resultPopup.SetActive(false);
-        if (GameFlowController.Instance != null) GameFlowController.Instance.ContinueNightAfterResult();
+        EventBus.RaiseNightResultConfirmed();
     }
 }

@@ -6,7 +6,7 @@ using UnityEngine.UI;
 
 /// <summary>
 /// 밤 메인 화면: 오늘 밤 우선적으로 손질(획득)하고 싶은 꽃을 요청한다.
-/// 확인을 누르면 GameFlowController가 요청 꽃 기반의 메인 스테이지 + 잉여 스테이지 큐를 생성한다.
+/// 확인을 누르면 GameManager가 요청 꽃 기반의 메인 스테이지 + 잉여 스테이지 큐를 생성한다.
 /// 목록 항목은 하이라키에 미리 배치된 템플릿을 복제해서 만든다.
 /// 목록에는 막아 둔 꽃(라벤더, 5칸짜리)을 뺀 모든 꽃이 보유 수량이 적은 순으로 나오고, 항목마다 보유 수량이 보인다.
 /// </summary>
@@ -50,8 +50,8 @@ public class NightRequestUI : MonoBehaviour
 
     private void OnGoToNightMain()
     {
-        if (GameFlowController.Instance == null) return;
-        GameFlowController.Instance.GoToNightMainScene();
+        if (GameManager.Instance == null) return;
+        GameManager.Instance.GoToNightMainScene();
     }
 
     private void CreateFlowerItem(int flowerId)
@@ -78,8 +78,7 @@ public class NightRequestUI : MonoBehaviour
         TMP_Text stockText = stockT != null ? stockT.GetComponent<TMP_Text>() : null;
         if (stockText != null) stockText.text = $"x{Mathf.Max(0, CurrencyManager.Instance.GetFlowerStock(flowerId))}";
 
-        FlowerPieceView view = itemRT.GetComponent<FlowerPieceView>();
-        if (view == null) view = itemRT.gameObject.AddComponent<FlowerPieceView>();
+        FlowerPieceView view = FlowerPieceView.GetOrAdd(itemRT.gameObject);
         view.Apply(block, block.iconSprite != null ? block.iconSprite : block.dayPieceSprite, view.Icon.preserveAspect);
 
         iconImages[flowerId] = view.Icon;
@@ -91,25 +90,17 @@ public class NightRequestUI : MonoBehaviour
 
     private void ToggleSelect(int flowerId)
     {
-        iconBaseTints.TryGetValue(flowerId, out var baseTint);
+        bool nowSelected = selected.Add(flowerId);
+        if (!nowSelected) selected.Remove(flowerId);
 
-        if (selected.Contains(flowerId))
-        {
-            selected.Remove(flowerId);
-            if (itemImages.TryGetValue(flowerId, out var img1)) img1.color = ItemColor;
-            if (iconImages.TryGetValue(flowerId, out var icon1)) icon1.color = baseTint;
-        }
-        else
-        {
-            selected.Add(flowerId);
-            if (itemImages.TryGetValue(flowerId, out var img2)) img2.color = SelectedColor;
-            if (iconImages.TryGetValue(flowerId, out var icon2)) icon2.color = baseTint * SelectedIconTint;
-        }
+        iconBaseTints.TryGetValue(flowerId, out var baseTint);
+        if (itemImages.TryGetValue(flowerId, out var img)) img.color = nowSelected ? SelectedColor : ItemColor;
+        if (iconImages.TryGetValue(flowerId, out var icon)) icon.color = nowSelected ? baseTint * SelectedIconTint : baseTint;
     }
 
     private void OnConfirm()
     {
-        if (GameFlowController.Instance == null) return;
-        GameFlowController.Instance.ConfirmNightRequests(new List<int>(selected));
+        if (GameManager.Instance == null) return;
+        GameManager.Instance.ConfirmNightRequests(new List<int>(selected));
     }
 }

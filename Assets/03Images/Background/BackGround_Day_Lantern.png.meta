@@ -4,7 +4,7 @@ TextureImporter:
   internalIDToNameTable:
   - first:
       213: -4356356015673214311
-    second: BackGround_Day_Lantern_0
+    second: Background_Day_Lantern_0
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -126,7 +126,7 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: BackGround_Day_Lantern_0
+      name: Background_Day_Lantern_0
       rect:
         serializedVersion: 2
         x: 13
@@ -161,7 +161,7 @@ TextureImporter:
     spriteCustomMetadata:
       entries: []
     nameFileIdTable:
-      BackGround_Day_Lantern_0: -4356356015673214311
+      Background_Day_Lantern_0: -4356356015673214311
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

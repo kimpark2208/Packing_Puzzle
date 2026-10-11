@@ -17,6 +17,12 @@ public class FlowerPieceView : MonoBehaviour
     /// <summary>꽃 아이콘 이미지. 화면별로 선택 상태 등에 맞춰 색을 바꿀 때 쓴다.</summary>
     public Image Icon => icon;
 
+    /// <summary>템플릿 복제본에 이 뷰가 이미 있으면 그것을, 없으면 붙여서 돌려준다.</summary>
+    public static FlowerPieceView GetOrAdd(GameObject target)
+    {
+        return target.TryGetComponent(out FlowerPieceView view) ? view : target.AddComponent<FlowerPieceView>();
+    }
+
     private void Awake()
     {
         // "FlowerImage" 자식이 있으면(배경 틀 + 꽃 아이콘이 분리된 템플릿) 그쪽에 적용,

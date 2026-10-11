@@ -34,9 +34,6 @@ public class NightShapePuzzleValidator
         return wallGrid[coord.y, coord.x];
     }
 
-    /// <summary>일반 스테이지는 벽을 제외한 보드 전체가 목표 범위다.</summary>
-    public bool IsCellInTarget(Vector2Int coord) => !IsWallCell(coord);
-
     /// <summary>벽을 제외한 모든 칸이 채워졌는가.</summary>
     public bool IsPuzzleComplete(bool[,] filled)
     {

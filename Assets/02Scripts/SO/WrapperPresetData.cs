@@ -20,8 +20,6 @@ public static class WrapperRegionPositionExtensions
     public static int Ring(this WrapperRegionPosition p) => p == WrapperRegionPosition.Center ? 0 : ((int)p - 1) / 4 + 1;
 
     public static bool IsFaceA(this WrapperRegionPosition p) => p != WrapperRegionPosition.Center && ((int)p - 1) % 4 < 2;
-
-    public static bool IsFaceB(this WrapperRegionPosition p) => p != WrapperRegionPosition.Center && ((int)p - 1) % 4 >= 2;
 }
 
 /// <summary>
@@ -39,8 +37,6 @@ public class WrapperPresetData : ScriptableObject
 
     /// <summary>이 프리셋의 링 수(칸 수에서 계산한다).</summary>
     public int MaxRing => (cellRoles.Length - 1) / 4;
-
-    public FlowerData.FlowerRole RoleAt(WrapperRegionPosition position) => cellRoles[(int)position];
 
     public int CountByTag(FlowerData.FlowerRole tag) => cellRoles.Count(r => r == tag);
 

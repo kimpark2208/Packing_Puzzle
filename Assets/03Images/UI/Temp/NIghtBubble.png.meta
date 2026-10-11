@@ -4,7 +4,7 @@ TextureImporter:
   internalIDToNameTable:
   - first:
       213: 3233163513650180070
-    second: NIghtBubble_0
+    second: NightBubble_0
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -126,7 +126,7 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: NIghtBubble_0
+      name: NightBubble_0
       rect:
         serializedVersion: 2
         x: 0
@@ -161,7 +161,7 @@ TextureImporter:
     spriteCustomMetadata:
       entries: []
     nameFileIdTable:
-      NIghtBubble_0: 3233163513650180070
+      NightBubble_0: 3233163513650180070
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

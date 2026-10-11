@@ -33,6 +33,9 @@ public class FlowerData : ScriptableObject
     [Header("블록 정보")]
     public int blockID;
     public string flowerName;
+
+    /// <summary>화면에 보여 줄 이름. 이름이 비어 있으면 "꽃 {번호}".</summary>
+    public string DisplayName => string.IsNullOrEmpty(flowerName) ? $"꽃 {blockID}" : flowerName;
     public Color color;
     public FlowerRole flowerRole;
 
@@ -49,16 +52,12 @@ public class FlowerData : ScriptableObject
     public Sprite stemSprite;
 
     [Header("밤 퍼즐 - 셀 단위로 표시되는 꽃 아이콘 (색상은 런타임에 ColorPalette로 틴트됨)")]
-    [UnityEngine.Serialization.FormerlySerializedAs("flowerIcon")]
     public Sprite nightCellSprite;
 
     [Header("밤 퍼즐 - 블록 미리보기용 통짜 이미지 (모양대로 칸을 흰색으로 채운 한 장, 색상은 런타임에 ColorPalette로 틴트됨). BlockImageGenerator가 자동 생성해 채운다.")]
-    [UnityEngine.Serialization.FormerlySerializedAs("blockImage")]
     public Sprite dayPieceSprite;
 
     [Header("낮 퍼즐 - 칸이 채워졌을 때 칸에 들어가는 꽃 이미지 (꽃마다 따로 만들 예정, 지금은 같은 역할이면 Temp_역할 이미지를 임시로 사용)")]
-    [UnityEngine.Serialization.FormerlySerializedAs("flowerWholeImage")]
-    [UnityEngine.Serialization.FormerlySerializedAs("dayBouquetSprite")]
     public Sprite dayFillSprite;
 
     /// <summary>이 블록이 차지하는 칸 수 (= 점수/크기). 모노미노=1 ~ 펜토미노=5.</summary>

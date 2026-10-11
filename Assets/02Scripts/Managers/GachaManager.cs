@@ -59,9 +59,9 @@ public class GachaManager : MonoBehaviour
 
         // 낮 퍼즐 씬 진입 시, 꽃 선택 화면에서 고른 풀을 스스로 가져온다.
         // (DayPuzzleUI 등 다른 스크립트의 Start 순서에 의존하지 않기 위함)
-        if (GameFlowController.Instance != null && GameFlowController.Instance.ChosenGachaPool.Count > 0)
+        if (GameManager.Instance != null && GameManager.Instance.ChosenGachaPool.Count > 0)
         {
-            SetPool(GameFlowController.Instance.ChosenGachaPool);
+            SetPool(GameManager.Instance.ChosenGachaPool);
         }
         else
         {
@@ -122,8 +122,8 @@ public class GachaManager : MonoBehaviour
     /// <summary>한 번에 뽑을 꽃 개수: 오늘 고른 포장지 데이터의 값. 버킷에 슬롯 오브젝트가 있는 만큼까지만 보여줄 수 있다.</summary>
     private int DrawCount()
     {
-        var order = GameFlowController.Instance != null ? GameFlowController.Instance.CurrentDayOrder : null;
-        WrapperData data = order != null && order.isFinalized && WrapperRegistry.Instance != null ? WrapperRegistry.Instance.GetById(order.wrapperId) : null;
+        var order = GameManager.Instance != null ? GameManager.Instance.CurrentDayOrder : null;
+        WrapperData data = order != null ? order.wrapper : null;
         return data != null ? Mathf.Min(data.flowersPerDraw, slotTemplates.Count) : slotTemplates.Count;
     }
 
@@ -149,8 +149,7 @@ public class GachaManager : MonoBehaviour
         draggable.blockData = flower;
         draggable.OnPlaced += HandleBlockPlaced;
 
-        FlowerPieceView view = block.GetComponent<FlowerPieceView>();
-        if (view == null) view = block.AddComponent<FlowerPieceView>();
+        FlowerPieceView view = FlowerPieceView.GetOrAdd(block);
         view.Apply(flower, flower.iconSprite != null ? flower.iconSprite : flower.dayPieceSprite, true);
 
         // FlowerImage의 Button은 선택 화면(클릭으로 고르기)용이라 드래그로 놓는 버켓에서는 꺼둔다.

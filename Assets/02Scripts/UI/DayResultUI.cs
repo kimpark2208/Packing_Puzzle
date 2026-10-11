@@ -18,6 +18,6 @@ public class DayResultUI : MonoBehaviour
 
     private void OnGoNext()
     {
-        if (GameFlowController.Instance != null) GameFlowController.Instance.StartNextDay();
+        if (GameManager.Instance != null) GameManager.Instance.StartNextDay();
     }
 }

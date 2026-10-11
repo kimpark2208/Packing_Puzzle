@@ -13,7 +13,7 @@ public static class CustomerDialogue
         }
 
         FlowerData flower = BlockRegistry.Instance != null ? BlockRegistry.Instance.GetById(req.targetId) : null;
-        string name = flower != null && !string.IsNullOrEmpty(flower.flowerName) ? flower.flowerName : $"꽃 {req.targetId}";
+        string name = flower != null ? flower.DisplayName : $"꽃 {req.targetId}";
         string count = req.minCount == 1 ? "하나" : $"{req.minCount}개";
         return $"고백을 하려고요. 사랑을 뜻하는 <b>{name}</b>{KoreanParticle.IGa(name)} <b>{count}</b>는 들어가야겠죠! 포장지는 {wrapper}으로 부탁드려요.";
     }

@@ -4,7 +4,7 @@ TextureImporter:
   internalIDToNameTable:
   - first:
       213: 8456872963467847136
-    second: Light_Day 1_0
+    second: Light_Day_01_0
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -126,7 +126,7 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: Light_Day 1_0
+      name: Light_Day_01_0
       rect:
         serializedVersion: 2
         x: 0
@@ -162,6 +162,7 @@ TextureImporter:
       entries: []
     nameFileIdTable:
       Light_Day 1_0: 8456872963467847136
+      Light_Day_01_0: 8456872963467847136
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

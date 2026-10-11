@@ -31,7 +31,7 @@ public class CatalogPopup : MonoBehaviour
     [SerializeField] private ScrollRect scroll;
     [SerializeField] private Button closeButton;
 
-    private readonly HashSet<int> ordered = new(); // 이번 씬에서 주문한 아이템(보유 상태는 아직 저장하지 않는다)
+    private readonly HashSet<int> ordered = new(); // 이번 씬에서 주문한 아이템. TODO: 가구/꾸미기 용품/유물의 구매(보유) 여부는 아직 저장하지 않는다
     private int selected;
     private Color[] tabBaseColors; // 프리팹에 둔 탭 색/높이(고르지 않은 탭의 모습)
     private float[] tabBaseHeights;
@@ -113,7 +113,7 @@ public class CatalogPopup : MonoBehaviour
             card.Find("Desc").GetComponent<TMP_Text>().text = item.description;
             card.Find("PriceText").GetComponent<TMP_Text>().text = item.price.ToString("N0");
 
-            var order = card.Find("OrderButton").GetComponent<Button>();
+            var order = card.Find("OrderBTN").GetComponent<Button>();
             var orderText = order.GetComponentInChildren<TMP_Text>();
             if (ordered.Contains(item.itemId))
             {

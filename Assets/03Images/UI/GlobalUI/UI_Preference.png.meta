@@ -4,7 +4,7 @@ TextureImporter:
   internalIDToNameTable:
   - first:
       213: -935644359666397089
-    second: UI_Preference 1_0
+    second: UI_Preference_01_0
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -126,7 +126,7 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: UI_Preference 1_0
+      name: UI_Preference_01_0
       rect:
         serializedVersion: 2
         x: 0
@@ -162,6 +162,7 @@ TextureImporter:
       entries: []
     nameFileIdTable:
       UI_Preference 1_0: -935644359666397089
+      UI_Preference_01_0: -935644359666397089
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

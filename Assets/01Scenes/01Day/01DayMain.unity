@@ -579,7 +579,7 @@ GameObject:
   - component: {fileID: 236430661}
   - component: {fileID: 236430660}
   m_Layer: 0
-  m_Name: RejectButton
+  m_Name: RejectBTN
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -935,7 +935,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 700286fb42c325b458bb2182aafe20bc, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::DayMainUI
-  TimeUpHideDelay: 3
+  timeUpHideDelay: 3
   bubbleText: {fileID: 729435958}
   askButton: {fileID: 236430660}
   acceptButton: {fileID: 1440874387}
@@ -1067,7 +1067,7 @@ GameObject:
   - component: {fileID: 596318489}
   - component: {fileID: 596318488}
   m_Layer: 0
-  m_Name: BackGround
+  m_Name: Background
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -2620,7 +2620,7 @@ GameObject:
   - component: {fileID: 1440874388}
   - component: {fileID: 1440874387}
   m_Layer: 0
-  m_Name: AcceptButton
+  m_Name: AcceptBTN
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

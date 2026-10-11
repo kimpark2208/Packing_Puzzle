@@ -4,9 +4,6 @@ public static class KoreanParticle
     /// <summary>받침이 있으면 "이", 없으면 "가". 한글이 아닌 글자로 끝나면 "이".</summary>
     public static string IGa(string word) => EndsWithoutBatchim(word) ? "가" : "이";
 
-    /// <summary>받침이 있으면 "을", 없으면 "를". 한글이 아닌 글자로 끝나면 "을".</summary>
-    public static string EulReul(string word) => EndsWithoutBatchim(word) ? "를" : "을";
-
     private static bool EndsWithoutBatchim(string word)
     {
         if (string.IsNullOrEmpty(word)) return false;

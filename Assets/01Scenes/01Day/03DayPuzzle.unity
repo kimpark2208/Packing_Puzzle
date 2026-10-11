@@ -4550,7 +4550,7 @@ MonoBehaviour:
   gachaButton: {fileID: 1263605276}
   bucket: {fileID: 1744586045}
   maxRerolls: 10
-  wiltChance: 0.2
+  wiltChance: 0.1
   initialPool:
   - {fileID: 11400000, guid: 0fd7e801d344731e1ebbd2ad81e67929, type: 2}
   - {fileID: 11400000, guid: 76877ecdd9d2763942ff5298c068785b, type: 2}

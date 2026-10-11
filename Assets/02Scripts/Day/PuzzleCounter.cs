@@ -7,7 +7,7 @@ public struct PuzzleCounts
     public Dictionary<int, int> flowerCounts;  // 꽃(blockID) -> 사용 개수
 }
 
-/// <summary>낮 퍼즐 보드에 놓인 꽃의 색/꽃별 개수를 센다(금액 계산은 Money 폴더의 규칙들이 한다).</summary>
+/// <summary>낮 퍼즐 보드에 놓인 꽃의 색/꽃별 개수를 센다(금액 계산은 Settlement 폴더의 규칙들이 한다).</summary>
 public static class PuzzleCounter
 {
     public static PuzzleCounts CollectCounts()
@@ -18,7 +18,7 @@ public static class PuzzleCounter
             flowerCounts = new Dictionary<int, int>()
         };
 
-        var board = WrapperBoardController.Instance;
+        var board = DayPuzzleController.Instance;
         if (board == null) return result;
 
         foreach (var slot in board.AllSlots)

@@ -11,7 +11,7 @@ public enum FlowerGlow
 
 /// <summary>
 /// 꽃의 빛 계산(순수 계산, 보드·UI를 모른다).
-/// 칸이 이웃한 꽃과 색 관계를 맺고(ColorCompatDatabase), 꽃마다 관계 합계로 상태가 정해지며,
+/// 칸이 이웃한 꽃과 색 관계를 맺고(ColorRelation), 꽃마다 관계 합계로 상태가 정해지며,
 /// 정산에는 꽃 한 송이당 평균 상태 점수 × 10이 들어간다(-20 전부 흐림 ~ +30 전부 빛남, 포장지 크기와 상관없다).
 /// </summary>
 public static class FlowerLight
@@ -48,7 +48,7 @@ public static class FlowerLight
         if (!cells.TryGetValue(position, out FlowerData.Color color)) return 0;
         foreach (WrapperRegionPosition n in Neighbors(position))
         {
-            if (cells.TryGetValue(n, out FlowerData.Color other)) sum += ColorCompatDatabase.GetBonus(color, other);
+            if (cells.TryGetValue(n, out FlowerData.Color other)) sum += ColorRelation.GetScore(color, other);
         }
         return sum;
     }

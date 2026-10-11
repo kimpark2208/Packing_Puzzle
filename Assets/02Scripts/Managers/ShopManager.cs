@@ -33,6 +33,7 @@ public class ShopManager : Singleton<ShopManager>
         InitializeItems();
     }
 
+    // TODO: 아이템 정의를 코드에서 빼서 ScriptableObject로 옮긴다(지금은 InitializeItems에 박혀 있다).
     private void InitializeItems()
     {
         // ========== 포장지 (Wrapper) ==========

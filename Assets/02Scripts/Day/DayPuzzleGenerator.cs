@@ -22,9 +22,11 @@ public static class DayPuzzleGenerator
         public string hintColorName;   // 명확한 힌트: "핑크"
 
         // ---- 플레이어가 포장지를 고른 뒤에 확정되는 것 ----
-        public bool isFinalized;
-        public int wrapperId;
-        public int presetIndex;        // 퍼즐에 쓸 프리셋 번호 (-1이면 보드 기본값)
+        /// <summary>확정된 포장지 데이터. 확정 전이거나 찾을 수 없으면 null. 퍼즐을 만드는 쪽(보드, 가챠, 꽃 선택)은 번호로 다시 찾지 말고 이것을 쓴다.</summary>
+        public WrapperData wrapper;
+
+        /// <summary>확정된 프리셋. 확정 전이거나 번호가 맞지 않으면 null.</summary>
+        public WrapperPresetData preset;
     }
 
     /// <summary>손님이 막 등장했을 때 호출. 아직 포장지는 정하지 않고 힌트만 준비한다.</summary>
@@ -74,9 +76,11 @@ public static class DayPuzzleGenerator
     /// <summary>플레이어가 포장지를 골랐을 때 호출. 퍼즐에 쓸 프리셋을 확정한다.</summary>
     public static void FinalizeForWrapper(DayOrder order, int chosenWrapperId)
     {
-        order.wrapperId = chosenWrapperId;
-        order.presetIndex = chosenWrapperId == order.hintWrapperId ? order.hintPresetIndex : RandomPlayablePresetIndex(chosenWrapperId);
-        order.isFinalized = true;
+        int presetIndex = chosenWrapperId == order.hintWrapperId ? order.hintPresetIndex : RandomPlayablePresetIndex(chosenWrapperId);
+
+        order.wrapper = WrapperRegistry.Instance != null ? WrapperRegistry.Instance.GetById(chosenWrapperId) : null;
+        bool validIndex = order.wrapper != null && presetIndex >= 0 && presetIndex < order.wrapper.presets.Count;
+        order.preset = validIndex ? order.wrapper.presets[presetIndex] : null;
     }
 
     /// <summary>해당 포장지의 보드가 지원하는 프리셋 중 무작위 번호. 없으면 -1.</summary>
@@ -95,6 +99,6 @@ public static class DayPuzzleGenerator
 
     private static bool IsPlayable(WrapperPresetData preset)
     {
-        return preset != null && preset.IsWellFormed && preset.MaxRing <= WrapperBoardController.SupportedRings;
+        return preset != null && preset.IsWellFormed && preset.MaxRing <= DayPuzzleController.SupportedRings;
     }
 }

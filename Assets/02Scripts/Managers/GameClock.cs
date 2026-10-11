@@ -50,11 +50,11 @@ public class GameClock : Singleton<GameClock>
     private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
     {
         paused = false; // 씬이 바뀌면 설정 창은 닫힌 상태로 시작한다
-        running = scene.name == GameFlowController.SceneDayMain
-               || scene.name == GameFlowController.SceneFlowerSelect
-               || scene.name == GameFlowController.SceneDayPuzzle;
-        nightScene = scene.name == GameFlowController.SceneNightMain
-                  || scene.name == GameFlowController.SceneNightPuzzle;
+        running = scene.name == GameManager.SceneDayMain
+               || scene.name == GameManager.SceneFlowerSelect
+               || scene.name == GameManager.SceneDayPuzzle;
+        nightScene = scene.name == GameManager.SceneNightMain
+                  || scene.name == GameManager.SceneNightPuzzle;
     }
 
     private void OnDayAdvanced(int newDay)

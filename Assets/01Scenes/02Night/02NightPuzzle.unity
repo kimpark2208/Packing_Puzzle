@@ -723,7 +723,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 3181269211305225555, guid: fb8c149f7df9ba147a4830702466aec1, type: 3}
       propertyPath: m_Name
-      value: NIghtGrid
+      value: NightGrid
       objectReference: {fileID: 0}
     - target: {fileID: 4442724166324606284, guid: fb8c149f7df9ba147a4830702466aec1, type: 3}
       propertyPath: m_Pivot.x
@@ -1462,7 +1462,7 @@ GameObject:
   - component: {fileID: 4085570106877986149}
   - component: {fileID: 878580020724072414}
   m_Layer: 0
-  m_Name: ConfirmButton
+  m_Name: ConfirmBTN
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

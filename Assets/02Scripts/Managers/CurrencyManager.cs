@@ -49,7 +49,7 @@ public class CurrencyManager : Singleton<CurrencyManager>
         currentDay = 1;
 
         // 초기 포장지: 기획서(포장지 프리셋 PDF)의 프리셋이 들어 있는 2번만 보유한 것으로 친다.
-        // 3번(3링) 프리셋은 보드가 아직 지원하지 않는다(WrapperBoardController.SupportedRings 참고).
+        // 3번(3링) 프리셋은 보드가 아직 지원하지 않는다(DayPuzzleController.SupportedRings 참고).
         ownedWrappers.Add(2);
 
         // 초기 꽃: 역할(속성)별로 하나씩. 장미-도미노(1, 매스), 튤립-I트로미노(3, 필러), 해바라기-L트로미노(4, 폼), 프리지아-S테트로미노(8, 라인)
@@ -207,8 +207,8 @@ public class CurrencyManager : Singleton<CurrencyManager>
         if (GUILayout.Button("Debug: 하루 시간 -1분") && GameClock.Instance != null)
             GameClock.Instance.SkipDayTime(60f);
 
-        if (GUILayout.Button("Debug: 밤 퍼즐 스킵(성공)") && GameFlowController.Instance != null)
-            GameFlowController.Instance.DebugSkipNightPuzzle();
+        if (GUILayout.Button("Debug: 밤 퍼즐 스킵(성공)") && GameManager.Instance != null)
+            GameManager.Instance.DebugSkipNightPuzzle();
 
         if (GUILayout.Button("Debug: 밤 시간 -1분") && GameClock.Instance != null)
             GameClock.Instance.SkipNightTime(60f);

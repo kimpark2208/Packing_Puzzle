@@ -4,7 +4,7 @@ using UnityEngine.UI;
 
 /// <summary>
 /// 포장지 템플릿 안의 칸 하나. SlotArea 아래에 에디터에서 직접 배치해 두고(오브젝트 이름 = position),
-/// WrapperBoardController가 프리셋에 따라 태그와 색을 정한다. 채워지면 하이라이트(Image)의 투명도를 바꿔 표시한다.
+/// DayPuzzleController가 프리셋에 따라 태그와 색을 정한다. 채워지면 하이라이트(Image)의 투명도를 바꿔 표시한다.
 /// </summary>
 public class WrapperSlot : MonoBehaviour
 {

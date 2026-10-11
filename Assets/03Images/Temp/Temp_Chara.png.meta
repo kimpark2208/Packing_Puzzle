@@ -4,7 +4,7 @@ TextureImporter:
   internalIDToNameTable:
   - first:
       213: -4995050825249669687
-    second: Temp_chara 1_0
+    second: Temp_chara_01_0
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -126,7 +126,7 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: Temp_chara 1_0
+      name: Temp_chara_01_0
       rect:
         serializedVersion: 2
         x: 0
@@ -162,6 +162,7 @@ TextureImporter:
       entries: []
     nameFileIdTable:
       Temp_chara 1_0: -4995050825249669687
+      Temp_chara_01_0: -4995050825249669687
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

@@ -105,7 +105,7 @@ public class FlowerSelectUI : MonoBehaviour
         if (CurrencyManager.Instance == null || WrapperRegistry.Instance == null) return false;
         WrapperData data = WrapperRegistry.Instance.GetById(wrapperId);
         return data != null && CurrencyManager.Instance.OwnedWrappers.Contains(wrapperId)
-            && data.presets.Count > 0 && data.ringCount <= WrapperBoardController.SupportedRings;
+            && data.presets.Count > 0 && data.ringCount <= DayPuzzleController.SupportedRings;
     }
 
     private void SelectWrapper(int wrapperId)
@@ -127,12 +127,12 @@ public class FlowerSelectUI : MonoBehaviour
 
     private void OnWrapperChosen(int wrapperId)
     {
-        if (GameFlowController.Instance == null) return;
+        if (GameManager.Instance == null) return;
 
-        GameFlowController.Instance.ChooseWrapper(wrapperId);
+        GameManager.Instance.ChooseWrapper(wrapperId);
         wrapperChosen = true;
 
-        var order = GameFlowController.Instance.CurrentDayOrder;
+        var order = GameManager.Instance.CurrentDayOrder;
         if (order == null) return;
 
         if (headerText != null)
@@ -151,9 +151,7 @@ public class FlowerSelectUI : MonoBehaviour
     private void LoadRoleLimits(DayPuzzleGenerator.DayOrder order)
     {
         limits.Clear();
-        WrapperData data = WrapperRegistry.Instance != null ? WrapperRegistry.Instance.GetById(order.wrapperId) : null;
-        bool valid = data != null && order.presetIndex >= 0 && order.presetIndex < data.presets.Count;
-        foreach (var shelf in shelves) limits[shelf.role] = valid && data.presets[order.presetIndex].CountByTag(shelf.role) > 0 ? 1 : 0;
+        foreach (var shelf in shelves) limits[shelf.role] = order.preset != null && order.preset.CountByTag(shelf.role) > 0 ? 1 : 0;
     }
 
     private int Limit(FlowerData.FlowerRole role)
@@ -218,8 +216,7 @@ public class FlowerSelectUI : MonoBehaviour
     private void BindFlowerSlot(RectTransform slot, FlowerData block)
     {
         // 줄기 꽃 이미지(stemSprite)가 비어있으면 프리팹의 기본 이미지를 그대로 둔다.
-        FlowerPieceView view = slot.GetComponent<FlowerPieceView>();
-        if (view == null) view = slot.gameObject.AddComponent<FlowerPieceView>();
+        FlowerPieceView view = FlowerPieceView.GetOrAdd(slot.gameObject);
         view.Apply(block, block.stemSprite, false);
 
         Transform badgeT = FindIn(slot, "CountBadge");
@@ -316,8 +313,8 @@ public class FlowerSelectUI : MonoBehaviour
 
     private void ConfirmSelection()
     {
-        if (!wrapperChosen || GameFlowController.Instance == null || counts.Count == 0) return;
+        if (!wrapperChosen || GameManager.Instance == null || counts.Count == 0) return;
         var pool = counts.SelectMany(kv => Enumerable.Repeat(kv.Key, kv.Value)).ToList();
-        GameFlowController.Instance.ConfirmFlowerSelection(pool);
+        GameManager.Instance.ConfirmFlowerSelection(pool);
     }
 }

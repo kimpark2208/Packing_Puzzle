@@ -1115,7 +1115,7 @@ GameObject:
   - component: {fileID: 1518289031}
   - component: {fileID: 1518289030}
   m_Layer: 0
-  m_Name: ConfirmButton
+  m_Name: ConfirmBTN
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

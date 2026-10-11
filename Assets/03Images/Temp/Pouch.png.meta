@@ -4,7 +4,7 @@ TextureImporter:
   internalIDToNameTable:
   - first:
       213: 4252806017846185761
-    second: "\uC2A4\uD06C\uB9B0\uC0F7 2026-09-12 143105_0"
+    second: "\uC2A4\uD06C\uB9B0\uC0F72026-09-12143105_0"
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -126,7 +126,7 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: "\uC2A4\uD06C\uB9B0\uC0F7 2026-09-12 143105_0"
+      name: "\uC2A4\uD06C\uB9B0\uC0F72026-09-12143105_0"
       rect:
         serializedVersion: 2
         x: 0
@@ -162,6 +162,7 @@ TextureImporter:
       entries: []
     nameFileIdTable:
       "\uC2A4\uD06C\uB9B0\uC0F7 2026-09-12 143105_0": 4252806017846185761
+      "\uC2A4\uD06C\uB9B0\uC0F72026-09-12143105_0": 4252806017846185761
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

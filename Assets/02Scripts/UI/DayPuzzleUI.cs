@@ -1,10 +1,9 @@
 using UnityEngine;
-using UnityEngine.Serialization;
 
 /// <summary>
 /// 낮 퍼즐(포장) 화면의 흐름 담당.
 /// - 씬 시작 시 오늘의 포장지 레벨로 보드를 만든다.
-/// - 꽃이 놓일 때마다 완성/붕괴 여부를 판정하고, 끝나면 점수로 정산(Money 폴더)해 결과를 보여준다.
+/// - 꽃이 놓일 때마다 완성/붕괴 여부를 판정하고, 끝나면 점수로 정산(Settlement 폴더)해 결과를 보여준다.
 /// - 완성 결과는 결과 화면(DayResultView)으로, 붕괴는 붕괴 팝업으로 보여준다.
 /// 결과 화면과 팝업은 하이라키에 미리 배치되어 있고 평소엔 비활성 상태다.
 /// </summary>
@@ -17,7 +16,6 @@ public class DayPuzzleUI : MonoBehaviour
     [SerializeField] private GameObject collapsePopup;
 
     [Header("퍼즐 점수 정산 규칙 수치")]
-    [FormerlySerializedAs("moneySettings")]
     [SerializeField] private ScoreRuleSettings scoreSettings;
 
     private const float CollapseAutoProceedDelay = 1.2f;
@@ -26,7 +24,7 @@ public class DayPuzzleUI : MonoBehaviour
     private const string GoodResultLine = "우와, 좋네요! 친구가 분명 좋아할 거예요.";
     private const string LateLine = "늦으셨네요."; // 손님 기분이 다 닳은 뒤에 퍼즐이 끝났을 때(성공 여부와 무관)
 
-    private WrapperBoardController board;
+    private DayPuzzleController board;
     private bool roundEnded;
     private bool collapseHandled;
     private int collapseCount; // 이 주문을 만드는 동안 꽃다발이 무너진 횟수
@@ -37,7 +35,7 @@ public class DayPuzzleUI : MonoBehaviour
 
     private void Start()
     {
-        board = WrapperBoardController.Instance;
+        board = DayPuzzleController.Instance;
         gacha = FindFirstObjectByType<GachaManager>();
 
         settlement = new PuzzleSettlement(scoreSettings); // 규칙 수치는 설정 에셋
@@ -92,7 +90,8 @@ public class DayPuzzleUI : MonoBehaviour
     {
         customerLate = IsCustomerLate();
         SettlementResult result = settlement.Settle(endKind, collapseCount);
-        GameFlowController.Instance?.ConsumeUsedFlowers(board.PlacementHistory); // 퍼즐이 끝났으니 놓은 꽃이 소모된다(붕괴 재시작은 끝이 아니다)
+        CurrencyManager.Instance.AddMoney(result.Payout); // 정산은 금액만 계산하고, 지급은 여기서 한다
+        GameManager.Instance?.ConsumeUsedFlowers(board.PlacementHistory); // 퍼즐이 끝났으니 놓은 꽃이 소모된다(붕괴 재시작은 끝이 아니다)
         GameClock.Instance?.StopMood(); // 퍼즐이 끝났으니 기분 시간은 다음 주문까지 멈춘다
         return result;
     }
@@ -156,15 +155,15 @@ public class DayPuzzleUI : MonoBehaviour
     private void OnResultConfirmed()
     {
         GameClock.Instance?.SetPaused(false);
-        if (GameFlowController.Instance == null) return;
+        if (GameManager.Instance == null) return;
 
         // 손님 기분이 다 닳은 뒤에 끝났으면 "늦으셨네요.", 아니면 요구사항을 못 채웠으면 손님이 화내고,
         // 채웠으면 만족한다.
         if (customerLate)
-            GameFlowController.Instance.ReturnToDayMainAngry(LateLine, RequirementNotMetRejectResponse);
+            GameManager.Instance.ReturnToDayMain(LateLine, RequirementNotMetRejectResponse);
         else if (!lastRequirementMet)
-            GameFlowController.Instance.ReturnToDayMainAngry(RequirementNotMetLine, RequirementNotMetRejectResponse);
+            GameManager.Instance.ReturnToDayMain(RequirementNotMetLine, RequirementNotMetRejectResponse);
         else
-            GameFlowController.Instance.ReturnToDayMainAngry(GoodResultLine);
+            GameManager.Instance.ReturnToDayMain(GoodResultLine);
     }
 }

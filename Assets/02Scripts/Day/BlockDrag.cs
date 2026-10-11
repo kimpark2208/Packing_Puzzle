@@ -4,7 +4,7 @@ using UnityEngine;
 using UnityEngine.EventSystems;
 
 /// <summary>
-/// 트레이의 꽃 조각의 드래그 입력. 드래그해서 WrapperBoardController의 알맞은 태그 슬롯에 놓는다.
+/// 트레이의 꽃 조각의 드래그 입력. 드래그해서 DayPuzzleController의 알맞은 태그 슬롯에 놓는다.
 /// 태그가 다르면 반려(원래 자리로 복귀)한다. 조각의 모양은 FlowerPieceView가 맡는다.
 /// 드래그 중 꽃(아이콘)은 손가락 위쪽에 떠서 따라오고, 그 꽃이 겹친 칸이 강조되며 놓으면 그 칸에 들어간다
 /// (손가락이 놓일 칸을 가리지 않도록).
@@ -63,17 +63,17 @@ public class BlockDrag : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDra
         if (rootCanvas == null) return;
         FollowPointer(eventData);
 
-        WrapperBoardController.Instance?.PreviewHover(blockData, IconScreenRect(eventData.pressEventCamera), eventData.pressEventCamera);
+        DayPuzzleController.Instance?.PreviewHover(blockData, IconScreenRect(eventData.pressEventCamera), eventData.pressEventCamera);
     }
 
     public void OnEndDrag(PointerEventData eventData)
     {
         canvasGroup.blocksRaycasts = true;
 
-        bool placed = WrapperBoardController.Instance != null &&
-            WrapperBoardController.Instance.TryPlaceAtScreenRect(blockData, IconScreenRect(eventData.pressEventCamera), eventData.pressEventCamera);
+        bool placed = DayPuzzleController.Instance != null &&
+            DayPuzzleController.Instance.TryPlaceAtScreenRect(blockData, IconScreenRect(eventData.pressEventCamera), eventData.pressEventCamera);
 
-        WrapperBoardController.Instance?.ClearHoverPreview();
+        DayPuzzleController.Instance?.ClearHoverPreview();
 
         if (placed)
         {

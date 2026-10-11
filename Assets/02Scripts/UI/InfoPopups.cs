@@ -10,23 +10,23 @@ using UnityEngine.UI;
 public class InfoPopups : MonoBehaviour
 {
     [SerializeField] private Button orderTab;
-    [SerializeField] private Button comboTab;
+    [SerializeField] private Button colorRelationTab;
     [SerializeField] private GameObject orderPopup;
-    [SerializeField] private GameObject comboPopup;
+    [SerializeField] private GameObject colorRelationPopup;
     [SerializeField] private Button orderClose;
-    [SerializeField] private Button comboClose;
+    [SerializeField] private Button colorRelationClose;
     [SerializeField] private TMP_Text orderNumberText;
     [SerializeField] private TMP_Text orderBodyText;
 
     private void Awake()
     {
         orderPopup.SetActive(false);
-        comboPopup.SetActive(false);
+        colorRelationPopup.SetActive(false);
 
-        orderTab.onClick.AddListener(() => Toggle(orderPopup, comboPopup));
-        comboTab.onClick.AddListener(() => Toggle(comboPopup, orderPopup));
+        orderTab.onClick.AddListener(() => Toggle(orderPopup, colorRelationPopup));
+        colorRelationTab.onClick.AddListener(() => Toggle(colorRelationPopup, orderPopup));
         orderClose.onClick.AddListener(() => orderPopup.SetActive(false));
-        comboClose.onClick.AddListener(() => comboPopup.SetActive(false));
+        colorRelationClose.onClick.AddListener(() => colorRelationPopup.SetActive(false));
     }
 
     private void Start()
@@ -45,7 +45,7 @@ public class InfoPopups : MonoBehaviour
     /// <summary>손님이 말한 주문(포장지 색 + 요구사항)을 주문서에 적는다.</summary>
     private void RefreshOrder()
     {
-        var order = GameFlowController.Instance != null ? GameFlowController.Instance.CurrentDayOrder : null;
+        var order = GameManager.Instance != null ? GameManager.Instance.CurrentDayOrder : null;
         int day = CurrencyManager.Instance != null ? CurrencyManager.Instance.CurrentDay : 1;
 
         orderNumberText.text = $"No. {day:0000}";

@@ -72,8 +72,7 @@ public static class CustomerRequirementGenerator
         requirement.targetId = flower.blockID;
         requirement.minCount = Random.Range(1, Mathf.Min(3, FlowerCapacity(preset, flower)) + 1);  // 1~3개
 
-        string flowerName = !string.IsNullOrEmpty(flower.flowerName) ? flower.flowerName : $"꽃 ID {flower.blockID}";
-        requirement.description = $"<b>{flowerName}</b>을(를) <b>{requirement.minCount}개</b> 사용하세요";
+        requirement.description = $"<b>{flower.DisplayName}</b>을(를) <b>{requirement.minCount}개</b> 사용하세요";
         return true;
     }
 
