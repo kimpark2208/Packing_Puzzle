@@ -185,6 +185,50 @@ public class DancingLinks
         return CountSearch(cap);
     }
 
+    /// <summary>
+    /// 해를 하나씩 찾아 onSolution에 그 해의 RowId 목록을 넘긴다. onSolution이 true를 돌려주면 거기서 멈추고, cap개까지만 찾는다.
+    /// 찾은 해의 개수를 반환한다. 해가 어떤 행들로 이루어졌는지 봐야 할 때(예: 모든 블록을 한 번 이상 썼는가) 쓴다.
+    /// </summary>
+    public int EnumerateSolutions(int cap, System.Func<IReadOnlyList<int>, bool> onSolution)
+    {
+        int found = 0;
+        bool stop = false;
+        EnumerateSearch(new List<int>(), cap, onSolution, ref found, ref stop);
+        return found;
+    }
+
+    private void EnumerateSearch(List<int> solution, int cap, System.Func<IReadOnlyList<int>, bool> onSolution, ref int found, ref bool stop)
+    {
+        if (root.Right == root)
+        {
+            found++;
+            if (onSolution(solution)) stop = true;
+            return;
+        }
+
+        ColumnNode col = ChoosePrimaryColumn();
+        if (col.Size == 0) return;
+
+        CoverColumn(col);
+
+        for (Node row = col.Down; row != col && !stop && found < cap; row = row.Down)
+        {
+            solution.Add(row.RowId);
+
+            for (Node node = row.Right; node != row; node = node.Right)
+                CoverColumn(node.Column);
+
+            EnumerateSearch(solution, cap, onSolution, ref found, ref stop);
+
+            for (Node node = row.Left; node != row; node = node.Left)
+                UncoverColumn(node.Column);
+
+            solution.RemoveAt(solution.Count - 1);
+        }
+
+        UncoverColumn(col);
+    }
+
     private int CountSearch(int cap)
     {
         if (root.Right == root) return 1;

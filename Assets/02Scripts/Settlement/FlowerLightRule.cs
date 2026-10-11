@@ -3,6 +3,6 @@ public class FlowerLightRule : IScoreRule
 {
     public void Evaluate(PuzzleContext context, ScoreLedger ledger)
     {
-        ledger.Add(ScoreReason.FlowerLight, FlowerLight.Score(context.PlacedCells));
+        ledger.Add(ScoreReason.FlowerLight, FlowerLight.Score(context.PlacedCells, context.SpecialCells));
     }
 }

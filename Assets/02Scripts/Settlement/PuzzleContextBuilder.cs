@@ -8,6 +8,10 @@ public static class PuzzleContextBuilder
             ? board.PlacedCells()
             : new System.Collections.Generic.Dictionary<WrapperRegionPosition, FlowerData.Color>();
 
+        var specialCells = board != null
+            ? board.SpecialCells()
+            : new System.Collections.Generic.Dictionary<WrapperRegionPosition, SpecialCell>();
+
         var requirement = CurrencyManager.Instance != null ? CurrencyManager.Instance.CurrentRequirement : default;
         var counts = PuzzleCounter.CollectCounts();
         var usedCounts = requirement.type == CustomerRequirementGenerator.RequirementType.Color ? counts.colorCounts : counts.flowerCounts;
@@ -15,6 +19,6 @@ public static class PuzzleContextBuilder
 
         float mood = GameClock.Instance != null ? GameClock.Instance.MoodRatio : 1f;
 
-        return new PuzzleContext(endKind, placedCells, requirement, used, mood, collapseCount);
+        return new PuzzleContext(endKind, placedCells, specialCells, requirement, used, mood, collapseCount);
     }
 }

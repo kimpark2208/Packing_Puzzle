@@ -13,6 +13,9 @@ public static class EventBus
     /// <summary>금액 변경 (변경된 금액)</summary>
     public static event Action<int> OnMoneyChanged;
 
+    /// <summary>부적 보유 수량 변경 (변경된 수량)</summary>
+    public static event Action<int> OnCharmsChanged;
+
     /// <summary>다음 날로 진행 (새로운 일수)</summary>
     public static event Action<int> OnDayAdvanced;
 
@@ -48,6 +51,7 @@ public static class EventBus
 
     public static void RaiseAscensionMoment(string description) => OnAscensionMoment?.Invoke(description);
     public static void RaiseMoneyChanged(int newAmount) => OnMoneyChanged?.Invoke(newAmount);
+    public static void RaiseCharmsChanged(int newAmount) => OnCharmsChanged?.Invoke(newAmount);
     public static void RaiseDayAdvanced(int newDay) => OnDayAdvanced?.Invoke(newDay);
     public static void RaiseDayTimeUp() => OnDayTimeUp?.Invoke();
     public static void RaiseNightTimeUp() => OnNightTimeUp?.Invoke();

@@ -6,7 +6,7 @@ using UnityEngine;
 using UnityEngine.UI;
 
 /// <summary>
-/// 꽃 선택 화면. "포장지 선택 -> 꽃 선택" 순서를 그대로 따른다.
+/// 꽃 선택 화면. 메인 씬(01DayMain)의 옆 페이지(ShelfRoot)이고, 주문을 수락한 뒤 스와이프로 들어온다(DayMainUI가 켠다). "포장지 선택 -> 꽃 선택" 순서를 그대로 따른다.
 /// 1단계: WrapperPopup의 포장지 박스 7개 중 쓸 수 있는 것을 눌러 고르고 '선택 완료'를 누른다 (목표 점수/정답 레시피가 이때 확정됨).
 ///        쓸 수 없는 포장지(보유하지 않았거나 퍼즐이 아직 지원하지 않는 링 수)는 속이 빈 어두운 박스로만 보인다.
 /// 2단계: 포장지를 고르면 FlowerPopup(역할별 선반 4개)으로 전환되고, 역할(라인/폼/매스/필러)마다
@@ -36,23 +36,27 @@ public class FlowerSelectUI : MonoBehaviour
     private class SlotView
     {
         public Image icon;
+        public Vector2 iconBasePosition; // 씬에 놓인 꽃 이미지의 자리(고르면 여기서 위로 올라온다)
         public TMP_Text badge;
-        public readonly List<(Graphic graphic, Color baseColor)> shaded = new(); // 그림자를 씌울 나머지 그림과 글자(원래 색)
+        public GameObject check; // 담은 꽃에만 보이는 체크 표시(프리팹의 Check)
+        public readonly List<(Graphic graphic, Color baseColor)> shaded = new(); // 재고가 없을 때 그림자를 씌울 나머지 그림과 글자(원래 색)
     }
 
-    private static readonly Color UnselectedShade = new(0.35f, 0.35f, 0.35f); // 같은 역할에서 한 꽃이 선택되면 선택되지 않은 꽃에 씌우는 그림자(곱해서 어둡게)
-    private const float SelectedLift = 30f; // 담긴 꽃이 화병에서 살짝 올라오는 높이
+    private static readonly Color OutOfStockShade = new(0.35f, 0.35f, 0.35f); // 재고가 없는 꽃에 씌우는 그림자(곱해서 어둡게)
     private const float WrapperRollLift = 30f; // 고른 포장지(박스 안 롤)가 살짝 올라오는 높이
     private static readonly Color IdleBoxColor = new(0.78f, 0.78f, 0.78f);     // 고르지 않은 박스
     private static readonly Color SelectedBoxColor = new(0.86f, 0.86f, 0.86f); // 고른 박스(고르지 않은 박스보다 살짝만 밝게, 하얗지 않게)
     private static readonly Color UnusableBoxColor = new(0.5f, 0.5f, 0.5f);   // 쓸 수 없는 박스
 
     [SerializeField] private TMP_Text headerText;
+    [SerializeField] private float selectedLift = 50f; // 담긴 꽃이 화병에서 올라오는 높이
+    [SerializeField] private Sprite pickedMarkSprite; // 담은 꽃에 붙는 체크 표시 그림(슬롯의 Check/Icon). 부적 화면은 같은 슬롯에 부적 그림을 쓴다
 
     [Header("포장지 선택 팝업 (박스 7개 + 선택 완료)")]
     [SerializeField] private GameObject wrapperPopup;
     [SerializeField] private WrapperBox[] wrapperBoxes;
     [SerializeField] private Button wrapperConfirmButton;
+    [SerializeField] private GameObject wrapperPreview; // 포장지를 눌러야 나타난다
 
     [Header("꽃 선택 팝업 (역할별 선반. 꽃 수만큼 에디터에 슬롯을 놓아 두고, 그 자리를 그대로 쓴다)")]
     [SerializeField] private GameObject flowerPopup;
@@ -68,6 +72,7 @@ public class FlowerSelectUI : MonoBehaviour
     private void Start()
     {
         if (wrapperPopup != null) wrapperPopup.SetActive(true);
+        if (wrapperPreview != null) wrapperPreview.SetActive(false);
         if (flowerPopup != null) flowerPopup.SetActive(false);
         CollectSpots(); // 에디터에 놓아 둔 슬롯은 자리로 기억해 두고, 꽃을 넣기 전까지 숨긴다
 
@@ -112,6 +117,7 @@ public class FlowerSelectUI : MonoBehaviour
     private void SelectWrapper(int wrapperId)
     {
         selectedWrapperId = wrapperId;
+        if (wrapperPreview != null) wrapperPreview.SetActive(true);
         if (wrapperConfirmButton != null) wrapperConfirmButton.interactable = true;
         RefreshWrapperBoxes();
     }
@@ -140,18 +146,21 @@ public class FlowerSelectUI : MonoBehaviour
         if (flowerPopup != null) flowerPopup.SetActive(true);
 
         CreateSelection(order);
-        if (flowerConfirmButton != null) flowerConfirmButton.onClick.AddListener(ConfirmSelection);
+        if (flowerConfirmButton != null)
+        {
+            flowerConfirmButton.gameObject.SetActive(true); // 꽃 선반은 부적 화면과 같은 덩어리라, 선택 완료 버튼은 이 단계에서만 켠다
+            flowerConfirmButton.onClick.AddListener(ConfirmSelection);
+        }
         BuildFlowerChoices();
     }
 
-    /// <summary>고른 포장지와 프리셋에서 선택 규칙을 만든다: 역할별 한도는 그 역할의 칸 수, 전체 한도는 포장지의 maxFlowerTypes.</summary>
+    /// <summary>고른 포장지와 프리셋에서 선택 규칙을 만든다: 역할별 한도는 그 프리셋에서 그 역할의 칸 수(전체 한도는 그 합).</summary>
     private void CreateSelection(DayPuzzleGenerator.DayOrder order)
     {
         var roleLimits = new Dictionary<FlowerData.FlowerRole, int>();
         foreach (var shelf in shelves) roleLimits[shelf.role] = order.preset != null ? order.preset.CountByTag(shelf.role) : 0;
 
-        int totalLimit = order.wrapper != null ? order.wrapper.maxFlowerTypes : roleLimits.Count;
-        selection = new FlowerSelection(roleLimits, totalLimit, StockOf);
+        selection = new FlowerSelection(roleLimits, StockOf);
     }
 
     private static int StockOf(FlowerData flower)
@@ -220,7 +229,16 @@ public class FlowerSelectUI : MonoBehaviour
         view.Apply(block, block.stemSprite, false);
 
         Transform badgeT = FindIn(slot, "CountBadge");
-        var slotView = new SlotView { icon = view.Icon, badge = badgeT != null ? badgeT.GetComponentInChildren<TMP_Text>(true) : null };
+        Transform checkT = FindIn(slot, "Check");
+        Transform markT = checkT != null ? checkT.Find("Icon") : null;
+        if (pickedMarkSprite != null && markT != null && markT.TryGetComponent(out Image markImage)) markImage.sprite = pickedMarkSprite; // 부적 화면과 같은 슬롯을 쓰므로, 꽃 선택에서는 체크 그림으로 바꾼다
+        var slotView = new SlotView
+        {
+            icon = view.Icon,
+            iconBasePosition = view.Icon.rectTransform.anchoredPosition,
+            badge = badgeT != null ? badgeT.GetComponentInChildren<TMP_Text>(true) : null,
+            check = checkT != null ? checkT.gameObject : null,
+        };
         foreach (Graphic graphic in slot.GetComponentsInChildren<Graphic>(true))
         {
             if (graphic != view.Icon) slotView.shaded.Add((graphic, graphic.color));
@@ -240,12 +258,12 @@ public class FlowerSelectUI : MonoBehaviour
         click.onClick.AddListener(() => OnSlotClicked(block));
     }
 
-    /// <summary>꽃을 누르면 선택 규칙(FlowerSelection)에 따라 담거나 비우거나 바꿔 담는다. 선택이 바뀌면 모든 꽃의 그림자와 표시를 다시 그린다.</summary>
+    /// <summary>꽃을 누르면 선택 규칙(FlowerSelection)에 따라 담거나 비우거나 바꿔 담는다. 선택이 바뀌면 모든 꽃의 표시를 다시 그린다.</summary>
     private void OnSlotClicked(FlowerData block)
     {
         if (selection == null || !selection.Toggle(block)) return;
 
-        RefreshAllSlots(); // 한도가 차면 다른 꽃들도 담을 수 없게 되므로 전부 다시 그린다
+        RefreshAllSlots(); // 같은 역할에서 바꿔 담으면 다른 꽃의 체크도 풀리므로 전부 다시 그린다
         RefreshLabels();
         RefreshConfirmButton();
 
@@ -263,11 +281,12 @@ public class FlowerSelectUI : MonoBehaviour
 
         bool picked = selection != null && selection.Contains(block);
 
-        // 더 이상 담을 수 없는 꽃(역할/전체 한도가 찼거나 재고가 없는 꽃)은 어둡게 한다.
-        Color shade = !picked && selection != null && !selection.CanAdd(block) ? UnselectedShade : Color.white;
+        // 재고가 없는 꽃은 어둡게 한다(담을 수 없다).
+        Color shade = StockOf(block) <= 0 ? OutOfStockShade : Color.white;
         view.icon.color = ColorPalette.ToUnityColor(block.color) * shade;
         foreach (var (graphic, baseColor) in view.shaded) graphic.color = baseColor * shade;
-        view.icon.rectTransform.anchoredPosition = new Vector2(0f, picked ? SelectedLift : 0f);
+        view.icon.rectTransform.anchoredPosition = view.iconBasePosition + new Vector2(0f, picked ? selectedLift : 0f);
+        if (view.check != null) view.check.SetActive(picked); // 담은 꽃에만 체크 표시
 
         if (view.badge != null)
         {
@@ -277,7 +296,7 @@ public class FlowerSelectUI : MonoBehaviour
         }
     }
 
-    /// <summary>선반 이름 옆에 고른 수/그 역할의 한도(예: "매스(2/4)")를, 맨 위 문구에 전체 고른 수/전체 한도를 보여 준다.</summary>
+    /// <summary>선반 이름 옆에 고른 수/그 역할의 한도(포장지 프리셋의 그 역할 칸 수. 예: "매스(2/4)")를, 맨 위 문구에 전체 고른 수/전체 한도를 보여 준다.</summary>
     private void RefreshLabels()
     {
         if (shelves == null) return;

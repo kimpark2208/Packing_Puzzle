@@ -21,6 +21,9 @@ public static class DayPuzzleGenerator
         public int hintPresetIndex;    // hintWrapperId 포장지 안에서 주문을 풀 수 있는 프리셋 번호
         public string hintColorName;   // 명확한 힌트: "핑크"
 
+        /// <summary>색 주문에서 색 이름 대신 말할 비유 문구("동백 같은"). 색 이름을 직접 말하면 null. 손님이 올 때 한 번 정해서, 대사가 다시 나와도 바뀌지 않는다.</summary>
+        public string colorPhrase;
+
         // ---- 플레이어가 포장지를 고른 뒤에 확정되는 것 ----
         /// <summary>확정된 포장지 데이터. 확정 전이거나 찾을 수 없으면 null. 퍼즐을 만드는 쪽(보드, 가챠, 꽃 선택)은 번호로 다시 찾지 말고 이것을 쓴다.</summary>
         public WrapperData wrapper;
@@ -29,8 +32,8 @@ public static class DayPuzzleGenerator
         public WrapperPresetData preset;
     }
 
-    /// <summary>손님이 막 등장했을 때 호출. 아직 포장지는 정하지 않고 힌트만 준비한다.</summary>
-    public static DayOrder GenerateOrder(int day)
+    /// <summary>손님이 막 등장했을 때 호출. 아직 포장지는 정하지 않고 힌트만 준비한다. 색 주문이면 colorMetaphorChance의 확률로 색 이름 대신 비유 문구로 말한다.</summary>
+    public static DayOrder GenerateOrder(int day, float colorMetaphorChance = 0f)
     {
         // 보유한 포장지의 (보드가 지원하는) 프리셋을 전부 모아서 무작위로 하나 고른다
         var pool = new List<(int wrapperId, int presetIndex)>();
@@ -63,13 +66,16 @@ public static class DayPuzzleGenerator
             hintColorName = ShopManager.Instance.GetColorHintName(hintWrapperId);
         }
 
+        var requirement = CustomerRequirementGenerator.GenerateRandomRequirement(day, preset);
+        bool useMetaphor = requirement.type == CustomerRequirementGenerator.RequirementType.Color && Random.value < colorMetaphorChance;
         return new DayOrder
         {
             day = day,
-            requirement = CustomerRequirementGenerator.GenerateRandomRequirement(day, preset),
+            requirement = requirement,
             hintWrapperId = hintWrapperId,
             hintPresetIndex = hintPresetIndex,
             hintColorName = hintColorName,
+            colorPhrase = useMetaphor ? ColorMetaphors.Pick((FlowerData.Color)requirement.targetId) : null,
         };
     }
 

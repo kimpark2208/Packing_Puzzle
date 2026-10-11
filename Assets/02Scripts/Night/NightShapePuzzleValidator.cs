@@ -53,6 +53,13 @@ public class NightShapePuzzleValidator
         return true;
     }
 
+    /// <summary>주어진 꽃(이 판정기가 아는 꽃)을 모두 한 번 이상 썼는가. 칸을 다 채워도 하나만 쓰고 끝낸 퍼즐은 완료로 치지 않는다.</summary>
+    public bool AreAllBlocksUsed(IEnumerable<int> usedFlowerIds)
+    {
+        var used = new HashSet<int>(usedFlowerIds);
+        return entries.All(entry => used.Contains(entry.block.blockID));
+    }
+
     /// <summary>
     /// 지금까지 선택된 셀 집합이, 어떤 꽃의 어떤 회전/반전 변형으로도 이어서 완성될 가능성이 있는지.
     /// </summary>

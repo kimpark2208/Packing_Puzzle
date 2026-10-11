@@ -3,7 +3,7 @@ using UnityEngine.SceneManagement;
 
 /// <summary>
 /// 시간 시계. 하루 남은 시간, 현재 손님의 기분(인내심) 남은 시간, 밤 남은 시간을 실제 시간으로 깎는다.
-/// 하루/기분 시간은 낮 씬(낮 메인/꽃 선택/낮 퍼즐)에서만 흐른다. 밤 시간은 밤이 시작된 뒤(BeginNight) 밤 메인/밤 퍼즐 씬에서만 흐른다.
+/// 하루/기분 시간은 낮 씬(메인 화면의 낮 손님 상황/꽃 선택/낮 퍼즐)에서만 흐른다. 밤 시간은 밤이 시작된 뒤(BeginNight) 메인 화면의 밤 상황/밤 퍼즐 씬에서만 흐른다.
 /// 밤 시간이 0이 되면 EventBus.OnNightTimeUp을 한 번 발행한다.
 /// 하루 시간은 날이 바뀔 때(EventBus.OnDayAdvanced) 가득 찬다.
 /// 기분 시간은 새 손님이 오면 가득 찬 채 멈춰 있다가(ResetMood), 플레이어가 주문을 수락할 때(StartMood) 가득 차서 흐르기 시작하고,
@@ -21,6 +21,9 @@ public class GameClock : Singleton<GameClock>
     public float MoodRemaining { get; private set; }
     public float NightRemaining { get; private set; }
 
+    /// <summary>시계 UI가 밤 모습으로 보여야 하는 화면인가: 밤 시간이 흐르는 화면(메인 화면의 밤 손님/밤 종료, 밤 퍼즐)과, 밤이 시작되기 직전의 낮 종료 화면(카운터와 부적 선반. 밤 시간은 아직 흐르지 않고 가득 차 있다).</summary>
+    public bool IsNightMode => nightLook;
+
     public float DayRatio => dayDurationSeconds > 0f ? Mathf.Clamp01(DayRemaining / dayDurationSeconds) : 0f;
     public float MoodRatio => moodDurationSeconds > 0f ? Mathf.Clamp01(MoodRemaining / moodDurationSeconds) : 0f;
     public float NightRatio => nightDurationSeconds > 0f ? Mathf.Clamp01(NightRemaining / nightDurationSeconds) : 0f;
@@ -28,8 +31,10 @@ public class GameClock : Singleton<GameClock>
     private bool running;
     private bool moodActive; // 현재 주문이 진행 중이라 기분 시간이 흐르는가
     private bool paused;     // 설정 창이 열려 있는가
-    private bool nightScene;  // 지금 밤 메인/밤 퍼즐 씬인가
+    private bool nightScene;  // 지금 메인 화면의 밤 상황(밤 손님/밤 종료)이거나 밤 퍼즐 씬인가
+    private bool nightLook;   // 시계를 밤 모습으로 보여 주는 화면인가(nightScene이거나 부적 화면)
     private bool nightActive; // 밤이 시작됐고 아직 끝나지 않았는가
+    private bool dayTimeUpRaised; // 오늘 하루 시간이 끝났다는 이벤트를 이미 발행했는가
 
     protected override void OnAwake()
     {
@@ -50,11 +55,14 @@ public class GameClock : Singleton<GameClock>
     private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
     {
         paused = false; // 씬이 바뀌면 설정 창은 닫힌 상태로 시작한다
-        running = scene.name == GameManager.SceneDayMain
-               || scene.name == GameManager.SceneFlowerSelect
+        // 메인 화면은 하나(낮 메인)라서, 낮 시간이 흐르는지 밤 시간이 흐르는지는 메인 화면의 상황(MainState)으로 정한다.
+        MainState main = GameManager.Instance != null ? GameManager.Instance.MainState : MainState.DayCustomer;
+        bool mainScene = scene.name == GameManager.SceneDayMain;
+        running = (mainScene && main == MainState.DayCustomer) // 낮 종료 상황에서는 하루 시간이 이미 끝났으므로 흐르지 않는다(꽃 선택은 이 메인 씬의 옆 페이지다)
                || scene.name == GameManager.SceneDayPuzzle;
-        nightScene = scene.name == GameManager.SceneNightMain
+        nightScene = (mainScene && (main == MainState.NightCustomer || main == MainState.NightEnding))
                   || scene.name == GameManager.SceneNightPuzzle;
+        nightLook = nightScene || (mainScene && main == MainState.DayEnding);
     }
 
     private void OnDayAdvanced(int newDay)
@@ -88,7 +96,8 @@ public class GameClock : Singleton<GameClock>
 
     private void TimeUp()
     {
-        running = false; // 한 번만 발행
+        if (dayTimeUpRaised) return; // 한 번만 발행(주문을 마무리하는 동안에는 시간이 0인 채로 계속 흐른다)
+        dayTimeUpRaised = true;
         EventBus.RaiseDayTimeUp();
     }
 
@@ -102,6 +111,7 @@ public class GameClock : Singleton<GameClock>
     public void ResetDay()
     {
         DayRemaining = dayDurationSeconds;
+        dayTimeUpRaised = false;
     }
 
     public void ResetMood()

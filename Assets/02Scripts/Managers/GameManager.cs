@@ -8,34 +8,38 @@ using UnityEngine.SceneManagement;
 /// 부트스트랩 씬(00Start)에 배치되어 씬 전환 간 유지된다. UI를 직접 찾아 부르지 않고 EventBus로만 주고받는다(밤 퍼즐 씬이 로드되면
 /// 현재 밤 퍼즐을 알리고, 퍼즐 완료/결과 확인 이벤트를 받는다). 오늘의 주문과 가챠 풀은 UI가 필요할 때 읽어 간다.
 ///
+/// 손님을 만나는 메인 화면은 씬 하나(01DayMain)이고, 낮 손님/낮 종료/밤 손님/밤 종료 중 무엇을 보여 줄지는 MainState로 정해서 씬을 연다.
 /// 씬 이름 상수는 Assets/01Scenes 폴더 구조를 그대로 따른다.
 /// </summary>
 public class GameManager : Singleton<GameManager>
 {
     public const string SceneStart = "00Start";
     public const string SceneDayMain = "01DayMain";
-    public const string SceneFlowerSelect = "02FlowerSelect";
     public const string SceneDayPuzzle = "03DayPuzzle";
-    public const string SceneDayToNight = "04DayToNight";
-    public const string SceneNightMain = "01NightMain";
     public const string SceneNightPuzzle = "02NightPuzzle";
     public const string SceneResult = "03Result";
 
     [SerializeField] private int nightRewardPerFlower = 6; // 밤 퍼즐을 완료하면 퍼즐에 쓴 꽃 종류마다 늘어나는 보유 수량
 
+    [Header("색 주문에서 색 이름 대신 비유 문구(\"동백 같은 꽃\")로 말하는 확률")]
+    [SerializeField, Range(0f, 1f)] private float colorMetaphorChance = 0.2f;
+
     public DayPuzzleGenerator.DayOrder CurrentDayOrder { get; private set; }
     public List<FlowerData> ChosenGachaPool { get; private set; } = new();
+
+    /// <summary>다음에 열리는(또는 지금 열려 있는) 메인 화면이 보여 줄 상황. 메인 화면으로 가기 전에 정한다.</summary>
+    public MainState MainState { get; private set; } = MainState.DayCustomer;
 
     private const string DefaultRejectResponseLine = "그래요라고 하세요";
 
     private string pendingCustomerLine;
     private string pendingRejectResponseLine = DefaultRejectResponseLine;
-    private bool pendingDayTimeUp;
+    private bool orderInProgress; // 주문을 수락해 꽃 선택/퍼즐을 하는 중
+    private bool dayEndPending; // 주문을 하는 중에 하루 시간이 끝나, 그 주문이 끝나면 낮 종료로 가야 한다
 
     private List<NightPuzzleData> nightQueue = new();
+    private readonly Queue<int[]> pendingRequestStages = new(); // 아직 퍼즐로 만들지 않은 부적 꽃 묶음(최대 2종씩)
     private int nightIndex;
-    private bool nightCustomerPending; // 밤 요청을 마치고 밤 메인에서 밤 손님을 만나야 하는가
-    private bool nightEndPending;      // 밤 시간이 끝나 밤 메인에서 마지막 손님이 외치고 떠나야 하는가
     private const int NightGridSize = 5; // 임시: 밤 퍼즐 판은 5x5 정사각형으로 고정
 
     protected override void OnAwake()
@@ -70,7 +74,10 @@ public class GameManager : Singleton<GameManager>
 
     public void BeginNewDay()
     {
-        CurrentDayOrder = DayPuzzleGenerator.GenerateOrder(CurrencyManager.Instance.CurrentDay);
+        dayEndPending = false;
+        orderInProgress = false;
+        MainState = MainState.DayCustomer;
+        CurrentDayOrder = DayPuzzleGenerator.GenerateOrder(CurrencyManager.Instance.CurrentDay, colorMetaphorChance);
         CurrencyManager.Instance.SetCurrentRequirement(CurrentDayOrder.requirement);
         SceneManager.LoadScene(SceneDayMain);
     }
@@ -81,9 +88,11 @@ public class GameManager : Singleton<GameManager>
         DayPuzzleGenerator.FinalizeForWrapper(CurrentDayOrder, wrapperId);
     }
 
-    public void GoToFlowerSelect()
+    /// <summary>손님의 주문을 수락했다: 이때부터 퍼즐을 마칠 때까지가 한 주문이라, 그사이 하루 시간이 끝나도 주문을 마무리한 뒤에 낮 종료로 간다.
+    /// 꽃 선택 화면은 메인 씬 옆 페이지라서 씬을 바꾸지 않고, 플레이어가 스와이프해서 간다.</summary>
+    public void AcceptOrder()
     {
-        SceneManager.LoadScene(SceneFlowerSelect);
+        orderInProgress = true;
     }
 
     public void ConfirmFlowerSelection(List<FlowerData> chosen)
@@ -92,17 +101,24 @@ public class GameManager : Singleton<GameManager>
         SceneManager.LoadScene(SceneDayPuzzle);
     }
 
-    /// <summary>결과 팝업에서 확인을 누르면 밤 요청(꽃 선택) 화면으로 이동한다.</summary>
-    public void ProceedToNightMain()
+    /// <summary>카운터에서 등불을 켜면 밤이 시작된다: 밤 시간이 가득 차 흐르기 시작하고, 부적을 붙인 꽃의 퍼즐로 밤 손님이 찾아온다.</summary>
+    public void StartNight(List<int> charmedFlowerIds)
     {
-        GameClock.Instance?.BeginNight(); // 밤이 시작된다(밤 시간이 가득 차서 흐르기 시작)
-        SceneManager.LoadScene(SceneDayToNight);
+        GameClock.Instance?.BeginNight();
+        ConfirmNightRequests(charmedFlowerIds);
     }
 
     /// <summary>낮 퍼즐이 끝나 다음 손님이 있는 낮 메인으로 돌아간다(성공이든 손님이 화났든). 돌아가면 손님이 customerLine을 첫 대사로 말한다.
     /// rejectResponseLine은 "이건아니지"를 눌렀을 때 나오는 대사(기본값: "그래요라고 하세요").</summary>
     public void ReturnToDayMain(string customerLine, string rejectResponseLine = DefaultRejectResponseLine)
     {
+        if (dayEndPending) // 주문을 하는 동안 하루 시간이 끝났다: 이 주문은 마무리했으니 이제 낮 종료로 간다
+        {
+            dayEndPending = false;
+            BeginDayEnding();
+            return;
+        }
+
         pendingCustomerLine = customerLine;
         pendingRejectResponseLine = rejectResponseLine;
         BeginNewDay();
@@ -124,52 +140,60 @@ public class GameManager : Singleton<GameManager>
         return line;
     }
 
-    /// <summary>하루 시간이 끝나면 하던 일과 상관없이 밤 메인으로 강제 전환한다. 밤 메인에서 손님(낮 모습으로 바꾼 캐릭터와 전등)이 마무리 대사를 한다.</summary>
+    /// <summary>하루 시간이 끝나면 메인 화면의 낮 종료로 넘어간다. 손님이 마무리 대사를 하고 떠난다.
+    /// 단, 주문을 수락해 꽃 선택/퍼즐을 하는 중(AcceptOrder 이후)이면 그 주문을 마무리한 뒤에 넘어간다(ReturnToDayMain).</summary>
     private void HandleDayTimeUp()
     {
-        pendingDayTimeUp = true;
-        SceneManager.LoadScene(SceneNightMain);
+        if (orderInProgress)
+        {
+            dayEndPending = true;
+            return;
+        }
+        BeginDayEnding();
     }
 
-    /// <summary>밤 메인 진입 시, 시간 초과로 강제 전환된 것이면 true를 한 번 반환하고 지운다.</summary>
-    public bool ConsumeDayTimeUp()
+    private void BeginDayEnding()
     {
-        bool value = pendingDayTimeUp;
-        pendingDayTimeUp = false;
-        return value;
+        orderInProgress = false;
+        MainState = MainState.DayEnding;
+        SceneManager.LoadScene(SceneDayMain);
     }
 
     // ========== 밤 ==========
 
-    /// <summary>DayToNight 화면에서 밤 메인 허브로 넘어갈 때 호출. 지금은 단순 씬 이동만 한다.</summary>
-    public void GoToNightMainScene()
+    /// <summary>requestedFlowerIds는 오늘 밤 부적을 붙인 꽃들.
+    /// 퍼즐 하나에는 꽃이 최대 2종만 나오므로, 부적을 붙인 꽃을 섞어서 두 개씩 묶어 퍼즐 하나씩 만든다(6개면 퍼즐 3개).
+    /// 묶음마다 퍼즐은 필요할 때 EnsureNightStage가 하나씩 만든다(한꺼번에 만들면 멈춤이 생긴다). 묶음을 다 쓰면 잉여 퍼즐로 이어진다.</summary>
+    private void ConfirmNightRequests(List<int> requestedFlowerIds)
     {
-        SceneManager.LoadScene(SceneNightMain);
-    }
+        int[] requested = requestedFlowerIds.Distinct().OrderBy(_ => Random.value).ToArray();
 
-    /// <summary>밤 메인(요청 선택) 화면에서 확인을 눌렀을 때. requestedFlowerIds는 오늘 밤 최우선으로 만들 꽃들.</summary>
-    public void ConfirmNightRequests(List<int> requestedFlowerIds)
-    {
-        int[] requested = requestedFlowerIds.Distinct().ToArray();
+        pendingRequestStages.Clear();
+        int perStage = ProceduralNightPuzzleGenerator.MaxBlocksPerStage;
+        for (int i = 0; i < requested.Length; i += perStage) pendingRequestStages.Enqueue(requested.Skip(i).Take(perStage).ToArray());
 
-        var obtained = CurrencyManager.Instance.GetObtainedFlowerIds();
-        // 멈춤을 줄이려고 요청 퍼즐만 만든다. 잉여 퍼즐은 필요할 때 EnsureNightStage가 하나씩 만든다(요청이 없으면 첫 잉여 퍼즐만).
-        nightQueue = ProceduralNightPuzzleGenerator.GenerateNightQueue(NightGridSize, requested, obtained, 0);
+        nightQueue = new List<NightPuzzleData>();
         nightIndex = 0;
         EnsureNightStage(0);
 
-        // 밤 요청을 마치면 밤 메인에서 밤 손님이 퍼즐 이야기를 하고, 수락하면 퍼즐로 간다(만들 퍼즐이 없으면 바로 퍼즐 씬).
-        nightCustomerPending = nightQueue.Count > 0;
-        SceneManager.LoadScene(nightCustomerPending ? SceneNightMain : SceneNightPuzzle);
+        // 밤 요청을 마치면 메인 화면에서 밤 손님이 퍼즐 이야기를 하고, 수락하면 퍼즐로 간다(만들 퍼즐이 없으면 바로 퍼즐 씬).
+        if (nightQueue.Count > 0)
+        {
+            MainState = MainState.NightCustomer;
+            SceneManager.LoadScene(SceneDayMain);
+        }
+        else
+        {
+            SceneManager.LoadScene(SceneNightPuzzle);
+        }
     }
 
-    /// <summary>밤 메인 진입 시, 밤 손님을 만나야 하면 첫 퍼즐에 나올 꽃 이름들을 한 번 돌려주고(아니면 null) 지운다.</summary>
-    public string ConsumeNightCustomerFlowers()
+    /// <summary>밤 손님이 지금 풀 퍼즐에 나올 꽃 이름들(없으면 null: 만들 수 있는 퍼즐이 더 없다).</summary>
+    public string NightCustomerFlowerNames()
     {
-        if (!nightCustomerPending) return null;
-        nightCustomerPending = false;
-
         EnsureNightStage(nightIndex);
+        if (nightIndex >= nightQueue.Count) return null;
+
         var names = nightQueue[nightIndex].requiredFlowerIds
             .Select(id => BlockRegistry.Instance != null ? BlockRegistry.Instance.GetById(id) : null)
             .Where(f => f != null)
@@ -177,14 +201,23 @@ public class GameManager : Singleton<GameManager>
         return string.Join(", ", names);
     }
 
-    /// <summary>밤 시간이 끝나기 전까지 퍼즐이 계속 나오도록, 큐가 모자라면 잉여 퍼즐을 더 만든다.</summary>
+    /// <summary>index번째 퍼즐까지 큐를 채운다. 부적 묶음이 남아 있으면 그 묶음의 퍼즐을, 없으면 밤 시간이 끝나기 전까지 퍼즐이 계속 나오도록 잉여 퍼즐을 만든다.</summary>
     private void EnsureNightStage(int index)
     {
         while (nightQueue.Count <= index)
         {
-            var more = ProceduralNightPuzzleGenerator.GenerateNightQueue(NightGridSize, null, CurrencyManager.Instance.GetObtainedFlowerIds(), 1);
-            if (more.Count == 0) return;
-            nightQueue.AddRange(more);
+            if (pendingRequestStages.Count > 0)
+            {
+                nightQueue.Add(ProceduralNightPuzzleGenerator.GenerateStage(NightGridSize, pendingRequestStages.Dequeue(), isBonusStage: false));
+            }
+            else if (ProceduralNightPuzzleGenerator.TryGenerateBonusStage(NightGridSize, CurrencyManager.Instance.GetObtainedFlowerIds(), out NightPuzzleData bonus))
+            {
+                nightQueue.Add(bonus);
+            }
+            else
+            {
+                return;
+            }
         }
     }
 
@@ -240,12 +273,12 @@ public class GameManager : Singleton<GameManager>
         if (!EventBus.RaiseNightStageResult(gains)) ContinueNightAfterResult(); // 결과 팝업이 없는 씬이면 바로 다음으로
     }
 
-    /// <summary>밤 퍼즐 결과 팝업의 확인: 밤 메인으로 돌아가 다음(잉여 퍼즐) 손님을 만난다.</summary>
+    /// <summary>밤 퍼즐 결과 팝업의 확인: 메인 화면으로 돌아가 다음(잉여 퍼즐) 손님을 만난다.</summary>
     public void ContinueNightAfterResult()
     {
         nightIndex++;
-        nightCustomerPending = true;
-        SceneManager.LoadScene(SceneNightMain);
+        MainState = MainState.NightCustomer;
+        SceneManager.LoadScene(SceneDayMain);
     }
 
     /// <summary>디버그용: 지금 밤 퍼즐을 풀지 않고 성공한 것으로 처리한다(이 퍼즐의 꽃을 모두 쓴 것으로 보고 보상/해금/다음 손님까지 같은 흐름).</summary>
@@ -258,23 +291,14 @@ public class GameManager : Singleton<GameManager>
         HandleStageCompleted(flowerIds);
     }
 
-    /// <summary>밤 시간이 끝났을 때: 진행 중이던 퍼즐/손님은 버리고 밤 메인에서 마지막 손님이 외치고 떠난다.</summary>
+    /// <summary>밤 시간이 끝났을 때: 진행 중이던 퍼즐/손님은 버리고 메인 화면에서 마지막 손님이 외치고 떠난다(밤 종료).</summary>
     private void HandleNightTimeUp()
     {
-        nightCustomerPending = false;
+        MainState = MainState.NightEnding;
 
-        if (SceneManager.GetActiveScene().name == SceneNightMain) return; // 이미 밤 메인이면 그 자리의 DayMainUI가 같은 이벤트를 받아 바로 처리한다
+        if (SceneManager.GetActiveScene().name == SceneDayMain) return; // 이미 메인 화면이면(밤 손님을 만나는 중) 그 자리의 DayMainUI가 같은 이벤트를 받아 바로 처리한다
 
-        nightEndPending = true;
-        SceneManager.LoadScene(SceneNightMain);
-    }
-
-    /// <summary>밤 메인 진입 시, 밤 시간이 끝나서 온 것이면 true를 한 번 반환하고 지운다.</summary>
-    public bool ConsumeNightEnd()
-    {
-        bool value = nightEndPending;
-        nightEndPending = false;
-        return value;
+        SceneManager.LoadScene(SceneDayMain);
     }
 
     /// <summary>밤이 끝나면(마지막 손님이 사라지면) 하루 결산 화면으로 간다.</summary>

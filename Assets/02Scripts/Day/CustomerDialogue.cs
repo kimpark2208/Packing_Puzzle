@@ -8,7 +8,9 @@ public static class CustomerDialogue
 
         if (req.type == CustomerRequirementGenerator.RequirementType.Color)
         {
-            string color = $"<b>{ColorPalette.ToKoreanName((FlowerData.Color)req.targetId)}색</b>";
+            string color = order.colorPhrase != null
+                ? $"<b>{order.colorPhrase}</b>" // 비유 문구: "동백 같은 꽃"
+                : $"<b>{ColorPalette.ToKoreanName((FlowerData.Color)req.targetId)}색</b>";
             return $"친구 생일이에요. 친구가… {color} 꽃을 좋아했던가? {color} 꽃 <b>{req.minCount}개</b>는 꼭 넣어주세요. 포장지는 {wrapper}이 좋겠어요!";
         }
 

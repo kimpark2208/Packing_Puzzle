@@ -14,7 +14,7 @@ Shader "UI/CellShade"
 
         [Header(Veins)]
         _VeinIntensity ("Vein Intensity", Range(0, 3)) = 1.3
-        _VeinWidth ("Vein Width", Range(0.02, 0.6)) = 0.16
+        _VeinWidth ("Vein Width", Range(0.02, 1)) = 0.16
         _VeinSoftness ("Vein Edge Softness (0 = hard)", Range(0, 1)) = 0.8
         _CellSize ("Voronoi Cell Size", Range(0.05, 1)) = 0.3
         _Speed ("Speed", Range(0, 4)) = 0.6
@@ -22,6 +22,12 @@ Shader "UI/CellShade"
         [Header(Perlin Noise)]
         _NoiseScale ("Noise Scale", Range(0.5, 8)) = 2.5
         _NoiseWarp ("Noise Warp Strength", Range(0, 1.5)) = 0.45
+
+        [Header(Rim Shadow)]
+        _RimShadowColor ("Rim Shadow Color", Color) = (0, 0, 0, 1)
+        _RimShadowIntensity ("Rim Shadow Intensity", Range(0, 2)) = 0.6
+        _RimShadowWidth ("Rim Shadow Width (cell uv)", Range(0.01, 0.4)) = 0.12
+        _RimShadowBlur ("Rim Shadow Blur (0 = hard)", Range(0, 1)) = 0.7
 
         [HideInInspector] _StencilComp ("Stencil Comparison", Float) = 8
         [HideInInspector] _Stencil ("Stencil ID", Float) = 0
@@ -91,6 +97,8 @@ Shader "UI/CellShade"
             fixed4 _BaseColor, _VeinColor;
             float _VeinIntensity, _VeinWidth, _VeinSoftness, _CellSize, _Speed;
             float _NoiseScale, _NoiseWarp;
+            fixed4 _RimShadowColor;
+            float _RimShadowIntensity, _RimShadowWidth, _RimShadowBlur;
 
             v2f vert(appdata_t v)
             {
@@ -127,6 +135,12 @@ Shader "UI/CellShade"
                 float c = dot(gradientAt(i + float2(0, 1)), f - float2(0, 1));
                 float d = dot(gradientAt(i + float2(1, 1)), f - float2(1, 1));
                 return lerp(lerp(a, b, u.x), lerp(c, d, u.x), u.y) * 1.4142; // 대략 -1~1
+            }
+
+            float cellAlpha(float2 p)
+            {
+                float inside = step(0.0, p.x) * step(p.x, 1.0) * step(0.0, p.y) * step(p.y, 1.0);
+                return tex2Dlod(_MainTex, float4(p, 0, 0)).a * inside;
             }
 
             fixed4 frag(v2f IN) : SV_Target
@@ -178,6 +192,26 @@ Shader "UI/CellShade"
                 // 원래 칸 색 위에 효과를 덮는다: 효과 알파가 낮을수록 원래 칸 색이 비친다.
                 float outA = effectA + cell.a * (1.0 - effectA);
                 float3 outRgb = (effectRgb * effectA + cell.rgb * cell.a * (1.0 - effectA)) / max(outA, 0.0001);
+
+                // 림 그림자: 칸 안쪽 가장자리를 어둡게 덮는다. 주변(2겹 고리)의 알파 평균이 낮을수록 가장자리다.
+                float acc = shape;
+                float wsum = 1.0;
+                [unroll] for (int ring = 1; ring <= 2; ring++)
+                {
+                    float radius = _RimShadowWidth * ring * 0.5;
+                    float off = ring * 0.39;
+                    [unroll] for (int k = 0; k < 8; k++)
+                    {
+                        float a = k * 0.7854 + off;
+                        acc += cellAlpha(uv + radius * float2(cos(a), sin(a)));
+                        wsum += 1.0;
+                    }
+                }
+                float edge = saturate(1.0 - acc / wsum) * shape;                       // 안쪽 가장자리일수록 큼(경계에서 약 0.5)
+                float rim = smoothstep(0.0, lerp(0.03, 0.5, _RimShadowBlur), edge);    // 블러가 클수록 안쪽으로 부드럽게 옅어진다
+                float rimMix = saturate(rim * _RimShadowIntensity * _RimShadowColor.a);
+                outRgb = lerp(outRgb, _RimShadowColor.rgb, rimMix);
+                outA = outA + rimMix * shape * (1.0 - outA);
                 fixed4 color = fixed4(outRgb, outA);
 
                 #ifdef UNITY_UI_CLIP_RECT

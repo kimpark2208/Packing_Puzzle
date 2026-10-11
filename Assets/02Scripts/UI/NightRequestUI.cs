@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using TMPro;
@@ -5,102 +6,115 @@ using UnityEngine;
 using UnityEngine.UI;
 
 /// <summary>
-/// 밤 메인 화면: 오늘 밤 우선적으로 손질(획득)하고 싶은 꽃을 요청한다.
-/// 확인을 누르면 GameManager가 요청 꽃 기반의 메인 스테이지 + 잉여 스테이지 큐를 생성한다.
-/// 목록 항목은 하이라키에 미리 배치된 템플릿을 복제해서 만든다.
-/// 목록에는 막아 둔 꽃(라벤더)을 뺀 모든 꽃이 보유 수량이 적은 순으로 나오고, 항목마다 보유 수량이 보인다.
+/// 부적 화면(낮 종료 뒤 꽃 선반): 오늘 밤 찾아올 손님을 꽃에 부적을 붙여 지정한다.
+/// - 선반은 꽃 선택 화면(FlowerSelectUI)과 같은 구성이라, 에디터에 놓아 둔 슬롯 자리에 모든 꽃을 역할별로 채운다. 꽃 옆에는 남은 재고를 보여 준다.
+/// - 꽃을 누르면 부적이 붙고(보유 부적 -1), 한 번 더 누르면 떼어져 돌아온다. 붙은 꽃은 슬롯의 Check(부적 그림)가 켜진다.
+///   재고가 0인 꽃에도 붙일 수 있다. 한 밤에 쓸 수 있는 부적은 maxCharmsPerNight개까지다.
+/// 이 화면은 메인 씬의 선반 덩어리(ShelfRoot)이고, 낮 종료 때 스와이프(SwipeParallax)로 들어온다. 밤은 카운터에서 등불을 켤 때 시작하며
+/// 그때 DayMainUI가 CharmedFlowerIds(부적을 붙인 꽃들)를 읽어 간다.
 /// </summary>
 public class NightRequestUI : MonoBehaviour
 {
-    private static readonly Color ItemColor = new(0.25f, 0.22f, 0.35f);
-    private static readonly Color SelectedColor = new(0.55f, 0.45f, 0.85f);
-    private static readonly Color SelectedIconTint = new(0.55f, 0.55f, 0.55f);
+    [Serializable]
+    private class Shelf
+    {
+        public FlowerData.FlowerRole role;
+        public RectTransform slotParent;
+    }
 
-    [SerializeField] private RectTransform listArea;
-    [SerializeField] private RectTransform itemTemplate;
-    [SerializeField] private Button confirmButton;
-    [SerializeField] private Button goToNightMainButton;
+    [SerializeField] private Shelf[] shelves;
+    [SerializeField] private TMP_Text usedText; // 오른쪽 위 "부적 n / 6"
+    [SerializeField] private int maxCharmsPerNight = 6;
 
-    private readonly HashSet<int> selected = new();
-    private readonly Dictionary<int, Image> itemImages = new();
-    private readonly Dictionary<int, Image> iconImages = new();
-    private readonly Dictionary<int, Color> iconBaseTints = new();
+    private readonly HashSet<int> charmed = new();
+    private readonly Dictionary<int, GameObject> checks = new();
+
+    /// <summary>지금 부적을 붙인 꽃들의 ID.</summary>
+    public IReadOnlyCollection<int> CharmedFlowerIds => charmed;
 
     private void Start()
     {
-        if (itemTemplate != null) itemTemplate.gameObject.SetActive(false);
+        BuildShelves();
+        RefreshUsed();
+    }
 
-        if (CurrencyManager.Instance != null && BlockRegistry.Instance != null && listArea != null && itemTemplate != null)
+    /// <summary>에디터에 놓아 둔 슬롯 자리에 역할별로 모든 꽃을 채운다. 꽃보다 자리가 많으면 남는 자리는 숨긴다.</summary>
+    private void BuildShelves()
+    {
+        if (BlockRegistry.Instance == null) return;
+
+        foreach (Shelf shelf in shelves)
         {
-            // 임시: 막아 둔 꽃(라벤더)을 뺀 모든 꽃을 보유 수량이 적은 순으로 보여 준다.
-            var ids = BlockRegistry.Instance.AllBlocks
-                .Where(b => !CurrencyManager.Instance.IsStartingOutOfStock(b.blockID))
-                .OrderBy(b => CurrencyManager.Instance.GetFlowerStock(b.blockID))
-                .ThenBy(b => b.blockID)
-                .Select(b => b.blockID);
-            foreach (int id in ids)
+            var spots = new List<RectTransform>();
+            foreach (Transform child in shelf.slotParent) spots.Add((RectTransform)child);
+
+            var flowers = BlockRegistry.Instance.AllBlocks.Where(b => b.flowerRole == shelf.role).ToList();
+            for (int i = 0; i < spots.Count; i++)
             {
-                CreateFlowerItem(id);
+                bool used = i < flowers.Count;
+                spots[i].gameObject.SetActive(used);
+                if (used) BindSlot(spots[i], flowers[i]);
+                else Debug.LogWarning($"[NightRequestUI] {shelf.role} 선반의 자리가 꽃보다 많습니다: {spots[i].name}");
             }
+            if (flowers.Count > spots.Count) Debug.LogWarning($"[NightRequestUI] {shelf.role} 선반의 슬롯 자리({spots.Count}개)보다 꽃이 많습니다.");
         }
-
-        if (confirmButton != null) confirmButton.onClick.AddListener(OnConfirm);
-        if (goToNightMainButton != null) goToNightMainButton.onClick.AddListener(OnGoToNightMain);
     }
 
-    private void OnGoToNightMain()
+    private void BindSlot(RectTransform slot, FlowerData flower)
     {
-        if (GameManager.Instance == null) return;
-        GameManager.Instance.GoToNightMainScene();
-    }
+        slot.name = $"Slot_{flower.blockID}";
+        FlowerPieceView.GetOrAdd(slot.gameObject).Apply(flower, flower.stemSprite, false);
 
-    private void CreateFlowerItem(int flowerId)
-    {
-        if (itemTemplate == null || listArea == null) return;
+        Transform badge = FindIn(slot, "CountBadge");
+        TMP_Text badgeText = badge != null ? badge.GetComponentInChildren<TMP_Text>(true) : null;
+        if (badgeText != null) badgeText.text = $"x{Mathf.Max(0, CurrencyManager.Instance != null ? CurrencyManager.Instance.GetFlowerStock(flower.blockID) : 0)}"; // 재고 표시(0이어도 그대로 보여 준다)
 
-        var block = BlockRegistry.Instance != null ? BlockRegistry.Instance.GetById(flowerId) : null;
-
-        RectTransform itemRT = Instantiate(itemTemplate, listArea);
-        itemRT.gameObject.SetActive(true);
-        itemRT.name = $"Flower_{flowerId}";
-
-        var img = itemRT.GetComponent<Image>();
-        if (img != null)
+        Transform check = FindIn(slot, "Check");
+        if (check != null)
         {
-            img.color = ItemColor;
-            itemImages[flowerId] = img;
+            checks[flower.blockID] = check.gameObject;
+            check.gameObject.SetActive(false);
         }
 
-        if (block == null) return;
-
-        // 임시 UI: 현재 보유 수량(템플릿에 미리 둔 StockText). 마이너스는 0으로 보여 준다.
-        Transform stockT = itemRT.Find("StockText");
-        TMP_Text stockText = stockT != null ? stockT.GetComponent<TMP_Text>() : null;
-        if (stockText != null) stockText.text = $"x{Mathf.Max(0, CurrencyManager.Instance.GetFlowerStock(flowerId))}";
-
-        FlowerPieceView view = FlowerPieceView.GetOrAdd(itemRT.gameObject);
-        view.Apply(block, block.iconSprite != null ? block.iconSprite : block.dayPieceSprite, view.Icon.preserveAspect);
-
-        iconImages[flowerId] = view.Icon;
-        iconBaseTints[flowerId] = ColorPalette.ToUnityColor(block.color);
-
-        var btn = view.Icon.GetComponent<Button>();
-        if (btn != null) btn.onClick.AddListener(() => ToggleSelect(flowerId));
+        // 꽃 선택 화면과 같은 이유로, 안쪽 버튼은 끄고 슬롯 맨 위에서 클릭을 받는다.
+        foreach (Button inner in slot.GetComponentsInChildren<Button>(true)) inner.enabled = false;
+        Button click = slot.GetComponent<Button>();
+        if (click == null)
+        {
+            click = slot.gameObject.AddComponent<Button>();
+            click.transition = Selectable.Transition.None;
+        }
+        int id = flower.blockID;
+        click.onClick.AddListener(() => ToggleCharm(id));
     }
 
-    private void ToggleSelect(int flowerId)
+    private static Transform FindIn(RectTransform slot, string childName)
     {
-        bool nowSelected = selected.Add(flowerId);
-        if (!nowSelected) selected.Remove(flowerId);
-
-        iconBaseTints.TryGetValue(flowerId, out var baseTint);
-        if (itemImages.TryGetValue(flowerId, out var img)) img.color = nowSelected ? SelectedColor : ItemColor;
-        if (iconImages.TryGetValue(flowerId, out var icon)) icon.color = nowSelected ? baseTint * SelectedIconTint : baseTint;
+        return slot.GetComponentsInChildren<Transform>(true).FirstOrDefault(t => t.name == childName);
     }
 
-    private void OnConfirm()
+    /// <summary>붙어 있으면 떼어 돌려받고, 없으면 붙인다(부적이 없거나 오늘 밤 한도를 다 썼으면 붙이지 못한다).</summary>
+    private void ToggleCharm(int flowerId)
     {
-        if (GameManager.Instance == null) return;
-        GameManager.Instance.ConfirmNightRequests(new List<int>(selected));
+        CurrencyManager wallet = CurrencyManager.Instance;
+        if (wallet == null) return;
+
+        if (charmed.Remove(flowerId))
+        {
+            wallet.RefundCharm();
+        }
+        else
+        {
+            if (charmed.Count >= maxCharmsPerNight || !wallet.TryUseCharm()) return;
+            charmed.Add(flowerId);
+        }
+
+        if (checks.TryGetValue(flowerId, out GameObject check)) check.SetActive(charmed.Contains(flowerId));
+        RefreshUsed();
+    }
+
+    private void RefreshUsed()
+    {
+        if (usedText != null) usedText.text = $"부적 {charmed.Count} / {maxCharmsPerNight}";
     }
 }

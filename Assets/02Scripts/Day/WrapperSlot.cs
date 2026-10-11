@@ -32,7 +32,12 @@ public class WrapperSlot : MonoBehaviour
     public int FilledCount => placed.Count;
     public bool IsFull => placed.Count > 0; // 칸당 꽃 한 송이
 
+    /// <summary>이 칸이 특수 칸(별/그늘)인가. 퍼즐을 만들 때마다 DayPuzzleController가 정한다.</summary>
+    public SpecialCell special { get; private set; }
+
     private Image background;
+    private Material baseMaterial;    // 일반 칸일 때 쓰는 원래 머티리얼
+    private Material specialMaterial; // 특수 칸일 때 쓰는 머티리얼(별/그늘 머티리얼)
     private Outline hoverOutline; // 에디터에서 칸마다 붙여 둔다(평소엔 꺼짐). 놓을 칸을 흰 테두리로 맥박치게 해서 손가락 근처에서도 보이게 한다
 
     private const float PulseSpeed = 8f;
@@ -40,6 +45,7 @@ public class WrapperSlot : MonoBehaviour
     private void Awake()
     {
         background = GetComponent<Image>();
+        if (background != null) baseMaterial = background.material;
         hoverOutline = GetComponent<Outline>();
         if (hoverOutline != null) hoverOutline.enabled = false;
     }
@@ -57,6 +63,20 @@ public class WrapperSlot : MonoBehaviour
     public void SetHover(bool on)
     {
         if (hoverOutline != null) hoverOutline.enabled = on;
+    }
+
+    /// <summary>특수 칸 종류를 정하고 칸 이미지의 머티리얼을 바꾼다. 일반 칸(None)이면 원래 머티리얼로 되돌린다.</summary>
+    public void SetSpecial(SpecialCell kind, Material material)
+    {
+        special = kind;
+        specialMaterial = material;
+        SetSpecialVisible(true);
+    }
+
+    /// <summary>특수 칸의 효과 모습을 켜고 끈다(그늘이 사라지면 일반 칸 모습으로). 종류(special)는 그대로다.</summary>
+    public void SetSpecialVisible(bool visible)
+    {
+        if (background != null) background.material = visible && special != SpecialCell.None ? specialMaterial : baseMaterial;
     }
 
     /// <summary>하이라이트 색을 지정한다(태그 색 + 투명도).</summary>

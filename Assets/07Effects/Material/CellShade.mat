@@ -48,6 +48,9 @@ Material:
     - _EdgeWidth: 0.199
     - _NoiseScale: 2.7
     - _NoiseWarp: 0.45
+    - _RimShadowBlur: 0.7
+    - _RimShadowIntensity: 0.7
+    - _RimShadowWidth: 0.2
     - _Scale: 2.86
     - _Speed: 1.5
     - _Stencil: 0
@@ -63,11 +66,12 @@ Material:
     - _VeinIntensity: 1
     - _VeinSoftness: 0.9
     - _VeinStrength: 1.57
-    - _VeinWidth: 0.6
+    - _VeinWidth: 0.8
     m_Colors:
     - _BaseColor: {r: 0, g: 0, b: 0, a: 0.8}
     - _ClipRect: {r: 0, g: 0, b: 0, a: 0}
     - _Color: {r: 1, g: 1, b: 1, a: 1}
+    - _RimShadowColor: {r: 0.11320752, g: 0.11320752, b: 0.11320752, a: 0.5686275}
     - _ShadeColor: {r: 0.735849, g: 0.735849, b: 0.735849, a: 0}
     - _VeinColor: {r: 0.14150941, g: 0.14150941, b: 0.14150941, a: 1}
   m_BuildTextureStacks: []

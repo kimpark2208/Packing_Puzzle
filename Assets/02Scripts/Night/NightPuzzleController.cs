@@ -16,7 +16,8 @@ public class NightPuzzleController : MonoBehaviour
     [Header("References")]
     [SerializeField] private NightCellView cellPrefab;
     [SerializeField] private RectTransform flowerBlockContainer;
-    [SerializeField] private float flowerBlockPreviewSize = 220f;
+    [SerializeField] private float flowerBlockPreviewSize = 220f;  // 블록 한 칸의 최대 크기(블록이 많으면 NoteBack 안에 맞게 줄어든다)
+    [SerializeField] private float flowerBlockPadding = 90f;       // NoteBack 가장자리에서 블록을 띄우는 여백(윗부분의 스프링 제본을 피한다)
 
     [Header("Test Only (인스펙터에서 직접 테스트할 때)")]
     [SerializeField] private int testGridSize = 5;
@@ -104,10 +105,11 @@ public class NightPuzzleController : MonoBehaviour
     }
 
     /// <summary>
-    /// 이번 스테이지에서 그려야 할 꽃 블록 모양(들)을 FlowerBlock 영역에 미리보기로 채운다.
+    /// 이번 스테이지에서 그려야 할 꽃 블록 모양(들)을 NoteBack(flowerBlockContainer) 안에 미리보기로 채운다.
     /// LayoutGroup + AspectRatioFitter 조합은 FitInParent가 셀 크기가 아니라 컨테이너 전체 크기를
     /// 기준으로 맞춰버려서 컨테이너가 커지면 미리보기도 같이 커지는 문제가 있었다. 그래서 크기/위치를
-    /// 직접 계산해서 배치한다(컨테이너 크기와 무관하게 항상 flowerBlockPreviewSize 기준 크기로 보임).
+    /// 직접 계산해서 배치한다. 블록이 많으면 여러 줄로 나누고 크기를 줄여, 가장자리 여백(flowerBlockPadding)을
+    /// 뺀 컨테이너 안에 항상 들어오게 한다(한 칸의 최대 크기는 flowerBlockPreviewSize).
     /// </summary>
     private void UpdateFlowerBlockPreview(List<FlowerData> allowedBlocks)
     {
@@ -124,23 +126,41 @@ public class NightPuzzleController : MonoBehaviour
         if (validBlocks.Count == 0) return;
 
         const float Spacing = 12f;
-        var sizes = new List<Vector2>();
-        foreach (FlowerData block in validBlocks)
+        Rect area = flowerBlockContainer.rect;
+        float availableWidth = Mathf.Max(1f, area.width - flowerBlockPadding * 2f);
+        float availableHeight = Mathf.Max(1f, area.height - flowerBlockPadding * 2f);
+
+        // 한 줄에 몇 개를 놓을 때 정사각 칸이 가장 커지는지 고른다(칸 안에 블록을 비율대로 넣는다).
+        int count = validBlocks.Count;
+        int columns = 1;
+        float bestCell = 0f;
+        for (int c = 1; c <= count; c++)
         {
-            float aspect = block.dayPieceSprite.rect.width / block.dayPieceSprite.rect.height;
-            float w = flowerBlockPreviewSize;
-            float h = flowerBlockPreviewSize;
-            if (aspect >= 1f) h = w / aspect; else w = h * aspect;
-            sizes.Add(new Vector2(w, h));
+            int rowCount = Mathf.CeilToInt(count / (float)c);
+            float cell = Mathf.Min((availableWidth - Spacing * (c - 1)) / c, (availableHeight - Spacing * (rowCount - 1)) / rowCount);
+            if (cell > bestCell)
+            {
+                bestCell = cell;
+                columns = c;
+            }
         }
 
-        float totalWidth = sizes.Sum(s => s.x) + Spacing * (sizes.Count - 1);
-        float x = -totalWidth / 2f;
+        float cellSize = Mathf.Min(bestCell, flowerBlockPreviewSize);
+        int rows = Mathf.CeilToInt(count / (float)columns);
+        float gridHeight = rows * cellSize + Spacing * (rows - 1);
 
-        for (int i = 0; i < validBlocks.Count; i++)
+        for (int i = 0; i < count; i++)
         {
             FlowerData block = validBlocks[i];
-            Vector2 size = sizes[i];
+            int row = i / columns;
+            int indexInRow = i % columns;
+            int itemsInRow = row == rows - 1 ? count - row * columns : columns; // 마지막 줄은 남는 만큼만 가운데로 모은다
+            float rowWidth = itemsInRow * cellSize + Spacing * (itemsInRow - 1);
+
+            float aspect = block.dayPieceSprite.rect.width / block.dayPieceSprite.rect.height;
+            float w = cellSize;
+            float h = cellSize;
+            if (aspect >= 1f) h = w / aspect; else w = h * aspect;
 
             GameObject previewGO = new GameObject($"BlockPreview_{block.blockID}", typeof(RectTransform), typeof(Image));
             previewGO.transform.SetParent(flowerBlockContainer, false);
@@ -148,15 +168,15 @@ public class NightPuzzleController : MonoBehaviour
             var rt = (RectTransform)previewGO.transform;
             rt.anchorMin = new Vector2(0.5f, 0.5f);
             rt.anchorMax = new Vector2(0.5f, 0.5f);
-            rt.sizeDelta = size;
-            rt.anchoredPosition = new Vector2(x + size.x / 2f, 0f);
+            rt.sizeDelta = new Vector2(w, h);
+            float x = -rowWidth / 2f + indexInRow * (cellSize + Spacing) + cellSize / 2f;
+            float y = gridHeight / 2f - row * (cellSize + Spacing) - cellSize / 2f;
+            rt.anchoredPosition = area.center + new Vector2(x, y);
 
             var image = previewGO.GetComponent<Image>();
             image.sprite = block.dayPieceSprite;
             image.color = ColorPalette.ToUnityColor(block.color); // 블록 이미지는 흰색이라 꽃 색으로 틴트한다
             image.preserveAspect = true;
-
-            x += size.x + Spacing;
         }
     }
 
@@ -486,7 +506,8 @@ public class NightPuzzleController : MonoBehaviour
 
     private void CheckCompletion()
     {
-        if (Validator != null && Validator.IsPuzzleComplete(filled))
+        // 칸을 모두 채우고, 주어진 꽃을 모두 한 번 이상 써야 완료다(하나만 쓰고 채운 채로는 끝나지 않는다).
+        if (Validator != null && Validator.IsPuzzleComplete(filled) && Validator.AreAllBlocksUsed(placedBlockFlowerId.Values))
         {
             OnPuzzleCompleted();
         }

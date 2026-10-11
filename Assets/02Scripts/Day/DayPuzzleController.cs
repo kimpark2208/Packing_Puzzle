@@ -42,6 +42,12 @@ public class DayPuzzleController : MonoBehaviour
     [SerializeField, Range(0f, 1f)] private float dimAlpha = 0.4f;
     [SerializeField] private RectTransform glowArea; // 칸과 같은 이름의 글로우 이미지를 두는 곳(FlowerArea와 같은 위치/크기이고 꽃보다 먼저 그려진다). 없으면 후광 없이 동작한다
 
+    [Header("특수 칸: 퍼즐을 만든 뒤 종류마다 확률로 만들지 정하고, 만들면 칸 하나를 무작위로 고른다(별 칸이 먼저, 그늘 칸은 별 칸이 아닌 칸). 붕괴 후 다시 만들 때는 같은 칸을 쓴다. 특수 칸은 꽃을 놓아도 사라지지 않고, 그늘 칸만 둘레의 꽃이 빛나면 일반 칸이 된다")]
+    [SerializeField, Range(0f, 1f)] private float starChance = 0.3f;
+    [SerializeField, Range(0f, 1f)] private float shadeChance = 0.3f;
+    [SerializeField] private Material starMaterial;  // 별 칸 이미지에 쓸 머티리얼(UI/CellStar)
+    [SerializeField] private Material shadeMaterial; // 그늘 칸 이미지에 쓸 머티리얼(UI/CellShade)
+
     [Header("기울기: 좌우 꽃 개수가 1개 차이일 때 많은 쪽으로 기운다(Lerp로 서서히)")]
     [SerializeField] private RectTransform wrapperImage; // 기울이는 대상(포장지 이미지만. 칸/꽃 이미지는 그대로)
     [SerializeField] private float tiltAngle = 8f;
@@ -84,8 +90,9 @@ public class DayPuzzleController : MonoBehaviour
         tiltTarget = -Mathf.Sign(RightMinusLeft()) * collapseAngle; // 오른쪽이 많으면 시계 방향(-z)
     }
 
-    /// <summary>포장지의 모든 칸을 켜고 프리셋이 정한 역할의 색과 꽃 이미지를 채운다. 포장지 링 수보다 바깥에 있는 칸은 끈다.</summary>
-    public void BuildLevel()
+    /// <summary>포장지의 모든 칸을 켜고 프리셋이 정한 역할의 색과 꽃 이미지를 채운다. 포장지 링 수보다 바깥에 있는 칸은 끈다.
+    /// 처음 만들 때는 특수 칸도 새로 정하고, 붕괴로 다시 만들 때(rebuild)는 원래 특수 칸을 그대로 쓴다.</summary>
+    public void BuildLevel(bool rebuild = false)
     {
         placementHistory.Clear();
         regions.Clear();
@@ -113,6 +120,28 @@ public class DayPuzzleController : MonoBehaviour
             if (flowerImage != null) flowerImage.GetComponent<Image>().sprite = tagSprites[(int)slot.tag];
             if (glowImage != null) glowImage.sprite = tagSprites[(int)slot.tag]; // 후광은 꽃 그림을 번지게 해서 그린다
             regions.Add(slot);
+        }
+
+        if (rebuild)
+        {
+            foreach (WrapperSlot slot in regions) slot.SetSpecialVisible(true); // 사라졌던 그늘도 다시 생긴다
+        }
+        else
+        {
+            ApplySpecialCells();
+        }
+    }
+
+    /// <summary>퍼즐이 만들어진 뒤 특수 칸을 정해 칸 이미지에 효과 머티리얼을 입힌다.</summary>
+    private void ApplySpecialCells()
+    {
+        var rolled = SpecialCellRoller.Roll(regions.Select(r => r.position), starChance, shadeChance);
+
+        foreach (WrapperSlot slot in regions)
+        {
+            rolled.TryGetValue(slot.position, out SpecialCell kind);
+            Material material = kind == SpecialCell.Star ? starMaterial : kind == SpecialCell.Shade ? shadeMaterial : null;
+            slot.SetSpecial(material != null ? kind : SpecialCell.None, material); // 머티리얼이 없으면 일반 칸으로 둔다
         }
     }
 
@@ -166,7 +195,7 @@ public class DayPuzzleController : MonoBehaviour
         if (region == null) return false;
 
         region.Fill(flower);
-        region.SetHighlightAlpha(FilledAlpha);
+        region.SetHighlightAlpha(region.special == SpecialCell.None ? FilledAlpha : IdleAlpha); // 특수 칸은 꽃을 놓아도 칸이 남는다
         Transform flowerImage = FlowerImageOf(region);
         if (flowerImage != null)
         {
@@ -183,17 +212,26 @@ public class DayPuzzleController : MonoBehaviour
         return true;
     }
 
-    /// <summary>놓인 꽃마다 이웃과의 관계 합계로 상태를 다시 구해 보여 준다: 흐림=투명하게, 선명=그대로, 빛남=꽃 뒤에 후광. 꽃을 놓을 때마다 이웃의 상태도 바뀐다.</summary>
+    /// <summary>놓인 꽃마다 최종 상태(이웃과의 관계 합계에 특수 칸 보정을 더한 것)를 다시 구해 보여 준다: 흐림=투명하게, 선명=그대로, 빛남=꽃 뒤에 후광. 꽃을 놓을 때마다 이웃의 상태도 바뀐다.
+    /// 둘레의 꽃이 빛나서 효과가 사라진 그늘 칸은 일반 칸 모습(꽃이 놓인 칸처럼 사라짐)으로 바꾼다.</summary>
     private void RefreshGlow()
     {
-        var cells = PlacedCells();
+        var (glows, clearedShades) = FlowerLight.Resolve(PlacedCells(), SpecialCells());
         foreach (WrapperSlot region in regions)
         {
             if (!region.IsFull) continue;
+
+            if (region.special == SpecialCell.Shade)
+            {
+                bool cleared = clearedShades.Contains(region.position);
+                region.SetSpecialVisible(!cleared);
+                region.SetHighlightAlpha(cleared ? FilledAlpha : IdleAlpha);
+            }
+
             Transform flowerImage = FlowerImageOf(region);
             if (flowerImage == null) continue;
 
-            FlowerGlow glow = FlowerLight.GlowOf(FlowerLight.RelationSum(region.position, cells));
+            FlowerGlow glow = glows[region.position];
             Image image = flowerImage.GetComponent<Image>();
             Color c = image.color;
             c.a = glow == FlowerGlow.Dim ? dimAlpha : 1f;
@@ -332,6 +370,12 @@ public class DayPuzzleController : MonoBehaviour
     public Dictionary<WrapperRegionPosition, FlowerData.Color> PlacedCells()
     {
         return regions.Where(r => r.IsFull).ToDictionary(r => r.position, r => r.PlacedFlowers[0].color);
+    }
+
+    /// <summary>이번 퍼즐의 특수 칸(별 칸/그늘 칸). 특수가 아닌 칸은 없다.</summary>
+    public Dictionary<WrapperRegionPosition, SpecialCell> SpecialCells()
+    {
+        return regions.Where(r => r.special != SpecialCell.None).ToDictionary(r => r.position, r => r.special);
     }
 
     public IReadOnlyList<WrapperSlot> AllSlots => regions;

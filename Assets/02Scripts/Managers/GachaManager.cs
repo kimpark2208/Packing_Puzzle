@@ -60,6 +60,7 @@ public class GachaManager : MonoBehaviour
         foreach (Transform slot in bucket)
         {
             if (gachaButton != null && slot == gachaButton.transform) continue; // 리롤 버튼이 버켓 안에 있어도 자리 템플릿이 아니다
+            if (slot.GetComponent<FlowerStorageSlot>() != null) continue; // 보관 칸도 마찬가지
             slotTemplates.Add(slot.gameObject);
             slot.gameObject.SetActive(false);
         }

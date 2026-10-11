@@ -1,0 +1,19 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: cfd614793e495ce47894618570de51e3, type: 3}
+  m_Name: Deco_01_Wrapper
+  m_EditorClassIdentifier: Assembly-CSharp::DecorationData
+  id: 1
+  category: 0
+  displayName: "\uBFB0\uC871 \uD3EC\uC7A5\uC9C0"
+  price: 300
+  sprite: {fileID: 8050237346638265156, guid: 1bce5eff1e110c34382dd820aa9e60fa, type: 3}

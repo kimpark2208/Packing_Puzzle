@@ -70,6 +70,12 @@ public class BlockDrag : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDra
         FollowPointer(eventData);
 
         DayPuzzleController.Instance?.PreviewHover(blockData, IconScreenRect(eventData.pressEventCamera), eventData.pressEventCamera);
+        storeTarget?.SetHover(CanStore(eventData));
+    }
+
+    private bool CanStore(PointerEventData eventData)
+    {
+        return storeTarget != null && storeTarget.IsEmpty && storeTarget.IsOver(IconScreenRect(eventData.pressEventCamera).center, eventData.pressEventCamera);
     }
 
     public void OnEndDrag(PointerEventData eventData)
@@ -80,6 +86,7 @@ public class BlockDrag : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDra
             DayPuzzleController.Instance.TryPlaceAtScreenRect(blockData, IconScreenRect(eventData.pressEventCamera), eventData.pressEventCamera);
 
         DayPuzzleController.Instance?.ClearHoverPreview();
+        storeTarget?.SetHover(false);
 
         if (placed)
         {
@@ -88,7 +95,7 @@ public class BlockDrag : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDra
             return;
         }
 
-        if (storeTarget != null && storeTarget.IsEmpty && storeTarget.IsOver(IconScreenRect(eventData.pressEventCamera).center, eventData.pressEventCamera))
+        if (CanStore(eventData))
         {
             OnStored?.Invoke(gameObject);
             return;

@@ -4,8 +4,8 @@ using System.Linq;
 
 /// <summary>
 /// 꽃 선택 화면의 선택 규칙(UI를 모르는 순수 계산).
-/// - 역할마다 고를 수 있는 종류는 그 프리셋에서 그 역할의 칸 수까지이고, 전체로는 포장지의 maxFlowerTypes까지다.
-/// - 칸이 있는 역할은 최소 1종을 골라야 한다. 전체 한도가 빠듯해도 그 몫이 남도록, 아직 못 고른 다른 역할의 몫은 남겨 두고 담게 한다.
+/// - 역할마다 고를 수 있는 종류는 그 프리셋에서 그 역할의 칸 수까지이고, 전체 한도는 그 합이다(표시되는 분모와 실제로 고를 수 있는 수가 같다).
+/// - 칸이 있는 역할은 최소 1종을 골라야 한다.
 /// - 꽃은 놓는 만큼 재고에서 빠지므로, 한 역할의 고른 꽃들의 재고를 합쳐 그 역할의 칸 수 이상이어야 완성할 수 있다.
 /// </summary>
 public class FlowerSelection
@@ -15,14 +15,13 @@ public class FlowerSelection
     private readonly HashSet<FlowerData> picked = new();
 
     /// <param name="roleLimits">역할별 칸 수(고를 수 있는 종류의 상한). 칸이 없는 역할은 0이거나 없다.</param>
-    public FlowerSelection(Dictionary<FlowerData.FlowerRole, int> roleLimits, int totalLimit, Func<FlowerData, int> stockOf)
+    public FlowerSelection(Dictionary<FlowerData.FlowerRole, int> roleLimits, Func<FlowerData, int> stockOf)
     {
         this.roleLimits = roleLimits;
-        TotalLimit = totalLimit;
         this.stockOf = stockOf;
     }
 
-    public int TotalLimit { get; }
+    public int TotalLimit => roleLimits.Values.Sum();
     public int Total => picked.Count;
     public IReadOnlyCollection<FlowerData> Picked => picked;
 
@@ -32,14 +31,11 @@ public class FlowerSelection
 
     private IEnumerable<FlowerData.FlowerRole> UsedRoles => roleLimits.Where(kv => kv.Value > 0).Select(kv => kv.Key);
 
-    /// <summary>지금 이 꽃을 새로 담을 수 있는가(재고, 역할 한도, 전체 한도).</summary>
+    /// <summary>지금 이 꽃을 새로 담을 수 있는가(재고, 역할 한도).</summary>
     public bool CanAdd(FlowerData flower)
     {
         FlowerData.FlowerRole role = flower.flowerRole;
-        if (Limit(role) == 0 || stockOf(flower) <= 0 || Count(role) >= Limit(role)) return false;
-
-        int roomReservedForOtherRoles = UsedRoles.Count(r => r != role && Count(r) == 0);
-        return Total + 1 + roomReservedForOtherRoles <= TotalLimit;
+        return Limit(role) > 0 && stockOf(flower) > 0 && Count(role) < Limit(role);
     }
 
     /// <summary>꽃을 눌렀을 때: 담겨 있으면 비우고, 비어 있으면 담는다. 한도가 1종인 역할이 차 있으면 바꿔 담는다. 선택이 바뀌었으면 true.</summary>

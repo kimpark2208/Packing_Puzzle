@@ -19,6 +19,7 @@ public static class FlowerLight
     private const int DimScore = -2, ClearScore = 1, BrightScore = 3;
     private const int BrightFrom = 3, ClearFrom = 1;
     private const int ScoreScale = 10;
+    private const int ShadeClearBrightNeighbors = 2; // 그늘 칸 둘레에 빛남 꽃이 이만큼 있으면 그늘이 사라진다
 
     /// <summary>
     /// 칸의 이웃: 같은 링의 바로 옆 두 칸(A상↔A하, B상↔B하, A상↔B상, A하↔B하), 같은 방향의 안쪽·바깥쪽 링 칸.
@@ -63,12 +64,68 @@ public static class FlowerLight
         return glow == FlowerGlow.Bright ? BrightScore : glow == FlowerGlow.Clear ? ClearScore : DimScore;
     }
 
+    /// <summary>
+    /// 놓인 꽃마다 최종 상태와, 효과가 사라진 그늘 칸. 먼저 이웃과의 관계로 기본 상태를 구한다.
+    /// 별 칸의 꽃은 한 단계 올린다. 그늘 칸의 꽃은 이웃의 영향을 받지 않고 계속 흐림이다.
+    /// 다만 이웃한 꽃 중 빛남이 둘 이상이 되면 그늘이 사라져 일반 칸이 되고, 그 꽃은 기본 상태로 돌아온다(사라진 그늘 칸이 다른 그늘 칸의 조건을 채울 수 있어 더 변하지 않을 때까지 되풀이한다).
+    /// 특수 칸은 그 칸의 꽃에게만 작용하고 이웃 꽃의 관계 합계는 바꾸지 않는다. specials가 null이면 특수 칸이 없는 것이다.
+    /// </summary>
+    public static (Dictionary<WrapperRegionPosition, FlowerGlow> glows, HashSet<WrapperRegionPosition> clearedShades) Resolve(
+        IReadOnlyDictionary<WrapperRegionPosition, FlowerData.Color> cells,
+        IReadOnlyDictionary<WrapperRegionPosition, SpecialCell> specials = null)
+    {
+        var glows = new Dictionary<WrapperRegionPosition, FlowerGlow>();
+        var cleared = new HashSet<WrapperRegionPosition>();
+        foreach (WrapperRegionPosition position in cells.Keys) glows[position] = GlowOf(RelationSum(position, cells));
+        if (specials == null) return (glows, cleared);
+
+        var baseGlows = new Dictionary<WrapperRegionPosition, FlowerGlow>(glows);
+        var shades = new List<WrapperRegionPosition>();
+        foreach (WrapperRegionPosition position in cells.Keys)
+        {
+            if (!specials.TryGetValue(position, out SpecialCell kind)) continue;
+            if (kind == SpecialCell.Star) glows[position] = Raised(glows[position]);
+            else if (kind == SpecialCell.Shade)
+            {
+                glows[position] = FlowerGlow.Dim;
+                shades.Add(position);
+            }
+        }
+
+        bool changed = true;
+        while (changed)
+        {
+            changed = false;
+            foreach (WrapperRegionPosition shade in shades)
+            {
+                if (cleared.Contains(shade) || BrightNeighborCount(shade, glows) < ShadeClearBrightNeighbors) continue;
+                cleared.Add(shade);
+                glows[shade] = baseGlows[shade];
+                changed = true;
+            }
+        }
+        return (glows, cleared);
+    }
+
+    private static int BrightNeighborCount(WrapperRegionPosition position, Dictionary<WrapperRegionPosition, FlowerGlow> glows)
+    {
+        int count = 0;
+        foreach (WrapperRegionPosition n in Neighbors(position))
+        {
+            if (glows.TryGetValue(n, out FlowerGlow g) && g == FlowerGlow.Bright) count++;
+        }
+        return count;
+    }
+
+    private static FlowerGlow Raised(FlowerGlow glow) => glow == FlowerGlow.Dim ? FlowerGlow.Clear : FlowerGlow.Bright;
+
     /// <summary>정산에 넣는 '꽃의 빛' 점수: (꽃 상태 점수 합계 ÷ 꽃 수) × 10을 반올림. 꽃이 없으면 0.</summary>
-    public static int Score(IReadOnlyDictionary<WrapperRegionPosition, FlowerData.Color> cells)
+    public static int Score(IReadOnlyDictionary<WrapperRegionPosition, FlowerData.Color> cells,
+        IReadOnlyDictionary<WrapperRegionPosition, SpecialCell> specials = null)
     {
         if (cells.Count == 0) return 0;
         int total = 0;
-        foreach (WrapperRegionPosition position in cells.Keys) total += GlowScore(GlowOf(RelationSum(position, cells)));
+        foreach (FlowerGlow glow in Resolve(cells, specials).glows.Values) total += GlowScore(glow);
         return (int)Math.Round(total * (double)ScoreScale / cells.Count, MidpointRounding.AwayFromZero);
     }
 }
