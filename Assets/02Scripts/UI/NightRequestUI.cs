@@ -8,7 +8,7 @@ using UnityEngine.UI;
 /// <summary>
 /// 부적 화면(낮 종료 뒤 꽃 선반): 오늘 밤 찾아올 손님을 꽃에 부적을 붙여 지정한다.
 /// - 선반은 꽃 선택 화면(FlowerSelectUI)과 같은 구성이라, 에디터에 놓아 둔 슬롯 자리에 모든 꽃을 역할별로 채운다. 꽃 옆에는 남은 재고를 보여 준다.
-/// - 꽃을 누르면 부적이 붙고(보유 부적 -1), 한 번 더 누르면 떼어져 돌아온다. 붙은 꽃은 슬롯의 Check(부적 그림)가 켜진다.
+/// - 꽃을 누르면 부적이 붙고(보유 부적 -1), 한 번 더 누르면 떼어져 돌아온다. 붙은 꽃은 슬롯의 Charm(부적 뱃지)이 켜진다.
 ///   재고가 0인 꽃에도 붙일 수 있다. 한 밤에 쓸 수 있는 부적은 maxCharmsPerNight개까지다.
 /// 이 화면은 메인 씬의 선반 덩어리(ShelfRoot)이고, 낮 종료 때 스와이프(SwipeParallax)로 들어온다. 밤은 카운터에서 등불을 켤 때 시작하며
 /// 그때 DayMainUI가 CharmedFlowerIds(부적을 붙인 꽃들)를 읽어 간다.
@@ -27,7 +27,7 @@ public class NightRequestUI : MonoBehaviour
     [SerializeField] private int maxCharmsPerNight = 6;
 
     private readonly HashSet<int> charmed = new();
-    private readonly Dictionary<int, GameObject> checks = new();
+    private readonly Dictionary<int, GameObject> charmBadges = new(); // 꽃 ID별 슬롯의 Charm(부적 뱃지)
 
     /// <summary>지금 부적을 붙인 꽃들의 ID.</summary>
     public IReadOnlyCollection<int> CharmedFlowerIds => charmed;
@@ -69,11 +69,11 @@ public class NightRequestUI : MonoBehaviour
         TMP_Text badgeText = badge != null ? badge.GetComponentInChildren<TMP_Text>(true) : null;
         if (badgeText != null) badgeText.text = $"x{Mathf.Max(0, CurrencyManager.Instance != null ? CurrencyManager.Instance.GetFlowerStock(flower.blockID) : 0)}"; // 재고 표시(0이어도 그대로 보여 준다)
 
-        Transform check = FindIn(slot, "Check");
-        if (check != null)
+        Transform charm = FindIn(slot, "Charm");
+        if (charm != null)
         {
-            checks[flower.blockID] = check.gameObject;
-            check.gameObject.SetActive(false);
+            charmBadges[flower.blockID] = charm.gameObject;
+            charm.gameObject.SetActive(false);
         }
 
         // 꽃 선택 화면과 같은 이유로, 안쪽 버튼은 끄고 슬롯 맨 위에서 클릭을 받는다.
@@ -109,7 +109,7 @@ public class NightRequestUI : MonoBehaviour
             charmed.Add(flowerId);
         }
 
-        if (checks.TryGetValue(flowerId, out GameObject check)) check.SetActive(charmed.Contains(flowerId));
+        if (charmBadges.TryGetValue(flowerId, out GameObject charm)) charm.SetActive(charmed.Contains(flowerId));
         RefreshUsed();
     }
 

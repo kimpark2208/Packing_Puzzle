@@ -162,7 +162,7 @@ public class GachaManager : MonoBehaviour
     private static void Wilt(BlockDrag draggable, FlowerPieceView view)
     {
         draggable.enabled = false;
-        view.Icon.color = WiltedColor;
+        view.SetIconColor(WiltedColor);
     }
 
     /// <summary>꽃 하나를 놓으면 그만큼 재고에서 빼고, 버켓의 나머지는 사라지고 풀에서 새 꽃들을 뽑는다.</summary>

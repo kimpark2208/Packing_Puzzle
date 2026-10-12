@@ -10,18 +10,18 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 74a634c29bfedc144ae03bdc4755ce48, type: 3}
-  m_Name: SO_06_TetrominoT_Orange
+  m_Name: SO_18_PentominoU_Blue
   m_EditorClassIdentifier: Assembly-CSharp::FlowerData
-  blockID: 6
-  flowerName: "\uD32C\uC9C0"
-  color: 1
-  flowerRole: 3
+  blockID: 18
+  flowerName: "\uC791\uC57D"
+  color: 3
+  flowerRole: 1
   shapeGrid:
+  - cols: 010001
   - cols: 010101
-  - cols: 000100
-  anchorCoord: {x: 1, y: 0}
-  iconSprite: {fileID: -3182467019310743072, guid: a88ffab4d83f02c4d8bd22562c2faccc, type: 3}
+  anchorCoord: {x: 1, y: 1}
+  iconSprite: {fileID: 7063445062853087527, guid: 133ed902eb78116429f4e19cbf0d67d6, type: 3}
   stemSprite: {fileID: 5856240631183992178, guid: b9f97a0c03bea8c49ac2b17ce37cf466, type: 3}
-  nightCellSprite: {fileID: -3182467019310743072, guid: a88ffab4d83f02c4d8bd22562c2faccc, type: 3}
-  dayPieceSprite: {fileID: 21300000, guid: 921b17167d3e85045a5e78d1f4c8c14e, type: 3}
-  dayFillSprite: {fileID: -3480653308909891845, guid: 29875a58e269b374195376c434488224, type: 3}
+  nightCellSprite: {fileID: 7063445062853087527, guid: 133ed902eb78116429f4e19cbf0d67d6, type: 3}
+  dayPieceSprite: {fileID: 21300000, guid: f58d1329dbb582c4facd343aa9704736, type: 3}
+  dayFillSprite: {fileID: -2764537206855289646, guid: ff27b819afb375b499366b7b05aa9148, type: 3}

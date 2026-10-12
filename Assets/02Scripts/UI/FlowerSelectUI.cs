@@ -35,8 +35,8 @@ public class FlowerSelectUI : MonoBehaviour
 
     private class SlotView
     {
-        public Image icon;
-        public Vector2 iconBasePosition; // 씬에 놓인 꽃 이미지의 자리(고르면 여기서 위로 올라온다)
+        public FlowerPieceView piece;     // 꽃 이미지(화병은 여러 송이)를 들고 있다
+        public Vector2 liftBasePosition;  // 씬에 놓인 꽃 이미지(들)의 자리(고르면 여기서 위로 올라온다)
         public TMP_Text badge;
         public GameObject check; // 담은 꽃에만 보이는 체크 표시(프리팹의 Check)
         public readonly List<(Graphic graphic, Color baseColor)> shaded = new(); // 재고가 없을 때 그림자를 씌울 나머지 그림과 글자(원래 색)
@@ -50,7 +50,6 @@ public class FlowerSelectUI : MonoBehaviour
 
     [SerializeField] private TMP_Text headerText;
     [SerializeField] private float selectedLift = 50f; // 담긴 꽃이 화병에서 올라오는 높이
-    [SerializeField] private Sprite pickedMarkSprite; // 담은 꽃에 붙는 체크 표시 그림(슬롯의 Check/Icon). 부적 화면은 같은 슬롯에 부적 그림을 쓴다
 
     [Header("포장지 선택 팝업 (박스 7개 + 선택 완료)")]
     [SerializeField] private GameObject wrapperPopup;
@@ -230,18 +229,17 @@ public class FlowerSelectUI : MonoBehaviour
 
         Transform badgeT = FindIn(slot, "CountBadge");
         Transform checkT = FindIn(slot, "Check");
-        Transform markT = checkT != null ? checkT.Find("Icon") : null;
-        if (pickedMarkSprite != null && markT != null && markT.TryGetComponent(out Image markImage)) markImage.sprite = pickedMarkSprite; // 부적 화면과 같은 슬롯을 쓰므로, 꽃 선택에서는 체크 그림으로 바꾼다
+        FindIn(slot, "Charm")?.gameObject.SetActive(false); // 부적 뱃지는 부적 화면에서만 쓴다
         var slotView = new SlotView
         {
-            icon = view.Icon,
-            iconBasePosition = view.Icon.rectTransform.anchoredPosition,
+            piece = view,
+            liftBasePosition = view.LiftTarget.anchoredPosition,
             badge = badgeT != null ? badgeT.GetComponentInChildren<TMP_Text>(true) : null,
             check = checkT != null ? checkT.gameObject : null,
         };
         foreach (Graphic graphic in slot.GetComponentsInChildren<Graphic>(true))
         {
-            if (graphic != view.Icon) slotView.shaded.Add((graphic, graphic.color));
+            if (!(graphic is Image image && view.Icons.Contains(image))) slotView.shaded.Add((graphic, graphic.color)); // 꽃 아이콘은 꽃 색으로 따로 칠한다
         }
         views[block] = slotView;
         RefreshSlot(block);
@@ -283,9 +281,9 @@ public class FlowerSelectUI : MonoBehaviour
 
         // 재고가 없는 꽃은 어둡게 한다(담을 수 없다).
         Color shade = StockOf(block) <= 0 ? OutOfStockShade : Color.white;
-        view.icon.color = ColorPalette.ToUnityColor(block.color) * shade;
+        view.piece.SetIconColor(ColorPalette.ToUnityColor(block.color) * shade);
         foreach (var (graphic, baseColor) in view.shaded) graphic.color = baseColor * shade;
-        view.icon.rectTransform.anchoredPosition = view.iconBasePosition + new Vector2(0f, picked ? selectedLift : 0f);
+        view.piece.LiftTarget.anchoredPosition = view.liftBasePosition + new Vector2(0f, picked ? selectedLift : 0f);
         if (view.check != null) view.check.SetActive(picked); // 담은 꽃에만 체크 표시
 
         if (view.badge != null)

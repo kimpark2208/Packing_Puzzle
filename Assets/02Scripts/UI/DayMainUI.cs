@@ -25,7 +25,7 @@ public class DayMainUI : MonoBehaviour
     private static readonly string[] CharacterRootNames = { "DayCharacterArea", "NightCharacterArea" };
     private const string LanternToggleName = "LanternToggle";
     private const string ShelfRootName = "ShelfRoot"; // 메인 옆 페이지: 낮 손님이면 꽃 선택, 낮 종료면 꽃 선반(부적)
-    private const string CharmPillName = "CharmConfirmBTN"; // 부적 화면에만 나오는 "부적 n / 6" 표시(오브젝트 이름이 CharmConfirmBTN으로 바뀌어 있다)
+    private const string CharmPillName = "CharmUse"; // 부적 화면에만 나오는 "부적 n / 6" 표시
 
     [SerializeField] private float timeUpHideDelay = 5f;
     [SerializeField] private float lanternDelay = 0.5f; // 전등을 켠 뒤 밤 요청 화면으로 넘어가기까지의 시간

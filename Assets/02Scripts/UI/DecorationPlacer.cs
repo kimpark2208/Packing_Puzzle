@@ -9,7 +9,7 @@ using UnityEngine.UI;
 /// - 카드/장식: 카드에서 끌어다 꽃다발 영역 안에 놓는다. 이 오브젝트의 RectTransform이 "꽃다발 제일 위 레이어"라서 PuzzleRoot 맨 끝에 둔다.
 ///   여러 개 놓을 수 있고, 놓은 뒤에도 끌어서 옮긴다. 꽃다발 밖에서 놓으면 사라진다.
 /// - 꽃다발 모양(포장지): 고른 포장지 그림으로 꽃다발 이미지를 바꾼다.
-/// 그림은 모두 원본 비율을 지킨 채 종류별 상자(…MaxSize) 안에 맞추고, 놓이는 기준점은 스프라이트의 피벗이다(PlacedDecoration).
+/// 그림은 모두 원본 비율을 지킨 채 항목별 상자(maxSizeByCategory) 안에 맞추고, 놓이는 기준점은 스프라이트의 피벗이다(PlacedDecoration).
 /// </summary>
 public class DecorationPlacer : MonoBehaviour
 {
@@ -18,11 +18,8 @@ public class DecorationPlacer : MonoBehaviour
     [SerializeField] private RectTransform ribbonAnchor;
     [SerializeField] private RectTransform leafAnchor;
 
-    [Header("종류별로 그림이 들어가는 최대 크기(비율은 유지한다)")]
-    [SerializeField] private Vector2 ribbonMaxSize = new(480f, 480f);
-    [SerializeField] private Vector2 leafMaxSize = new(300f, 420f);
-    [SerializeField] private Vector2 cardMaxSize = new(260f, 300f);
-    [SerializeField] private Vector2 ornamentMaxSize = new(180f, 180f);
+    [Header("항목별로 그림이 들어가는 최대 크기(비율은 유지한다). 순서는 항목 순서: 0 포장지(안 씀), 1 리본, 2 카드, 3 장식, 4 잎")]
+    [SerializeField] private Vector2[] maxSizeByCategory = { new(300f, 300f), new(480f, 480f), new(260f, 300f), new(180f, 180f), new(300f, 420f) };
 
     private readonly Dictionary<DecorationCategory, PlacedDecoration> anchored = new();
     private RectTransform layer;
@@ -59,13 +56,13 @@ public class DecorationPlacer : MonoBehaviour
         anchored.Remove(data.category);
         if (same) return;
 
-        anchored[data.category] = Create(data, anchor, MaxSizeOf(data.category), false);
+        anchored[data.category] = Create(data, anchor, maxSizeByCategory[(int)data.category], false);
     }
 
     /// <summary>카드/장식: 카드에서 끌기 시작했다. 포인터 자리에 새 것을 만들어 돌려준다(끄는 동안 카드가 MoveToScreen으로 따라가게 한다).</summary>
     public PlacedDecoration BeginFreeDrag(DecorationData data, Vector2 screenPosition)
     {
-        PlacedDecoration item = Create(data, layer, MaxSizeOf(data.category), true);
+        PlacedDecoration item = Create(data, layer, maxSizeByCategory[(int)data.category], true);
         item.MoveToScreen(screenPosition);
         return item;
     }
@@ -99,17 +96,6 @@ public class DecorationPlacer : MonoBehaviour
         item.name = $"Placed_{data.name}";
         item.Init(data, this, maxSize, draggable);
         return item;
-    }
-
-    private Vector2 MaxSizeOf(DecorationCategory category)
-    {
-        switch (category)
-        {
-            case DecorationCategory.Ribbon: return ribbonMaxSize;
-            case DecorationCategory.Leaf: return leafMaxSize;
-            case DecorationCategory.Card: return cardMaxSize;
-            default: return ornamentMaxSize;
-        }
     }
 
     private Camera Camera() => canvas != null && canvas.renderMode != RenderMode.ScreenSpaceOverlay ? canvas.worldCamera : null;

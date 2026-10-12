@@ -213,8 +213,9 @@ public class DayPuzzleController : MonoBehaviour
     }
 
     /// <summary>놓인 꽃마다 최종 상태(이웃과의 관계 합계에 특수 칸 보정을 더한 것)를 다시 구해 보여 준다: 흐림=투명하게, 선명=그대로, 빛남=꽃 뒤에 후광. 꽃을 놓을 때마다 이웃의 상태도 바뀐다.
-    /// 둘레의 꽃이 빛나서 효과가 사라진 그늘 칸은 일반 칸 모습(꽃이 놓인 칸처럼 사라짐)으로 바꾼다.</summary>
-    private void RefreshGlow()
+    /// 둘레의 꽃이 빛나서 효과가 사라진 그늘 칸은 일반 칸 모습(꽃이 놓인 칸처럼 사라짐)으로 바꾼다.
+    /// showDim이 false면 흐림 꽃도 선명하게 보여 준다(꽃다발이 완성됐을 때. 빛남의 후광과 특수 칸은 그대로다).</summary>
+    public void RefreshGlow(bool showDim = true)
     {
         var (glows, clearedShades) = FlowerLight.Resolve(PlacedCells(), SpecialCells());
         foreach (WrapperSlot region in regions)
@@ -234,28 +235,11 @@ public class DayPuzzleController : MonoBehaviour
             FlowerGlow glow = glows[region.position];
             Image image = flowerImage.GetComponent<Image>();
             Color c = image.color;
-            c.a = glow == FlowerGlow.Dim ? dimAlpha : 1f;
+            c.a = glow == FlowerGlow.Dim && showDim ? dimAlpha : 1f;
             image.color = c;
 
             Image glowImage = GlowImageOf(region);
             if (glowImage != null) glowImage.gameObject.SetActive(glow == FlowerGlow.Bright);
-        }
-    }
-
-    /// <summary>꽃다발이 완성됐다: 흐림 꽃을 다시 선명하게 돌려놓는다(알파만. 빛남의 후광과 특수 칸은 그대로 둔다).</summary>
-    public void RestoreDimAlpha()
-    {
-        foreach (WrapperSlot region in regions)
-        {
-            if (!region.IsFull) continue;
-
-            Transform flowerImage = FlowerImageOf(region);
-            if (flowerImage == null) continue;
-
-            Image image = flowerImage.GetComponent<Image>();
-            Color c = image.color;
-            c.a = 1f;
-            image.color = c;
         }
     }
 

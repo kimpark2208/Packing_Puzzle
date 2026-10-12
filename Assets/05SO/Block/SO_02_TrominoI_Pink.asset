@@ -10,19 +10,19 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 74a634c29bfedc144ae03bdc4755ce48, type: 3}
-  m_Name: SO_14_PentominoZ_Red
+  m_Name: SO_02_TrominoI_Pink
   m_EditorClassIdentifier: Assembly-CSharp::FlowerData
-  blockID: 14
-  flowerName: "\uC591\uADC0\uBE44"
-  color: 0
+  blockID: 2
+  flowerName: "\uD2A4\uB9BD"
+  color: 5
   flowerRole: 3
   shapeGrid:
-  - cols: 010100
-  - cols: 000100
-  - cols: 000101
-  anchorCoord: {x: 1, y: 1}
+  - cols: 01
+  - cols: 01
+  - cols: 01
+  anchorCoord: {x: 0, y: 1}
   iconSprite: {fileID: -3182467019310743072, guid: a88ffab4d83f02c4d8bd22562c2faccc, type: 3}
   stemSprite: {fileID: 5856240631183992178, guid: b9f97a0c03bea8c49ac2b17ce37cf466, type: 3}
   nightCellSprite: {fileID: -3182467019310743072, guid: a88ffab4d83f02c4d8bd22562c2faccc, type: 3}
-  dayPieceSprite: {fileID: 21300000, guid: 26e4535e2d208d64ab23ed013b557d44, type: 3}
+  dayPieceSprite: {fileID: 21300000, guid: dda93d7761e5d864d9fa5ce6e2edaa9d, type: 3}
   dayFillSprite: {fileID: -3480653308909891845, guid: 29875a58e269b374195376c434488224, type: 3}

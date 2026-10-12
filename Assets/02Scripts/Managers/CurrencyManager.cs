@@ -10,7 +10,7 @@ public class CurrencyManager : Singleton<CurrencyManager>
 {
     [SerializeField] private int initialMoney = 0;
     [SerializeField] private int initialFlowerStock = 20; // 모든 꽃의 시작 보유 수량
-    [SerializeField] private int[] outOfStockFlowerIds = { 5 }; // 시작 보유 수량이 0인 꽃(지금은 라벤더만. 5칸짜리는 임시로 재고에 넣었다)
+    [SerializeField] private int[] outOfStockFlowerIds = { 4 }; // 시작 보유 수량이 0인 꽃(지금은 라벤더만. 5칸짜리는 임시로 재고에 넣었다)
 
     [SerializeField] private int initialCharms = 20; // 시작 부적 수량(저장 시스템이 생기기 전까지는 매번 이 값으로 시작한다)
     [SerializeField] private int maxCharms = 30;     // 부적 보유 한도
@@ -71,10 +71,10 @@ public class CurrencyManager : Singleton<CurrencyManager>
         // 3번(3링) 프리셋은 보드가 아직 지원하지 않는다(DayPuzzleController.SupportedRings 참고).
         ownedWrappers.Add(2);
 
-        // 초기 꽃: 역할(속성)별로 하나씩. 장미-도미노(1, 매스), 튤립-I트로미노(3, 필러), 해바라기-L트로미노(4, 폼), 프리지아-S테트로미노(8, 라인)
+        // 초기 꽃: 역할(속성)별로 하나씩. 장미-도미노(1, 매스), 튤립-I트로미노(2, 필러), 해바라기-L트로미노(3, 폼), 프리지아-S테트로미노(7, 라인)
         // (BlockRegistry의 1단계 포장지 꽃 ID와 일치해야 함)
-        // 8번은 좌우 반전이 실제로 다르게 보이는(거울상) 도형이라, 처음부터 회전/반전 조작을 눈으로 확인할 수 있다.
-        foreach (int id in new[] { 1, 3, 4, 8 }) obtainedFlowers[id] = true;
+        // 7번은 좌우 반전이 실제로 다르게 보이는(거울상) 도형이라, 처음부터 회전/반전 조작을 눈으로 확인할 수 있다.
+        foreach (int id in new[] { 1, 2, 3, 7 }) obtainedFlowers[id] = true;
 
         // 보유 수량은 등록된 모든 꽃이 initialFlowerStock(GetFlowerStock의 기본값)이고, 지정한 꽃만 0이다.
         foreach (int id in outOfStockFlowerIds) flowerStock[id] = 0;

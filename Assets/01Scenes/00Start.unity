@@ -202,6 +202,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::GameFlowController
   dontDestroyOnLoad: 1
   nightRewardPerFlower: 6
+  nightStagesToPrepare: 6
   colorMetaphorChance: 0.2
 --- !u!114 &438470795
 MonoBehaviour:
@@ -265,7 +266,7 @@ MonoBehaviour:
   dontDestroyOnLoad: 1
   initialMoney: 0
   initialFlowerStock: 20
-  outOfStockFlowerIds: 05000000
+  outOfStockFlowerIds: 04000000
   initialCharms: 20
   maxCharms: 30
 --- !u!4 &438470799

@@ -14,12 +14,13 @@ using UnityEngine.UI;
 /// </summary>
 public class LoadingScreen : MonoBehaviour
 {
+    private const float WorkShare = 0.7f; // 작업이 있을 때 막대에서 작업이 차지하는 몫(나머지는 씬 불러오기)
+
     [SerializeField] private TMP_Text quoteText;
     [SerializeField] private TMP_Text statusText;
     [SerializeField] private Slider bar;
     [SerializeField, Min(0.1f)] private float minSeconds = 1f;  // 불러오기가 이보다 빨리 끝나도 이만큼은 보여 준다(막대는 이 시간에 걸쳐 천천히 찬다)
     [SerializeField] private float changeSeconds = 0.5f; // 문구와 상태 글자가 바뀌는 간격
-    [SerializeField, Range(0f, 1f)] private float workShare = 0.7f; // 작업이 있을 때 막대에서 작업이 차지하는 몫(나머지는 씬 불러오기)
     [SerializeField, TextArea] private string[] quotes =
     {
         "어떤 꽃다발은 사람보다 오래 기억됩니다.",
@@ -49,7 +50,7 @@ public class LoadingScreen : MonoBehaviour
         yield return null; // 로딩 화면을 먼저 그린 뒤에 일을 시작한다(안 그러면 첫 조각 동안 이전 화면이 남는다)
 
         IEnumerator<float> work = SceneLoader.TakeWork();
-        float workPart = work != null ? workShare : 0f;
+        float workPart = work != null ? WorkShare : 0f;
         while (work != null && work.MoveNext())
         {
             Refresh(workPart * Mathf.Clamp01(work.Current));
@@ -57,8 +58,6 @@ public class LoadingScreen : MonoBehaviour
         }
 
         string target = string.IsNullOrEmpty(SceneLoader.Target) ? GameManager.SceneDayMain : SceneLoader.Target; // 로딩 씬만 단독으로 실행해도 메인으로 간다
-        ThreadPriority previousPriority = Application.backgroundLoadingPriority;
-        Application.backgroundLoadingPriority = ThreadPriority.High; // 로딩 화면은 움직임이 적으니 프레임당 불러오기에 시간을 더 줘서 빨리 끝낸다
         AsyncOperation load = SceneManager.LoadSceneAsync(target);
         load.allowSceneActivation = false; // 막대가 다 찰 때까지 열지 않는다
 
@@ -68,7 +67,6 @@ public class LoadingScreen : MonoBehaviour
             yield return null;
         }
 
-        Application.backgroundLoadingPriority = previousPriority;
         load.allowSceneActivation = true;
     }
 
@@ -97,10 +95,8 @@ public class LoadingScreen : MonoBehaviour
     private static string Pick(string[] lines, string current)
     {
         if (lines == null || lines.Length == 0) return current;
-        if (lines.Length == 1) return lines[0];
 
-        string picked = current;
-        for (int tries = 0; tries < 8 && picked == current; tries++) picked = lines[Random.Range(0, lines.Length)]; // 목록이 전부 같은 글이어도 멈추지 않게 횟수를 제한한다
-        return picked;
+        int at = System.Array.IndexOf(lines, current); // 지금 것 다음 칸부터 (목록 길이 - 1)칸 안에서 고르면 지금 것은 절대 다시 뽑히지 않는다
+        return lines[at < 0 ? Random.Range(0, lines.Length) : (at + 1 + Random.Range(0, lines.Length - 1)) % lines.Length];
     }
 }

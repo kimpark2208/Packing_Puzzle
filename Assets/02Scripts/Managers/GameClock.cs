@@ -28,6 +28,16 @@ public class GameClock : Singleton<GameClock>
     public float MoodRatio => moodDurationSeconds > 0f ? Mathf.Clamp01(MoodRemaining / moodDurationSeconds) : 0f;
     public float NightRatio => nightDurationSeconds > 0f ? Mathf.Clamp01(NightRemaining / nightDurationSeconds) : 0f;
 
+    // 기분 단계의 경계(남은 기분 시간의 비율)
+    private const float HappyAbove = 0.65f;
+    private const float NormalAbove = 0.32f;
+
+    /// <summary>지금 손님 기분 단계: 남은 비율이 65%를 넘으면 좋음, 32%를 넘으면 보통, 그 아래는 나쁨.</summary>
+    public MoodLevel Mood => MoodRatio > HappyAbove ? MoodLevel.Happy : MoodRatio > NormalAbove ? MoodLevel.Normal : MoodLevel.Bad;
+
+    /// <summary>기분 시간이 지금 실제로 줄고 있는가(주문을 수락했고, 낮 화면이고, 설정/결과로 멈춰 있지 않다).</summary>
+    public bool MoodFlowing => moodActive && running && !paused;
+
     private bool running;
     private bool moodActive; // 현재 주문이 진행 중이라 기분 시간이 흐르는가
     private bool paused;     // 설정 창이 열려 있는가

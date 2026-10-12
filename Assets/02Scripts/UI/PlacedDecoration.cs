@@ -33,7 +33,7 @@ public class PlacedDecoration : MonoBehaviour, IBeginDragHandler, IDragHandler, 
     }
 
     /// <summary>스프라이트의 가로세로 비율을 지킨 채 상자 안에 꽉 차는 크기.</summary>
-    public static Vector2 FitSize(Sprite sprite, Vector2 box)
+    private static Vector2 FitSize(Sprite sprite, Vector2 box)
     {
         if (sprite == null || sprite.rect.width <= 0f || sprite.rect.height <= 0f) return box;
         float scale = Mathf.Min(box.x / sprite.rect.width, box.y / sprite.rect.height);
@@ -41,7 +41,7 @@ public class PlacedDecoration : MonoBehaviour, IBeginDragHandler, IDragHandler, 
     }
 
     /// <summary>스프라이트에 정해 둔 피벗(그림 안의 기준점)을 0~1 비율로.</summary>
-    public static Vector2 PivotOf(Sprite sprite)
+    private static Vector2 PivotOf(Sprite sprite)
     {
         if (sprite == null || sprite.rect.width <= 0f || sprite.rect.height <= 0f) return new Vector2(0.5f, 0.5f);
         return new Vector2(sprite.pivot.x / sprite.rect.width, sprite.pivot.y / sprite.rect.height);
