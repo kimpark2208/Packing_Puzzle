@@ -242,6 +242,23 @@ public class DayPuzzleController : MonoBehaviour
         }
     }
 
+    /// <summary>꽃다발이 완성됐다: 흐림 꽃을 다시 선명하게 돌려놓는다(알파만. 빛남의 후광과 특수 칸은 그대로 둔다).</summary>
+    public void RestoreDimAlpha()
+    {
+        foreach (WrapperSlot region in regions)
+        {
+            if (!region.IsFull) continue;
+
+            Transform flowerImage = FlowerImageOf(region);
+            if (flowerImage == null) continue;
+
+            Image image = flowerImage.GetComponent<Image>();
+            Color c = image.color;
+            c.a = 1f;
+            image.color = c;
+        }
+    }
+
     public void PreviewHover(FlowerData flower, Vector2 screenPoint, Camera eventCamera)
     {
         PreviewHover(flower, new Rect(screenPoint, Vector2.zero), eventCamera);

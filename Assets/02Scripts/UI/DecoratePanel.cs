@@ -1,12 +1,14 @@
 using System.Collections.Generic;
+using System.Linq;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
 /// <summary>
-/// 꾸미기 창(낮 퍼즐 화면 왼쪽): 탭 2개, 항목 칩 3개, 카드 그리드. 탭과 칩은 씬에 미리 배치되어 있고,
-/// 카드는 카드 프리팹을 필요한 개수만큼 복제해 그리드(GridLayoutGroup이 있는 Content)에 채운다.
-/// 지금은 보이는 동작만 한다: 탭/칩/카드를 누르면 선택 표시가 바뀌고, 탭을 바꾸면 카드 이름이 바뀐다. 카드의 실제 기능은 아직 없다.
+/// 꾸미기 창(낮 퍼즐 화면 왼쪽): 탭 2개("꽃다발 꾸미기"/"꽃다발 모양"), 항목 칩 4개, 카드 그리드. 탭과 칩은 씬에 미리 배치되어 있고,
+/// 카드는 꾸미기 용품(DecorationData)마다 카드 프리팹을 복제해 그리드(GridLayoutGroup이 있는 Content)에 채운다.
+/// - 꽃다발 꾸미기 탭: 칩이 가리키는 항목(리본/풀/카드/장식)의 카드. 리본/풀은 카드를 누르면 앵커에 놓이고, 카드/장식은 카드에서 끌어다 꽃다발에 놓는다(DecorationCardView).
+/// - 꽃다발 모양 탭: 포장지 항목의 카드. 누르면 꽃다발 이미지가 그 포장지 그림으로 바뀐다.
 /// </summary>
 public class DecoratePanel : MonoBehaviour
 {
@@ -14,49 +16,89 @@ public class DecoratePanel : MonoBehaviour
     private static readonly Color ChipOn = new(0.45f, 0.45f, 0.45f), ChipOff = new(1f, 1f, 1f);
     private static readonly Color CardOn = new(0.92f, 0.92f, 0.9f), CardOff = new(1f, 1f, 1f);
     private static readonly Color TextDark = new(0.25f, 0.25f, 0.25f);
-    private static readonly string[] CardNames = { "이름이름이름", "모양모양모양" }; // 탭마다 카드 이름이 달라 보이게 하는 임시 문구
 
     [SerializeField] private Button[] tabs;
     [SerializeField] private Button[] chips;
+    [SerializeField] private DecorationCategory[] chipCategories; // chips와 같은 순서: 각 칩이 보여 줄 항목
+    [SerializeField] private DecorationData[] decorations;        // 꾸미기 용품 전부(탭/칩마다 자기 항목만 걸러서 보여 준다)
     [SerializeField] private Button cardPrefab;
-    [SerializeField] private int cardCount = 12; // 지금은 임시 개수. 꾸미기 용품 데이터가 연결되면 그 개수로 만든다
+    [SerializeField] private DecorationPlacer placer;
+
+    [Header("꽃다발 꾸미기 탭(0번): 이 탭일 때만 켜지는 오브젝트들과 카드가 채워지는 그리드")]
+    [SerializeField] private GameObject[] decorateTab;
+    [SerializeField] private Transform decorateCardParent;
+    [Header("꽃다발 모양 탭(1번)")]
+    [SerializeField] private GameObject shapeTab;
+    [SerializeField] private Transform shapeCardParent;
 
     private readonly List<Button> cards = new();
-    private Transform cardParent; // 카드가 채워지는 그리드(GridLayoutGroup이 있는 자식)
+    private readonly List<DecorationData> shown = new(); // cards와 같은 순서의 용품
     private int tab;
     private int chip;
-    private int card = -1; // 고른 카드(없으면 -1)
 
     private void Awake()
     {
-        Hook(tabs, i => tab = i);
-        Hook(chips, i => chip = i);
-        SpawnCards(cardCount);
-        Refresh();
+        Hook(tabs, i =>
+        {
+            tab = i;
+            SpawnCards();
+        });
+        Hook(chips, i =>
+        {
+            chip = i;
+            SpawnCards();
+        });
+        SpawnCards();
     }
 
-    /// <summary>카드를 count개 만든다(이미 있던 카드는 치우고 다시 채운다).</summary>
-    private void SpawnCards(int count)
+    /// <summary>지금 탭(과 칩)에 해당하는 카드로 다시 채운다.</summary>
+    private void SpawnCards()
     {
-        foreach (Button old in cards) Destroy(old.gameObject);
-        cards.Clear();
-        card = -1;
+        bool shape = tab == 1;
+        foreach (GameObject body in decorateTab) body.SetActive(!shape);
+        if (shapeTab != null) shapeTab.SetActive(shape);
 
-        if (cardPrefab == null) return;
-        if (cardParent == null) cardParent = GetComponentInChildren<GridLayoutGroup>(true).transform;
-
-        for (int i = 0; i < count; i++)
+        foreach (Button old in cards)
         {
-            int index = i;
-            Button created = Instantiate(cardPrefab, cardParent);
-            created.name = $"Card_{i + 1}";
+            old.gameObject.SetActive(false); // Destroy는 프레임 끝에 되므로, 그 전에 그리드 배치에서 빠지게 끈다
+            Destroy(old.gameObject);
+        }
+        cards.Clear();
+        shown.Clear();
+
+        Transform parent = shape ? shapeCardParent : decorateCardParent;
+        if (cardPrefab == null || parent == null)
+        {
+            Refresh();
+            return;
+        }
+        foreach (Transform sample in parent) Destroy(sample.gameObject); // 에디터에 배치만 해 둔 견본 카드는 실행하면 치운다
+
+        DecorationCategory category = shape ? DecorationCategory.Wrapper : chipCategories[Mathf.Min(chip, chipCategories.Length - 1)];
+        foreach (DecorationData data in decorations.Where(d => d != null && d.category == category).OrderBy(d => d.id))
+        {
+            DecorationData item = data;
+            Button created = Instantiate(cardPrefab, parent);
+            created.name = $"Card_{item.name}";
+            created.transform.Find("Name").GetComponent<TMP_Text>().text = item.displayName;
+
+            var picture = created.transform.Find("Image").GetComponent<Image>();
+            picture.sprite = item.sprite;
+            picture.preserveAspect = true; // 카드 칸이 달라도 그림의 가로세로 비율을 지킨다
+            picture.raycastTarget = false;
+
+            created.GetComponent<DecorationCardView>().Bind(item, placer);
             created.onClick.AddListener(() =>
             {
-                card = card == index ? -1 : index; // 고른 카드를 다시 누르면 해제
+                if (placer == null) return;
+                if (item.category == DecorationCategory.Wrapper) placer.SelectShape(item); // 꽃다발 모양: 포장지 그림으로 바꾼다
+                else if (DecorationPlacer.IsAnchored(item.category)) placer.ToggleAnchored(item); // 리본/풀: 앵커에 놓는다(카드/장식은 끌어서 놓는다)
                 Refresh();
             });
             cards.Add(created);
+            shown.Add(item);
         }
+        Refresh();
     }
 
     private void Hook(Button[] buttons, System.Action<int> select)
@@ -78,12 +120,10 @@ public class DecoratePanel : MonoBehaviour
         for (int i = 0; i < chips.Length; i++) Paint(chips[i], i == chip ? ChipOn : ChipOff, i == chip ? Color.white : TextDark);
         for (int i = 0; i < cards.Count; i++)
         {
-            Paint(cards[i], i == card ? CardOn : CardOff, TextDark);
+            bool picked = placer != null && (shown[i].category == DecorationCategory.Wrapper ? placer.IsShapeSelected(shown[i]) : placer.IsPlaced(shown[i])); // 앵커에 놓였거나 지금 모양인 카드는 고른 표시
+            Paint(cards[i], picked ? CardOn : CardOff, TextDark);
             Outline border = cards[i].GetComponent<Outline>();
-            if (border != null) border.effectColor = i == card ? new Color(0.35f, 0.35f, 0.35f) : new Color(0.8f, 0.8f, 0.8f);
-
-            Transform nameLabel = cards[i].transform.Find("Name");
-            if (nameLabel != null) nameLabel.GetComponent<TMP_Text>().text = CardNames[Mathf.Min(tab, CardNames.Length - 1)];
+            if (border != null) border.effectColor = picked ? new Color(0.35f, 0.35f, 0.35f) : new Color(0.8f, 0.8f, 0.8f);
         }
     }
 

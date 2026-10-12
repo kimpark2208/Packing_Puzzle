@@ -16,6 +16,9 @@ public class DayPuzzleUI : MonoBehaviour
     [Header("결과 화면 (점수 사유가 하나씩 나오는 오버레이)")]
     [SerializeField] private DayResultView resultView;
 
+    [Header("결과 화면의 포토카드 사진(완성한 꽃다발을 찍어 넣는다)")]
+    [SerializeField] private BouquetPhoto bouquetPhoto;
+
     [Header("붕괴 팝업")]
     [SerializeField] private GameObject collapsePopup;
 
@@ -118,6 +121,7 @@ public class DayPuzzleUI : MonoBehaviour
         {
             roundEnded = true;
             GameClock.Instance?.StopMood(); // 완성한 순간 손님 기분 시간은 멈춘다(정산은 작업 완료를 누를 때)
+            board.RestoreDimAlpha(); // 완성한 꽃다발은 흐림 꽃도 선명하게 보여 준다(빛남 후광과 특수 칸은 그대로)
             SetDecorating(true);
             return;
         }
@@ -156,6 +160,7 @@ public class DayPuzzleUI : MonoBehaviour
     {
         lastRequirementMet = result.RequirementMet;
         GameClock.Instance?.SetPaused(true); // 결과를 보는 동안 하루 시간도 멈춘다(기분 시간은 정산에서 이미 멈췄다)
+        if (bouquetPhoto != null) bouquetPhoto.Take(); // 결과 화면의 포토카드에 완성한 꽃다발(꾸미기 포함)을 넣는다
 
         if (resultView == null) // 결과 화면이 연결되지 않았으면 알림 없이 바로 넘어간다
         {

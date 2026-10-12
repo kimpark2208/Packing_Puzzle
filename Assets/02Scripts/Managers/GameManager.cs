@@ -13,13 +13,13 @@ using UnityEngine.SceneManagement;
 /// </summary>
 public class GameManager : Singleton<GameManager>
 {
-    public const string SceneStart = "00Start";
     public const string SceneDayMain = "01DayMain";
     public const string SceneDayPuzzle = "03DayPuzzle";
     public const string SceneNightPuzzle = "02NightPuzzle";
     public const string SceneResult = "03Result";
 
     [SerializeField] private int nightRewardPerFlower = 6; // 밤 퍼즐을 완료하면 퍼즐에 쓴 꽃 종류마다 늘어나는 보유 수량
+    [SerializeField, Min(1)] private int nightStagesToPrepare = 6; // 낮에서 밤으로 넘어가는 로딩에서 미리 만들어 두는 밤 퍼즐 수(부적 퍼즐 + 모자란 만큼의 잉여 퍼즐)
 
     [Header("색 주문에서 색 이름 대신 비유 문구(\"동백 같은 꽃\")로 말하는 확률")]
     [SerializeField, Range(0f, 1f)] private float colorMetaphorChance = 0.2f;
@@ -61,25 +61,35 @@ public class GameManager : Singleton<GameManager>
         EventBus.OnNightResultConfirmed -= ContinueNightAfterResult;
     }
 
-    private void Start()
-    {
-        // 부트스트랩에서 바로 낮 메인으로 진입한다.
-        if (SceneManager.GetActiveScene().name == SceneStart)
-        {
-            BeginNewDay();
-        }
-    }
-
     // ========== 낮 ==========
 
+    /// <summary>시작 화면(00Start)에서 터치했다: 로딩이 기니 로딩 씬을 거쳐 낮 메인으로 간다. 첫 손님은 로딩 씬에서 정한다.</summary>
+    public void StartGame()
+    {
+        SceneLoader.Load(SceneDayMain, StartGameWork());
+    }
+
+    private IEnumerator<float> StartGameWork()
+    {
+        yield return 0f;
+        PrepareNewDay();
+        yield return 1f;
+    }
+
     public void BeginNewDay()
+    {
+        PrepareNewDay();
+        SceneManager.LoadScene(SceneDayMain);
+    }
+
+    /// <summary>새 손님(오늘의 주문)을 정하고 메인 화면이 낮 손님을 보여 주도록 해 둔다.</summary>
+    private void PrepareNewDay()
     {
         dayEndPending = false;
         orderInProgress = false;
         MainState = MainState.DayCustomer;
         CurrentDayOrder = DayPuzzleGenerator.GenerateOrder(CurrencyManager.Instance.CurrentDay, colorMetaphorChance);
         CurrencyManager.Instance.SetCurrentRequirement(CurrentDayOrder.requirement);
-        SceneManager.LoadScene(SceneDayMain);
     }
 
     /// <summary>플레이어가 포장지를 골랐을 때(꽃 선택 화면 상단). 포장지 단계의 태그 요구 레벨을 확정한다.</summary>
@@ -101,11 +111,12 @@ public class GameManager : Singleton<GameManager>
         SceneManager.LoadScene(SceneDayPuzzle);
     }
 
-    /// <summary>카운터에서 등불을 켜면 밤이 시작된다: 밤 시간이 가득 차 흐르기 시작하고, 부적을 붙인 꽃의 퍼즐로 밤 손님이 찾아온다.</summary>
+    /// <summary>카운터에서 등불을 켜면 밤이 시작된다: 로딩 씬에서 부적을 붙인 꽃의 퍼즐을 모두 만든 뒤, 밤 시간이 가득 차 흐르기 시작하고 밤 손님이 찾아온다.
+    /// 로딩 동안은 밤 시간이 흐르지 않는다(밤 시간은 밤 화면이 열려야 흐른다).</summary>
     public void StartNight(List<int> charmedFlowerIds)
     {
         GameClock.Instance?.BeginNight();
-        ConfirmNightRequests(charmedFlowerIds);
+        SceneLoader.Load(SceneDayMain, GenerateNightStagesWork(charmedFlowerIds));
     }
 
     /// <summary>낮 퍼즐이 끝나 다음 손님이 있는 낮 메인으로 돌아간다(성공이든 손님이 화났든). 돌아가면 손님이 customerLine을 첫 대사로 말한다.
@@ -161,31 +172,41 @@ public class GameManager : Singleton<GameManager>
 
     // ========== 밤 ==========
 
-    /// <summary>requestedFlowerIds는 오늘 밤 부적을 붙인 꽃들.
+    /// <summary>로딩 씬이 돌리는 작업(조각 작업): requestedFlowerIds(오늘 밤 부적을 붙인 꽃들)로 밤 퍼즐을 미리 모두 만든다.
     /// 퍼즐 하나에는 꽃이 최대 2종만 나오므로, 부적을 붙인 꽃을 섞어서 두 개씩 묶어 퍼즐 하나씩 만든다(6개면 퍼즐 3개).
-    /// 묶음마다 퍼즐은 필요할 때 EnsureNightStage가 하나씩 만든다(한꺼번에 만들면 멈춤이 생긴다). 묶음을 다 쓰면 잉여 퍼즐로 이어진다.</summary>
-    private void ConfirmNightRequests(List<int> requestedFlowerIds)
+    /// 퍼즐 하나를 만들 때마다(그동안 화면은 멈춘다) 진행률을 알려 로딩 막대가 한 칸씩 찬다. 묶음을 다 쓴 뒤의 잉여 퍼즐은 필요할 때 EnsureNightStage가 하나씩 만든다.
+    /// 다 만들면 밤 요청을 마친 것이다: 메인 화면에서 밤 손님이 퍼즐 이야기를 하고, 수락하면 퍼즐로 간다(만들 퍼즐이 없으면 바로 퍼즐 씬).</summary>
+    private IEnumerator<float> GenerateNightStagesWork(List<int> requestedFlowerIds)
     {
-        int[] requested = requestedFlowerIds.Distinct().OrderBy(_ => Random.value).ToArray();
+        yield return 0f;
 
+        int[] requested = requestedFlowerIds.Distinct().OrderBy(_ => Random.value).ToArray();
         pendingRequestStages.Clear();
         int perStage = ProceduralNightPuzzleGenerator.MaxBlocksPerStage;
         for (int i = 0; i < requested.Length; i += perStage) pendingRequestStages.Enqueue(requested.Skip(i).Take(perStage).ToArray());
 
         nightQueue = new List<NightPuzzleData>();
         nightIndex = 0;
-        EnsureNightStage(0);
 
-        // 밤 요청을 마치면 메인 화면에서 밤 손님이 퍼즐 이야기를 하고, 수락하면 퍼즐로 간다(만들 퍼즐이 없으면 바로 퍼즐 씬).
+        // 부적 묶음의 퍼즐을 먼저, 모자라면 잉여 퍼즐로 nightStagesToPrepare개를 채운다(EnsureNightStage가 순서대로 알아서 만든다)
+        int total = Mathf.Max(nightStagesToPrepare, pendingRequestStages.Count);
+        for (int i = 0; i < total; i++)
+        {
+            EnsureNightStage(i);
+            if (nightQueue.Count <= i) break; // 만들 수 있는 퍼즐이 더 없다(보유한 꽃이 없을 때)
+            yield return (i + 1) / (float)total;
+        }
+
         if (nightQueue.Count > 0)
         {
             MainState = MainState.NightCustomer;
-            SceneManager.LoadScene(SceneDayMain);
+            SceneLoader.Target = SceneDayMain;
         }
         else
         {
-            SceneManager.LoadScene(SceneNightPuzzle);
+            SceneLoader.Target = SceneNightPuzzle;
         }
+        yield return 1f;
     }
 
     /// <summary>밤 손님이 지금 풀 퍼즐에 나올 꽃 이름들(없으면 null: 만들 수 있는 퍼즐이 더 없다).</summary>

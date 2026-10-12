@@ -150,6 +150,7 @@ GameObject:
   - component: {fileID: 2279697527499976168}
   - component: {fileID: 3489230969572567024}
   - component: {fileID: 4631717024398694591}
+  - component: {fileID: 3012270201708043378}
   m_Layer: 0
   m_Name: DecorationCard
   m_TagString: Untagged
@@ -273,6 +274,18 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Mask
   m_ShowMaskGraphic: 1
+--- !u!114 &3012270201708043378
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3737314325326865916}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fa776f7bbcd913a4e95b5a42c0f78a9a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DecorationCardView
 --- !u!1 &8298928184660267977
 GameObject:
   m_ObjectHideFlags: 0
@@ -307,8 +320,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 0, y: 0}
+  m_AnchoredPosition: {x: 0, y: 31}
+  m_SizeDelta: {x: -20, y: -82}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &6825095242139132594
 CanvasRenderer:
@@ -340,7 +353,7 @@ MonoBehaviour:
       m_Calls: []
   m_Sprite: {fileID: 0}
   m_Type: 0
-  m_PreserveAspect: 0
+  m_PreserveAspect: 1
   m_FillCenter: 1
   m_FillMethod: 4
   m_FillAmount: 1
