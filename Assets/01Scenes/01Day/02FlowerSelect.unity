@@ -632,6 +632,7 @@ MonoBehaviour:
     box: {fileID: 1563777432}
     rolls: {fileID: 1449509434}
   wrapperConfirmButton: {fileID: 1435125141}
+  wrapperPreview: {fileID: 0}
   flowerPopup: {fileID: 2080710008}
   shelves:
   - role: 0

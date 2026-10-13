@@ -36,10 +36,12 @@ public class GameClock : Singleton<GameClock>
     public MoodLevel Mood => MoodRatio > HappyAbove ? MoodLevel.Happy : MoodRatio > NormalAbove ? MoodLevel.Normal : MoodLevel.Bad;
 
     /// <summary>기분 시간이 지금 실제로 줄고 있는가(주문을 수락했고, 낮 화면이고, 설정/결과로 멈춰 있지 않다).</summary>
-    public bool MoodFlowing => moodActive && running && !paused && !tutorialHold;
+    public bool MoodFlowing => moodActive && running && !paused && !TutorialHold;
+
+    /// <summary>튜토리얼 안내가 떠 있는 동안 true: 하루/기분/밤 시간이 모두 멈춘다(설정 창의 멈춤과 따로 센다).</summary>
+    public bool TutorialHold { get; set; }
 
     private bool running;
-    private bool tutorialHold; // 튜토리얼 안내가 떠 있는 동안 모든 시간이 멈춘다(설정 창의 멈춤과 따로 센다)
     private bool moodActive; // 현재 주문이 진행 중이라 기분 시간이 흐르는가
     private bool paused;     // 설정 창이 열려 있는가
     private bool nightScene;  // 지금 메인 화면의 밤 상황(밤 손님/밤 종료)이거나 밤 퍼즐 씬인가
@@ -84,7 +86,7 @@ public class GameClock : Singleton<GameClock>
 
     private void Update()
     {
-        if (paused || tutorialHold) return;
+        if (paused || TutorialHold) return;
         if (running) Tick(Time.deltaTime);
         if (nightScene && nightActive) TickNight(Time.deltaTime);
     }
@@ -147,12 +149,6 @@ public class GameClock : Singleton<GameClock>
     public void SetPaused(bool value)
     {
         paused = value;
-    }
-
-    /// <summary>튜토리얼 안내가 뜨고 사라질 때: 떠 있는 동안 하루/기분/밤 시간이 모두 멈춘다.</summary>
-    public void SetTutorialHold(bool value)
-    {
-        tutorialHold = value;
     }
 
     /// <summary>디버그용: 하루 남은 시간만 앞당긴다(손님 기분은 그대로).</summary>

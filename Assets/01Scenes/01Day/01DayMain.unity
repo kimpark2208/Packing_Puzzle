@@ -14056,10 +14056,6 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 2266957558842548143, guid: e5214c83b2723424693bfef4d45ed6ba, type: 3}
-      propertyPath: m_IsActive
-      value: 0
-      objectReference: {fileID: 0}
     - target: {fileID: 3956769130293302030, guid: e5214c83b2723424693bfef4d45ed6ba, type: 3}
       propertyPath: m_Camera
       value: 
@@ -14087,10 +14083,6 @@ PrefabInstance:
     - target: {fileID: 4418657240255978181, guid: e5214c83b2723424693bfef4d45ed6ba, type: 3}
       propertyPath: badTextColor.r
       value: 0.3207547
-      objectReference: {fileID: 0}
-    - target: {fileID: 7216884373613189942, guid: e5214c83b2723424693bfef4d45ed6ba, type: 3}
-      propertyPath: m_AdditionalShaderChannelsFlag
-      value: 25
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []

@@ -379,7 +379,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &3498600004325380711
 RectTransform:
   m_ObjectHideFlags: 0
@@ -1023,7 +1023,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!224 &2187165409523023270
 RectTransform:
   m_ObjectHideFlags: 0
@@ -1066,7 +1066,6 @@ MonoBehaviour:
   banner: {fileID: 4215299418239884848}
   bannerText: {fileID: 2198263704542807451}
   confirmButton: {fileID: 4919040934906425888}
-  padding: 12
 --- !u!114 &2392446474543234537
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1079,5 +1078,4 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f2f199de24fbe5544bb04760d38b5afb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TutorialDirector
-  settleSeconds: 0.5
   checkInterval: 0.1

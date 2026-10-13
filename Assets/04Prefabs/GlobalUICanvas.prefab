@@ -1153,7 +1153,6 @@ GameObject:
   m_Component:
   - component: {fileID: 1427536270193336188}
   - component: {fileID: 6004621401877033181}
-  - component: {fileID: 4218395728813852726}
   m_Layer: 0
   m_Name: Clock
   m_TagString: Untagged
@@ -1190,19 +1189,6 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1868366344884818179}
   m_CullTransparentMesh: 1
---- !u!114 &4218395728813852726
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1868366344884818179}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 4229588fe120fe748aed715084c16d5e, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::LanternVisibility
-  lanternArea: {fileID: 1451442231829324966}
 --- !u!1 &2194514556246710938
 GameObject:
   m_ObjectHideFlags: 0
@@ -4431,6 +4417,7 @@ MonoBehaviour:
   fillImage: {fileID: 9211668239266722192}
   dayFillSprite: {fileID: 21300000, guid: e902f564b058db048b56aa2a9ad01ac5, type: 3}
   nightFillSprite: {fileID: 21300000, guid: 09e10a6d33257d24a804bc27146d4735, type: 3}
+  lanternArea: {fileID: 1451442231829324966}
 --- !u!1 &7325123121644268690
 GameObject:
   m_ObjectHideFlags: 0

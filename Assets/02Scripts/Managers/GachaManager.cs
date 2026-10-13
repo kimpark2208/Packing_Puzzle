@@ -24,7 +24,7 @@ public class GachaManager : MonoBehaviour
     [SerializeField, Range(0f, 1f)] private float wiltChance = 0.08f; // 뽑힌 꽃 하나가 시든 꽃일 확률
     [SerializeField] private List<FlowerData> initialPool = new(); // 인스펙터 테스트용 기본 풀
 
-    private static readonly Color WiltedColor = new(0.55f, 0.55f, 0.55f);
+    public static readonly Color WiltedColor = new(0.55f, 0.55f, 0.55f); // 시든 꽃 색(튜토리얼이 시든 꽃을 알아볼 때도 쓴다)
 
     private readonly List<GameObject> slotTemplates = new();
     private readonly List<GameObject> shown = new();

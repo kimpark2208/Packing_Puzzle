@@ -17,20 +17,6 @@ using static TutorialOverlay.Step;
 /// </summary>
 public static class TutorialLessons
 {
-    public class Lesson
-    {
-        public readonly string id;
-        public readonly Func<bool> when;
-        public readonly Func<Step[]> steps;
-
-        public Lesson(string id, Func<bool> when, Func<Step[]> steps)
-        {
-            this.id = id;
-            this.when = when;
-            this.steps = steps;
-        }
-    }
-
     // ── 하이라키 경로(씬 루트부터) ──────────────────────────────────────────────
     private const string Global = "GlobalUICanvas/GlobalUI/";
     private const string ColorRelationButton = Global + "ResourceBar/ColorRelationBTN";
@@ -64,27 +50,27 @@ public static class TutorialLessons
     private const string NightResult = "Canvas/ResultPopup";
 
     // ── 안내 목록(보여 주는 순서) ───────────────────────────────────────────────
-    public static readonly IReadOnlyList<Lesson> All = new[]
+    public static readonly (string id, Func<bool> when, Func<Step[]> steps)[] All =
     {
         // 낮 손님: 첫 주문
-        new Lesson("welcome", () => In(GameManager.SceneDayMain) && Main == MainState.DayCustomer && Active(AcceptButton), () => new[]
+        ("welcome", () => In(GameManager.SceneDayMain) && Main == MainState.DayCustomer && Active(AcceptButton), () => new[]
         {
             On($"손님이 원하는 {Em("포장지")}와 {Em("꽃 요구사항")}을 말해요.\n이 주문대로 꽃다발을 만들어요.", () => Rt(SpeechBubble)),
             On($"{Em($"[{Label(AcceptButton)}]")}로 주문을 받으면 손님이 기다리기 시작해요.\n오래 기다릴수록 손님의 기분이 깎여요.", () => Rt(AcceptButton)),
         }),
 
         // 꽃 선택 페이지(주문을 받으면 자동으로 넘어온다)
-        new Lesson("wrapper", () => In(GameManager.SceneDayMain) && Main == MainState.DayCustomer && Visible(WrapperConfirm), () => new[]
+        ("wrapper", () => In(GameManager.SceneDayMain) && Main == MainState.DayCustomer && Visible(WrapperConfirm), () => new[]
         {
             On($"주문의 {Em("포장지")}를 골라요.\n포장지마다 필요한 꽃의 수가 달라요.", () => Children(WrapperBoxes)),
         }),
-        new Lesson("flowers", () => In(GameManager.SceneDayMain) && Main == MainState.DayCustomer && Visible(FlowerConfirm), () => new[]
+        ("flowers", () => In(GameManager.SceneDayMain) && Main == MainState.DayCustomer && Visible(FlowerConfirm), () => new[]
         {
             On($"꽃은 네 역할로 나뉘어요. {Em("꽃병")}에 {Em("꽃의 재고")}가 표시돼요.\n최대 개수를 다 채우지 않아도, 역할마다 하나 이상 선택하면 {Em($"[{Label(FlowerConfirm)}]")}로 넘어갈 수 있어요.", () => Rt(FlowerShelves)),
         }),
 
         // 낮 퍼즐: 꽃 놓기
-        new Lesson("puzzle-board", () => In(GameManager.SceneDayPuzzle) && Active(FlowerBucket), () => new[]
+        ("puzzle-board", () => In(GameManager.SceneDayPuzzle) && Active(FlowerBucket), () => new[]
         {
             On($"꽃끼리의 {Em("색 궁합")}은 {Em("[색 조합도]")}에서 볼 수 있어요.", () => Rt(ColorRelationButton)),
             On($"이웃한 꽃과 {Em("색 궁합")}이 좋으면 꽃이 {Em("빛나고")}, 안 맞으면 {Em("흐려져요")}.\n빛나는 꽃이 많을수록 꽃다발의 상태가 좋아져요.", () => Rt(SlotArea)),
@@ -96,50 +82,50 @@ public static class TutorialLessons
             OnIfShown($"원하는 꽃이 안 나오면 {Em("[다시 뽑기]")}를 눌러요.\n숫자는 남은 횟수예요.", () => Rt(RerollButton)),
             On($"{Em("보관 칸")}에 꽃 하나를 맡겨 두었다가 나중에 꺼내 쓸 수 있어요.", () => Rt(StorageSlot)),
         }),
-        new Lesson("wilted", () => In(GameManager.SceneDayPuzzle) && WiltedFlower() != null, () => new[]
+        ("wilted", () => In(GameManager.SceneDayPuzzle) && WiltedFlower() != null, () => new[]
         {
             On($"회색 꽃은 {Em("시든 꽃")}이에요. 놓을 수 없어요.\n{Em("[다시 뽑기]")}를 누르거나 다른 꽃을 놓으면 새 꽃이 나와요.", () => WiltedFlower()),
         }),
-        new Lesson("collapse", () => In(GameManager.SceneDayPuzzle) && Active(CollapsePopup), () => new[]
+        ("collapse", () => In(GameManager.SceneDayPuzzle) && Active(CollapsePopup), () => new[]
         {
             Banner($"꽃다발이 {Em("무너졌어요!")} 이번 꽃다발은 {Em("감점")}돼요.\n처음부터 다시 만들어요."),
         }),
 
         // 낮 퍼즐: 꾸미기와 결과
-        new Lesson("decorate", () => In(GameManager.SceneDayPuzzle) && Active(DecoratePanelPath), () => new[]
+        ("decorate", () => In(GameManager.SceneDayPuzzle) && Active(DecoratePanelPath), () => new[]
         {
             On($"{Em("리본과 풀")}은 카드를 누르면 위치에 놓아지고,\n{Em("카드와 장식")}은 드래그로 끌어다 놓아요.\n{Em("[꽃다발 모양]")}에서는 포장지를 바꿔요.", () => Rt(DecoratePanelPath)),
         }),
-        new Lesson("result", () => In(GameManager.SceneDayPuzzle) && Active(ResultGauge), () => new[]
+        ("result", () => In(GameManager.SceneDayPuzzle) && Active(ResultGauge), () => new[]
         {
             On($"{Em("꽃다발 점수")}가 하나씩 나오며 게이지가 움직여요.\n화면을 누르면 빨리 넘어가요.", () => Rt(ResultGauge)),
         }),
 
         // 낮이 끝난 뒤: 부적과 전등
-        new Lesson("day-end", () => In(GameManager.SceneDayMain) && Main == MainState.DayEnding && Active(AcceptButton), () => new[]
+        ("day-end", () => In(GameManager.SceneDayMain) && Main == MainState.DayEnding && Active(AcceptButton), () => new[]
         {
             Banner($"{Em("낮 영업")} 끝! 화면을 {Em("밀면")} 옆의 {Em("꽃 선반")}으로 갈 수 있어요."),
         }),
-        new Lesson("charm", () => In(GameManager.SceneDayMain) && Main == MainState.DayEnding && Visible(CharmUse), () => new[]
+        ("charm", () => In(GameManager.SceneDayMain) && Main == MainState.DayEnding && Visible(CharmUse), () => new[]
         {
             On($"{Em("얻고 싶은 꽃")}에 {Em("부적")}을 붙여요. 최대 {Em("6개")}지만, 다 붙이지 않아도 돼요.\n그 꽃을 만들어줄 {Em("손님")}이 밤에 와요. 끝나면 밀어서 다시 카운터로 돌아와요.", () => Rt(FlowerShelves)),
         }),
-        new Lesson("lantern", () => In(GameManager.SceneDayMain) && Main == MainState.DayEnding && HasSeen("charm") && LanternReady(), () => new[] // 선반에서 부적을 붙여 본 뒤에
+        ("lantern", () => In(GameManager.SceneDayMain) && Main == MainState.DayEnding && HasSeen("charm") && LanternReady(), () => new[] // 선반에서 부적을 붙여 본 뒤에
         {
             On($"{Em("전등")}을 켜면 {Em("밤 영업")}이 시작돼요.", () => Rt(Lantern)),
         }),
 
         // 밤
-        new Lesson("night-customer", () => In(GameManager.SceneDayMain) && Main == MainState.NightCustomer && Active(AcceptButton), () => new[]
+        ("night-customer", () => In(GameManager.SceneDayMain) && Main == MainState.NightCustomer && Active(AcceptButton), () => new[]
         {
             On($"밤에는 {Em("특별한 손님")}이 부적을 붙인 꽃을 얻을 수 있는 {Em("퍼즐")}을 부탁해요.\n{Em($"[{Label(AcceptButton)}]")}를 누르면 시작해요.", () => Rt(AcceptButton)),
         }),
-        new Lesson("night-puzzle", () => In(GameManager.SceneNightPuzzle) && Active(NightGrid), () => new[]
+        ("night-puzzle", () => In(GameManager.SceneNightPuzzle) && Active(NightGrid), () => new[]
         {
             On($"왼쪽 {Em("수첩")} 위의 위의 블럭을 {Em("오른쪽 칸")}에 {Em("그려 넣어요")}.", () => Rt(NightNote)),
             On($"블럭은 {Em("좌우반전")}이나 {Em("회전")}한 모양으로 그려도 돼요. 그린 블럭을 다시 누르면 지워요.\n{Em("어두운 칸")}은 그릴 수 없어요. 빈칸을 {Em("빈틈없이")} 채우면 완성!", () => Rt(NightGrid)),
         }),
-        new Lesson("night-result", () => In(GameManager.SceneNightPuzzle) && Active(NightResult), () => new[]
+        ("night-result", () => In(GameManager.SceneNightPuzzle) && Active(NightResult), () => new[]
         {
             Banner($"퍼즐을 풀면 {Em("꽃")}을 얻어요. 얻은 꽃은 다음 날 꽃 선택에서 쓸 수 있어요."),
         }),
@@ -204,10 +190,8 @@ public static class TutorialLessons
             if (!piece.gameObject.activeSelf) continue;
 
             Image icon = piece.GetComponentsInChildren<Image>().FirstOrDefault(i => i.name.StartsWith("FlowerImage"));
-            if (icon != null && IsWiltGray(icon.color)) return piece;
+            if (icon != null && icon.color == GachaManager.WiltedColor) return piece;
         }
         return null;
     }
-
-    private static bool IsWiltGray(Color c) => Mathf.Abs(c.r - 0.55f) < 0.02f && Mathf.Abs(c.g - 0.55f) < 0.02f && Mathf.Abs(c.b - 0.55f) < 0.02f;
 }

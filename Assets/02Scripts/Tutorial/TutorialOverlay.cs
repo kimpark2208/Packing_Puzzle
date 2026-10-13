@@ -4,14 +4,13 @@ using System.Collections.Generic;
 using System.Linq;
 using TMPro;
 using UnityEngine;
-using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
 /// <summary>
 /// 튜토리얼 안내 화면: 안내 배너(화면 위) + 손가락 + 눌러야 할 곳만 밝게 살리고 나머지는 어둡게 한다.
 /// 배너 오른쪽 아래의 확인 버튼을 눌러야 다음 단계로 넘어가거나 사라진다. 안내가 떠 있는 동안은 하루/기분/밤 시간이 멈춘다.
 /// 같은 id는 실행 중 한 번만 보여 준다(저장하지 않는다). 무엇을 언제 보여 줄지는 TutorialLessons/TutorialDirector가 정하고, 이 컴포넌트는 보여 주기만 한다.
-/// 글로벌 UI 캔버스에 미리 배치된 프리팹(TutorialOverlay)을 쓴다. 에디터에서는 꺼 두고 게임이 시작되면 켜지며, 안내가 없을 때는 Content가 꺼져 있다.
+/// 글로벌 UI 캔버스에 미리 배치된 프리팹(TutorialOverlay)을 쓴다. 안내가 없을 때는 Content가 꺼져 있다(씬 편집에 방해되지 않게 프리팹에도 꺼 둔 채로 저장한다).
 /// </summary>
 public class TutorialOverlay : MonoBehaviour
 {
@@ -46,6 +45,7 @@ public class TutorialOverlay : MonoBehaviour
     private const float ConfirmGapFromBanner = 20f; // 배너와 확인 버튼 사이의 간격
     private const float BannerMargin = 30f;        // 배너와 화면 가장자리 사이의 간격
     private const float ScreenMargin = 10f;        // 확인 버튼이 화면 가장자리에서 떨어지는 간격
+    private const float Padding = 12f;             // 밝게 살린 영역을 대상보다 조금 크게 잡는 여백
     private const float HandBobPixels = 12f;
     private const float HandBobSpeed = 6f;
 
@@ -66,9 +66,7 @@ public class TutorialOverlay : MonoBehaviour
     [SerializeField] private RectTransform banner;
     [SerializeField] private TMP_Text bannerText;
     [SerializeField] private Button confirmButton;
-    [SerializeField] private float padding = 12f; // 밝게 살린 영역을 대상보다 조금 크게 잡는 여백
 
-    private readonly Queue<(string id, Step[] steps)> pending = new();
     private bool confirmed;
     private Vector2 handBase;
     private Vector2 handDirection; // 손가락이 가리키는 쪽의 반대 방향(흔들리는 방향)
@@ -79,25 +77,6 @@ public class TutorialOverlay : MonoBehaviour
         seen.Clear();
         IsShowing = false;
         Instance = null;
-    }
-
-    /// <summary>
-    /// 에디터에서는 튜토리얼 오버레이를 꺼 두어(씬 편집에 방해되지 않게) 게임이 시작될 때 켠다. 씬이 열릴 때마다 그 씬의 꺼진 오버레이를 켠다.
-    /// </summary>
-    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
-    private static void ActivateOnGameStart()
-    {
-        SceneManager.sceneLoaded -= ActivateIn; // 도메인 리로드가 꺼져 있어도 구독이 겹치지 않게
-        SceneManager.sceneLoaded += ActivateIn;
-        for (int i = 0; i < SceneManager.sceneCount; i++) ActivateIn(SceneManager.GetSceneAt(i), LoadSceneMode.Single);
-    }
-
-    private static void ActivateIn(Scene scene, LoadSceneMode mode)
-    {
-        foreach (GameObject root in scene.GetRootGameObjects())
-        {
-            foreach (TutorialOverlay overlay in root.GetComponentsInChildren<TutorialOverlay>(true)) overlay.gameObject.SetActive(true);
-        }
     }
 
     private void Awake()
@@ -113,7 +92,7 @@ public class TutorialOverlay : MonoBehaviour
         if (IsShowing)
         {
             IsShowing = false;
-            GameClock.Instance?.SetTutorialHold(false);
+            if (GameClock.Instance != null) GameClock.Instance.TutorialHold = false;
         }
     }
 
@@ -122,34 +101,30 @@ public class TutorialOverlay : MonoBehaviour
 
     public static bool HasSeen(string id) => seen.Contains(id);
 
-    /// <summary>같은 id는 한 번만 보여 준다. 이미 다른 안내가 떠 있으면 끝난 뒤에 이어서 보여 준다.</summary>
+    /// <summary>같은 id는 한 번만 보여 준다. 다른 안내가 떠 있으면 아무것도 하지 않는다(id도 쓴 것으로 치지 않으니 나중에 다시 부르면 된다).</summary>
     public static void Play(string id, params Step[] steps)
     {
-        if (Instance == null || steps.Length == 0 || !seen.Add(id)) return;
+        if (Instance == null || steps.Length == 0 || IsShowing || !seen.Add(id)) return;
 
-        Instance.pending.Enqueue((id, steps));
-        if (!IsShowing) Instance.StartCoroutine(Instance.Run());
+        Instance.StartCoroutine(Instance.Run(steps));
     }
 
-    private IEnumerator Run()
+    private IEnumerator Run(Step[] steps)
     {
         IsShowing = true;
-        GameClock.Instance?.SetTutorialHold(true);
+        if (GameClock.Instance != null) GameClock.Instance.TutorialHold = true;
 
-        while (pending.Count > 0)
+        foreach (Step step in steps)
         {
-            foreach (Step step in pending.Dequeue().steps)
-            {
-                yield return null; // 레이아웃이 자리 잡은 뒤에 위치를 계산한다
-                confirmed = false;
-                if (!Show(step)) continue;
-                yield return new WaitUntil(() => confirmed);
-            }
+            yield return null; // 레이아웃이 자리 잡은 뒤에 위치를 계산한다
+            confirmed = false;
+            if (!Show(step)) continue;
+            yield return new WaitUntil(() => confirmed);
         }
 
         content.gameObject.SetActive(false);
         IsShowing = false;
-        GameClock.Instance?.SetTutorialHold(false);
+        if (GameClock.Instance != null) GameClock.Instance.TutorialHold = false;
     }
 
     /// <summary>한 장면을 보여 준다. 건너뛰어야 하는 장면이면 아무것도 바꾸지 않고 false를 돌려준다.</summary>
@@ -186,7 +161,7 @@ public class TutorialOverlay : MonoBehaviour
             return true;
         }
 
-        hole = Rect.MinMaxRect(hole.xMin - padding, hole.yMin - padding, hole.xMax + padding, hole.yMax + padding);
+        hole = Rect.MinMaxRect(hole.xMin - Padding, hole.yMin - Padding, hole.xMax + Padding, hole.yMax + Padding);
 
         Place(dimTop, all.xMin, hole.yMax, all.width, all.yMax - hole.yMax);
         Place(dimBottom, all.xMin, all.yMin, all.width, hole.yMin - all.yMin);
