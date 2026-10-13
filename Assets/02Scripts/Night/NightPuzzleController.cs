@@ -272,7 +272,7 @@ public class NightPuzzleController : MonoBehaviour
 
     private void Update()
     {
-        if (puzzleCompleted) return;
+        if (puzzleCompleted || TutorialOverlay.IsShowing) return; // 튜토리얼 안내가 떠 있는 동안은 그리지 않는다
 
         if (!isDrawing && Input.GetMouseButtonDown(0) && graphicRaycaster != null && EventSystem.current != null)
         {

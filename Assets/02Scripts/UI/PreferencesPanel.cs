@@ -21,7 +21,7 @@ public class PreferencesPanel : MonoBehaviour
         GameClock.Instance?.SetPaused(true); // 설정 창이 열려 있는 동안 시간이 멈춘다
     }
 
-    private void Close()
+    public void Close()
     {
         popup.SetActive(false);
         GameClock.Instance?.SetPaused(false);
