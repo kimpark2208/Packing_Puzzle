@@ -19,7 +19,6 @@ public static class TutorialLessons
 {
     // ── 하이라키 경로(씬 루트부터) ──────────────────────────────────────────────
     private const string Global = "GlobalUICanvas/GlobalUI/";
-    private const string ColorRelationButton = Global + "ResourceBar/ColorRelationBTN";
     private const string Lantern = Global + "Clock/LanternArea/LanternToggle";
 
     private const string MainRoot = "Canvas/DayMainRoot/";
@@ -72,7 +71,6 @@ public static class TutorialLessons
         // 낮 퍼즐: 꽃 놓기
         ("puzzle-board", () => In(GameManager.SceneDayPuzzle) && Active(FlowerBucket), () => new[]
         {
-            On($"꽃끼리의 {Em("색 궁합")}은 {Em("[색 조합도]")}에서 볼 수 있어요.", () => Rt(ColorRelationButton)),
             On($"이웃한 꽃과 {Em("색 궁합")}이 좋으면 꽃이 {Em("빛나고")}, 안 맞으면 {Em("흐려져요")}.\n빛나는 꽃이 많을수록 꽃다발의 상태가 좋아져요.", () => Rt(SlotArea)),
             OnIfShown($"{Em("별 칸")}에 놓은 꽃은 기본적으로 {Em("빛나요")}.", () => SpecialSlot(SpecialCell.Star)),
             OnIfShown($"{Em("그늘 칸")}에 놓은 꽃은 기본적으로 {Em("흐려져요")}.\n이웃한 꽃이 빛나면 그늘이 사라져요.", () => SpecialSlot(SpecialCell.Shade)),

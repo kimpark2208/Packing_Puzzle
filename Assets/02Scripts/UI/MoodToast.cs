@@ -40,6 +40,10 @@ public class MoodToast : MonoBehaviour
         lines = new[] { "아직 멀었어요?", "저 정말 바쁜데요!", "이러다 해 지겠어요.", "빨리 좀 해 주세요!" },
     };
 
+    [Header("소리")]
+    [SerializeField, Tooltip("재촉 메시지가 뜰 때 나는 소리.")] private AudioClip popSound;
+    [SerializeField, Range(0f, 1f)] private float popVolume = 0.7f;
+
     [Header("배경 색: 손님 기분 남은 시간이 줄수록 이 색으로 물든다(가득 찼을 때는 배경 이미지의 원래 색)")]
     [SerializeField] private Color urgentColor = Color.red;
 
@@ -109,6 +113,7 @@ public class MoodToast : MonoBehaviour
     private void Show(string message)
     {
         if (label != null) label.text = message;
+        Sfx.Play(popSound, popVolume);
         if (showing != null) StopCoroutine(showing);
         showing = StartCoroutine(Slide());
     }

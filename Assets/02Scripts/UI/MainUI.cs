@@ -147,6 +147,27 @@ public class MainUI : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// 대사를 시작한다. 씬 전환의 페이드가 아직 걷히는 중이면 말풍선과 응답 버튼을 숨겨 두었다가, 다 걷힌 뒤에 보이고 대사(와 말소리)를 시작한다.
+    /// </summary>
+    private void SayAfterReveal(System.Action say)
+    {
+        if (!SceneTransition.Busy)
+        {
+            say();
+            return;
+        }
+        SetBubble(false);
+        StartCoroutine(SayAfterRevealRoutine(say));
+    }
+
+    private System.Collections.IEnumerator SayAfterRevealRoutine(System.Action say)
+    {
+        while (SceneTransition.Busy) yield return null;
+        SetBubble(true);
+        say();
+    }
+
     /// <summary>전화기를 누르면 카탈로그가 아래에서 올라오며 열리고, 다시 누르면 반대로 내려가며 닫힌다.</summary>
     private void ToggleCatalog()
     {
@@ -172,7 +193,10 @@ public class MainUI : MonoBehaviour
     /// <summary>꽃 선택 페이지에 도착하면 카운터로 돌아올 수 없다(주문은 이미 수락했다).</summary>
     private void OnSwipeArrived(int page)
     {
-        if (state == MainState.DayCustomer && page >= 1) swipe.LowestPage = page;
+        if (state != MainState.DayCustomer || page < 1) return;
+
+        swipe.LowestPage = page;
+        ColorWheelHud.Show(); // 컬러휠은 꽃 선택 페이지에 도착한 뒤부터 보인다
     }
 
     /// <summary>낮 손님: 주문을 말한다. 이전 손님의 반응 대사가 있으면 그것부터 말한다.</summary>
@@ -183,7 +207,7 @@ public class MainUI : MonoBehaviour
         if (showingAngryLine)
         {
             ShowPreviousCustomer(); // 반응 대사는 방금 주문을 한 그 손님이 한다
-            speech.Show(angryLine);
+            SayAfterReveal(() => speech.Show(angryLine));
             forceAcceptLine = GameManager.Instance != null
                 ? GameManager.Instance.ConsumePendingRejectResponseLine()
                 : CustomerSpeech.DefaultForceAcceptLine;
@@ -213,6 +237,11 @@ public class MainUI : MonoBehaviour
     {
         changingCustomer = true;
         SetBubble(false);
+        if (SceneTransition.Busy)
+        {
+            if (character != null) character.gameObject.SetActive(false); // 페이드가 걷히는 동안은 손님을 숨겼다가, 다 걷히면 들어오는 모션과 함께 나타낸다
+            while (SceneTransition.Busy) yield return null;
+        }
 
         PanelMotion motion = character != null ? character.GetComponent<PanelMotion>() : null;
         float seconds = motion != null ? motion.Seconds : 0f;
@@ -257,8 +286,11 @@ public class MainUI : MonoBehaviour
             GameManager.Instance.ConsumePendingRejectResponseLine();
         }
         ShowPreviousCustomer();
-        speech.ShowTimeUp();
-        EndConversation();
+        SayAfterReveal(() =>
+        {
+            speech.ShowTimeUp();
+            EndConversation();
+        });
     }
 
     /// <summary>밤 손님: 지금 풀 퍼즐에 나올 꽃을 말하고, 수락하면 밤 퍼즐로 간다. 풀 퍼즐이 더 없으면 밤을 끝낸다.</summary>
@@ -270,15 +302,18 @@ public class MainUI : MonoBehaviour
             if (GameManager.Instance != null) GameManager.Instance.EndNight();
             return;
         }
-        speech.ShowNightCustomer(flowers);
+        SayAfterReveal(() => speech.ShowNightCustomer(flowers));
     }
 
     /// <summary>밤 종료: 밤 시간이 끝났다. 손님이 "해가 뜨면 저는 죽어요!!"라고 외치고, 낮 종료와 같은 방식으로 사라진다. 사라지면 하루 결산으로 간다.</summary>
     private void BeginNightEnd()
     {
         state = MainState.NightEnding;
-        speech.ShowNightEnd();
-        EndConversation();
+        SayAfterReveal(() =>
+        {
+            speech.ShowNightEnd();
+            EndConversation();
+        });
     }
 
     /// <summary>밤 손님을 만나는 중에 밤 시간이 끝났다: 그 자리에서 밤 종료로 넘어간다.</summary>

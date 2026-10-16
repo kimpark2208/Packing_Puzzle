@@ -266,6 +266,9 @@ public class CurrencyManager : Singleton<CurrencyManager>
         if (GUILayout.Button("Debug: 캐릭터 새로 뽑기"))
             FindFirstObjectByType<CharacterGenerator>()?.Randomize();
 
+        if (GUILayout.Button($"Debug: 배속 x{Time.timeScale:0.#} (x1 → x2 → x4 → x8)"))
+            Time.timeScale = Time.timeScale >= 8f ? 1f : Time.timeScale * 2f;
+
         GUILayout.Label($"현재 금액: {CurrentMoney}\n현재 일수: {CurrentDay}\n보유 포장지: {ownedWrappers.Count}개");
     }
 #endif

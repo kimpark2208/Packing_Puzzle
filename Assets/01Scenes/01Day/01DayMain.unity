@@ -2611,14 +2611,14 @@ MonoBehaviour:
   lanternDelay: 0.3
   customerSwapDelay: 0.3
   forcedSwipeSound: {fileID: 8300000, guid: 232571b78f6f28c4d9b9a9aee2dfa565, type: 3}
-  forcedSwipeVolume: 0.8
+  forcedSwipeVolume: 0.3
   acceptToSelectDelay: 0.5
   nightLanternSprite: {fileID: 21300000, guid: 0b7900ebf3714434d9bf95bd5a39a1b1, type: 3}
   dayBgm: {fileID: 8300000, guid: 9b3e36bd3b43054438166fdc12fbea9d, type: 3}
   dayEndBgm: {fileID: 8300000, guid: 928a75e628c605e4e9a7c555198d4507, type: 3}
-  bgmVolume: 0.4
+  bgmVolume: 0.2
   nightStartJingle: {fileID: 8300000, guid: 0952fa529e47aa447bbe64b94a243dea, type: 3}
-  nightStartJingleVolume: 0.7
+  nightStartJingleVolume: 0.4
 --- !u!4 &409908878
 Transform:
   m_ObjectHideFlags: 0
@@ -2683,7 +2683,7 @@ MonoBehaviour:
     day: {fileID: 21300000, guid: 0ab9c036b66fb494d93b7aa42f751c61, type: 3}
     sunset: {fileID: 21300000, guid: 0ab9c036b66fb494d93b7aa42f751c61, type: 3}
     night: {fileID: 21300000, guid: 5648e4409dae52e419489f52e41db74c, type: 3}
-  sunsetBlendStart: 0.5
+  sunsetBlendStart: 0.3
   nightBlendSeconds: 2.5
 --- !u!1 &439875266
 GameObject:
@@ -14482,64 +14482,47 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 3956769130293302030, guid: e5214c83b2723424693bfef4d45ed6ba, type: 3}
-      propertyPath: m_Camera
+    - target: {fileID: 1451442231829324966, guid: e5214c83b2723424693bfef4d45ed6ba, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1530627966078128367, guid: e5214c83b2723424693bfef4d45ed6ba, type: 3}
+      propertyPath: m_Material
       value: 
-      objectReference: {fileID: 629404586}
-    - target: {fileID: 4418657240255978181, guid: e5214c83b2723424693bfef4d45ed6ba, type: 3}
-      propertyPath: urgentColor.b
-      value: 0.27803493
+      objectReference: {fileID: 2100000, guid: e246ba74c514f1d41aa8d3ae81c1696a, type: 2}
+    - target: {fileID: 3577109836999407441, guid: e5214c83b2723424693bfef4d45ed6ba, type: 3}
+      propertyPath: graphic
+      value: 
       objectReference: {fileID: 0}
-    - target: {fileID: 4418657240255978181, guid: e5214c83b2723424693bfef4d45ed6ba, type: 3}
-      propertyPath: urgentColor.g
-      value: 0.33938533
+    - target: {fileID: 7512464634239313938, guid: e5214c83b2723424693bfef4d45ed6ba, type: 3}
+      propertyPath: m_AnchorMax.x
+      value: 0.5
       objectReference: {fileID: 0}
-    - target: {fileID: 4418657240255978181, guid: e5214c83b2723424693bfef4d45ed6ba, type: 3}
-      propertyPath: urgentColor.r
-      value: 0.8301887
+    - target: {fileID: 7512464634239313938, guid: e5214c83b2723424693bfef4d45ed6ba, type: 3}
+      propertyPath: m_AnchorMax.y
+      value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 4418657240255978181, guid: e5214c83b2723424693bfef4d45ed6ba, type: 3}
-      propertyPath: badTextColor.b
-      value: 0.18004628
+    - target: {fileID: 7512464634239313938, guid: e5214c83b2723424693bfef4d45ed6ba, type: 3}
+      propertyPath: m_AnchorMin.x
+      value: 0.5
       objectReference: {fileID: 0}
-    - target: {fileID: 4418657240255978181, guid: e5214c83b2723424693bfef4d45ed6ba, type: 3}
-      propertyPath: badTextColor.g
-      value: 0.22005467
+    - target: {fileID: 7512464634239313938, guid: e5214c83b2723424693bfef4d45ed6ba, type: 3}
+      propertyPath: m_SizeDelta.x
+      value: 300
       objectReference: {fileID: 0}
-    - target: {fileID: 4418657240255978181, guid: e5214c83b2723424693bfef4d45ed6ba, type: 3}
-      propertyPath: badTextColor.r
-      value: 0.3207547
+    - target: {fileID: 7512464634239313938, guid: e5214c83b2723424693bfef4d45ed6ba, type: 3}
+      propertyPath: m_SizeDelta.y
+      value: 300
+      objectReference: {fileID: 0}
+    - target: {fileID: 7512464634239313938, guid: e5214c83b2723424693bfef4d45ed6ba, type: 3}
+      propertyPath: m_AnchoredPosition.y
+      value: 85
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents:
-    - targetCorrespondingSourceObject: {fileID: 8821609960876299649, guid: e5214c83b2723424693bfef4d45ed6ba, type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 5234928085984056090}
+    m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: e5214c83b2723424693bfef4d45ed6ba, type: 3}
---- !u!1 &5234928085984056089 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 8821609960876299649, guid: e5214c83b2723424693bfef4d45ed6ba, type: 3}
-  m_PrefabInstance: {fileID: 5234928085984056088}
-  m_PrefabAsset: {fileID: 0}
---- !u!114 &5234928085984056090
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5234928085984056089}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: de5f114964c9ec14d9f8c04a41491990, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::PressSound
-  clips:
-  - {fileID: 8300000, guid: e57ffb055a1488a46aa00669649b1f45, type: 3}
-  watch: {fileID: 0}
-  whenWatchedActive: []
-  volume: 0.8
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0

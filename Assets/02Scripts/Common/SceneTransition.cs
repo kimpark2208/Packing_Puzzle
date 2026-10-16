@@ -19,6 +19,9 @@ public class SceneTransition : Singleton<SceneTransition>
     /// <summary>화면을 덮기 시작했다(덮는 시간 전달). 소리를 같이 줄일 때 쓴다(AudioFadeOnTransition).</summary>
     public static event Action<float> FadingOut;
 
+    /// <summary>화면을 덮는 중이거나 덮여 있거나 걷는 중이다(전환이 완전히 끝나지 않았다). 새 씬이 대사·소리를 시작하기 전에 기다릴 때 쓴다.</summary>
+    public static bool Busy => Instance != null && Instance.busy;
+
     /// <summary>화면을 덮고 씬을 바꾼 뒤 걷는다. 이미 전환 중이면 무시한다.</summary>
     public static void Go(string scene)
     {

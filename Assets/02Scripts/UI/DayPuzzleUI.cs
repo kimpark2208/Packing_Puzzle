@@ -56,6 +56,7 @@ public class DayPuzzleUI : MonoBehaviour
     {
         board = DayPuzzleController.Instance;
         gacha = FindFirstObjectByType<GachaManager>();
+        ColorWheelHud.ActivatePin(); // 퍼즐에 들어가면 컬러휠 핀이 활성화된다
 
         settlement = new PuzzleSettlement(scoreSettings); // 규칙 수치는 설정 에셋
         SetUpDecorateStage();

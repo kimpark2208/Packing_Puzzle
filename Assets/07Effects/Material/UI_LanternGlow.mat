@@ -7,8 +7,8 @@ Material:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_Name: GeneralGlow
-  m_Shader: {fileID: 4800000, guid: 02a2920109857e84089d9770ba4e0a7f, type: 3}
+  m_Name: UI_LanternGlow
+  m_Shader: {fileID: -6465566751694194690, guid: f7513ed6621bcc34caee4e100b82d37c, type: 3}
   m_Parent: {fileID: 0}
   m_ModifiedSerializedProperties: 0
   m_ValidKeywords: []
@@ -41,13 +41,14 @@ Material:
         m_Offset: {x: 0, y: 0}
     m_Ints: []
     m_Floats:
-    - _BlurRadius: 0.05
+    - _CenterX: 0.52
+    - _CenterY: 0.52
     - _ColorMask: 15
-    - _GlowIntensity: 2.5
-    - _GlowPower: 0.8
-    - _PadScale: 1.6
-    - _PulseAmount: 0.2
-    - _PulseSpeed: 3.5
+    - _Falloff: 2
+    - _Intensity: 3
+    - _Radius: 0.4
+    - _RadiusX: 0.5
+    - _RadiusY: 0.29
     - _Stencil: 0
     - _StencilComp: 8
     - _StencilOp: 0
@@ -55,10 +56,8 @@ Material:
     - _StencilWriteMask: 255
     - _UIMaskSoftnessX: 1
     - _UIMaskSoftnessY: 1
-    - _UseUIAlphaClip: 0
     m_Colors:
     - _ClipRect: {r: 0, g: 0, b: 0, a: 0}
-    - _Color: {r: 1, g: 1, b: 1, a: 1}
-    - _GlowColor: {r: 0.9150943, g: 0.7676655, b: 0.43596473, a: 1}
+    - _GlowColor: {r: 1, g: 0.932414, b: 0.6462264, a: 1}
   m_BuildTextureStacks: []
   m_AllowLocking: 1
