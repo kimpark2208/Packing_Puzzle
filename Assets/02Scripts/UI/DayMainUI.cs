@@ -22,7 +22,8 @@ public class DayMainUI : MonoBehaviour
     private const string TelephoneName = "CounterTelephone"; // 낮/밤 모습이 같은 오브젝트 하나를 쓴다(MainLook이 그림만 바꾼다)
     private const string CatalogPopupName = "CatalogPopup";
     private const string BubbleContainerName = "BubbleContainer";
-    private static readonly string[] CharacterRootNames = { "DayCharacterArea", "NightCharacterArea" };
+    private const string DayCharacterName = "DayCharacterArea"; // 낮 손님을 무작위로 만드는 CharacterGenerator가 붙은 오브젝트
+    private static readonly string[] CharacterRootNames = { DayCharacterName, "NightCharacterArea" };
     private const string LanternToggleName = "LanternToggle";
     private const string ShelfRootName = "ShelfRoot"; // 메인 옆 페이지: 낮 손님이면 꽃 선택, 낮 종료면 꽃 선반(부적)
     private const string CharmPillName = "CharmUse"; // 부적 화면에만 나오는 "부적 n / 6" 표시
@@ -42,6 +43,7 @@ public class DayMainUI : MonoBehaviour
     private GameObject catalogPopup;
     private GameObject bubbleContainer;
     private GameObject[] characterRoots;
+    private CharacterGenerator character; // 낮 손님의 모습(주문마다 무작위로 바뀐다)
     private Toggle lantern; // 켜면 밤이 시작된다(낮 종료 손님이 떠난 뒤, 카운터 화면에서만 켤 수 있다)
     private SwipeParallax swipe;     // 카운터 ↔ 옆 페이지 이동(낮 손님: 수락하면 꽃 선택으로 자동으로 한 방향, 낮 종료: 꽃 선반과 스와이프로 왕복)
     private NightRequestUI shelf;    // 꽃 선반: 부적을 붙인 꽃을 들고 있다(낮 종료)
@@ -77,6 +79,7 @@ public class DayMainUI : MonoBehaviour
         bubbleContainer = SceneFind.One<Transform>(scene, BubbleContainerName)?.gameObject;
         catalogPopup = SceneFind.One<Transform>(scene, CatalogPopupName)?.gameObject;
         characterRoots = System.Array.ConvertAll(CharacterRootNames, n => SceneFind.One<Transform>(scene, n)?.gameObject);
+        character = SceneFind.One<CharacterGenerator>(scene, DayCharacterName);
 
         Button reject = SceneFind.One<Button>(scene, RejectButtonName);
         Button accept = SceneFind.One<Button>(scene, AcceptButtonName);
@@ -152,6 +155,7 @@ public class DayMainUI : MonoBehaviour
         showingAngryLine = !string.IsNullOrEmpty(angryLine);
         if (showingAngryLine)
         {
+            ShowPreviousCustomer(); // 반응 대사는 방금 주문을 한 그 손님이 한다
             speech.Show(angryLine);
             forceAcceptLine = GameManager.Instance != null
                 ? GameManager.Instance.ConsumePendingRejectResponseLine()
@@ -159,10 +163,29 @@ public class DayMainUI : MonoBehaviour
         }
         else
         {
+            ShowNewCustomer();
             speech.ShowOrder(order);
             GameClock.Instance?.ResetMood(); // 새 손님: 기분 시간은 가득 차 있고, 주문을 수락해야 줄어들기 시작한다
         }
         // 이전 손님의 반응 대사 중이면 기분 시간은 끝난 그대로 멈춰 둔다(다음 손님이 올 때 채운다: OnAcceptClicked)
+    }
+
+    /// <summary>새 손님이 왔다: 무작위 캐릭터로 바꾸고, 반응 대사와 낮 종료 대사를 같은 손님이 하도록 기억해 둔다.</summary>
+    private void ShowNewCustomer()
+    {
+        if (character == null) return;
+
+        character.Randomize();
+        if (GameManager.Instance != null) GameManager.Instance.CustomerLook = character.Current;
+    }
+
+    /// <summary>방금 주문을 한 손님의 모습을 보여 준다(기억해 둔 것이 없으면 새 손님).</summary>
+    private void ShowPreviousCustomer()
+    {
+        if (character == null) return;
+
+        if (GameManager.Instance != null && GameManager.Instance.CustomerLook is CharacterAppearance look) character.Apply(look);
+        else ShowNewCustomer();
     }
 
     /// <summary>낮 종료: 하루 시간이 끝났다. 손님이 마무리 대사를 한 뒤 잠시 후(또는 응답 버튼을 누르면) 사라지고, 사라지면 전등을 켤 수 있다.</summary>
@@ -173,6 +196,7 @@ public class DayMainUI : MonoBehaviour
             GameManager.Instance.ConsumePendingCustomerLine();
             GameManager.Instance.ConsumePendingRejectResponseLine();
         }
+        ShowPreviousCustomer();
         speech.ShowTimeUp();
         EndConversation();
     }
@@ -221,6 +245,7 @@ public class DayMainUI : MonoBehaviour
         if (showingAngryLine)
         {
             showingAngryLine = false;
+            ShowNewCustomer(); // 반응 대사가 끝났으니 다음 손님이 온다
             speech.ShowOrder(order);
             GameClock.Instance?.ResetMood(); // 반응 대사가 끝나고 다음 손님이 왔다: 기분 시간이 가득 찬다(수락하면 줄어들기 시작한다)
             return;

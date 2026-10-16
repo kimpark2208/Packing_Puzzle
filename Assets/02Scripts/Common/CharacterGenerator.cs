@@ -43,11 +43,7 @@ public class CharacterGenerator : MonoBehaviour
     public CharacterAppearance Current { get; private set; }
 
     [ContextMenu("Randomize")]
-    public void Randomize()
-    {
-        Current = Generate();
-        Apply(Current);
-    }
+    public void Randomize() => Apply(Generate());
 
     public CharacterAppearance Generate()
     {
@@ -92,6 +88,7 @@ public class CharacterGenerator : MonoBehaviour
 
     public void Apply(CharacterAppearance appearance)
     {
+        Current = appearance;
         Show(brow, appearance.brow);
         Show(cloth, appearance.cloth);
         Show(eyes, appearance.eyes);

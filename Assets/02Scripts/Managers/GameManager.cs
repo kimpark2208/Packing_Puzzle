@@ -27,6 +27,9 @@ public class GameManager : Singleton<GameManager>
     public DayPuzzleGenerator.DayOrder CurrentDayOrder { get; private set; }
     public List<FlowerData> ChosenGachaPool { get; private set; } = new();
 
+    /// <summary>지금 주문을 한 낮 손님의 모습. 퍼즐을 마치고 메인 화면이 다시 열려도 반응 대사와 낮 종료 대사를 같은 손님이 하도록 기억해 둔다(메인 화면은 열릴 때마다 새로 만들어진다).</summary>
+    public CharacterAppearance? CustomerLook { get; set; }
+
     /// <summary>다음에 열리는(또는 지금 열려 있는) 메인 화면이 보여 줄 상황. 메인 화면으로 가기 전에 정한다.</summary>
     public MainState MainState { get; private set; } = MainState.DayCustomer;
 
