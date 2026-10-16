@@ -3,32 +3,30 @@ using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
 /// <summary>
-/// 꽃다발 위에 올려 둔 꾸미기 용품 하나. 앵커에 놓인 것(리본/풀)은 가만히 있고, 드래그로 놓는 것(카드/장식)은 다시 끌어서 옮길 수 있다.
-/// 꽃다발 밖에서 놓으면 사라진다(DecorationPlacer.Drop). 그림은 원본 비율을 지킨 채 상자(maxSize) 안에 맞춘다.
-/// 놓이는 기준점은 스프라이트의 피벗이다(리본은 매듭에 피벗을 두면 앵커에 매듭이 온다). 피벗은 스프라이트 임포트에서 정한다.
+/// 꽃다발 위에 올려 둔 꾸미기 용품 하나. 놓인 뒤에는 꽃다발 위에서 끌어서 옮길 수 있고, 꽃다발 밖에서 놓으면 사라진다(DecorationPlacer.Drop).
+/// 그림은 원본 비율을 지킨 채 상자(maxSize) 안에 맞추고 용품의 sizeScale을 곱한다. 놓이는 기준점은 스프라이트의 피벗이다(리본은 매듭에 피벗을 두면 앵커에 매듭이 온다).
+/// 부모(앵커 영역)가 기울어 있어도 맞도록 월드 좌표로 움직인다.
 /// </summary>
 [RequireComponent(typeof(Image))]
 public class PlacedDecoration : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHandler
 {
     private DecorationPlacer owner;
     private RectTransform rect;
-    private bool draggable;
-    private Vector2 grabOffset; // 잡은 자리와 기준점의 차이(끌어도 잡은 곳이 튀지 않게)
+    private Vector3 grabOffset; // 잡은 자리와 기준점의 차이(끌어도 잡은 곳이 튀지 않게)
 
     public DecorationData Data { get; private set; }
 
-    public void Init(DecorationData data, DecorationPlacer placer, Vector2 maxSize, bool canDrag)
+    public void Init(DecorationData data, DecorationPlacer placer, Vector2 maxSize)
     {
         Data = data;
         owner = placer;
-        draggable = canDrag;
         rect = (RectTransform)transform;
 
         var image = GetComponent<Image>();
         image.sprite = data.sprite;
         image.preserveAspect = true;
-        image.raycastTarget = canDrag; // 앵커에 놓인 것은 클릭을 가로채지 않는다
-        rect.sizeDelta = FitSize(data.sprite, maxSize);
+        image.raycastTarget = true; // 잡아서 끌 수 있다
+        rect.sizeDelta = FitSize(data.sprite, maxSize) * data.sizeScale;
         rect.pivot = PivotOf(data.sprite);
     }
 
@@ -47,26 +45,26 @@ public class PlacedDecoration : MonoBehaviour, IBeginDragHandler, IDragHandler, 
         return new Vector2(sprite.pivot.x / sprite.rect.width, sprite.pivot.y / sprite.rect.height);
     }
 
-    /// <summary>화면 좌표(포인터)로 옮긴다.</summary>
-    public void MoveToScreen(Vector2 screenPosition)
+    /// <summary>화면 좌표(포인터)가 가리키는, 부모 평면 위의 월드 좌표.</summary>
+    private Vector3 PointerWorld(Vector2 screenPosition)
     {
-        rect.anchoredPosition = owner.ScreenToLayer(screenPosition) + grabOffset;
+        RectTransformUtility.ScreenPointToWorldPointInRectangle((RectTransform)rect.parent, screenPosition, owner.EventCamera, out Vector3 world);
+        return world;
     }
 
     public void OnBeginDrag(PointerEventData eventData)
     {
-        if (!draggable) return;
         transform.SetAsLastSibling(); // 잡은 것이 제일 위로
-        grabOffset = rect.anchoredPosition - owner.ScreenToLayer(eventData.position);
+        grabOffset = rect.position - PointerWorld(eventData.position);
     }
 
     public void OnDrag(PointerEventData eventData)
     {
-        if (draggable) MoveToScreen(eventData.position);
+        rect.position = PointerWorld(eventData.position) + grabOffset;
     }
 
     public void OnEndDrag(PointerEventData eventData)
     {
-        if (draggable) owner.Drop(this, eventData.position);
+        owner.Drop(this, eventData.position);
     }
 }

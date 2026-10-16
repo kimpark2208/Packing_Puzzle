@@ -1,8 +1,10 @@
 using System.Collections;
 using System.Collections.Generic;
+using TMPro;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
+using UnityEngine.UI;
 
 /// <summary>
 /// 한 씬 안에서 화면(페이지)들을 좌우 스와이프로 넘나든다. 페이지는 오른쪽으로 한 화면 폭씩 이어 놓고(ParallaxPage), 왼쪽으로 밀면 다음(오른쪽) 페이지,
@@ -30,6 +32,12 @@ public class SwipeParallax : MonoBehaviour, IBeginDragHandler, IDragHandler, IEn
     [SerializeField] private float snapSeconds = 0.35f;
 
     private readonly List<Entry> entries = new();
+    private readonly List<(Graphic graphic, Material material)> blurTargets = new(); // 움직이는 동안만 블러 머티리얼로 바꿔 끼울 그림들
+    private readonly Dictionary<float, Material> blurMaterials = new();               // 레이어 속도(factor)별 머티리얼: 빠른 레이어일수록 길게 번진다
+    private static readonly int BlurPixelsId = Shader.PropertyToID("_BlurPixels");
+    private bool blurOn;
+    private float lastBlurView;
+    private float blurSpeed;  // 페이지/초(부드럽게 다듬은 값)
     private Canvas rootCanvas;
     private int pageCount = 1;
     private float view;       // 지금 보고 있는 위치: 0 = 첫 화면, 1 = 1번 페이지 ...
@@ -67,6 +75,12 @@ public class SwipeParallax : MonoBehaviour, IBeginDragHandler, IDragHandler, IEn
     private void OnDisable()
     {
         dragging = animating = false;
+        BlurEnd();
+    }
+
+    private void OnDestroy()
+    {
+        foreach (Material material in blurMaterials.Values) Destroy(material);
     }
 
     /// <summary>자식(꺼진 것 포함)의 ParallaxLayer를 모아, 페이지와 깊이 값을 정한다.</summary>
@@ -89,7 +103,62 @@ public class SwipeParallax : MonoBehaviour, IBeginDragHandler, IDragHandler, IEn
                 parentFactor = parent != null ? settings.Factor(parent.Depth, page) : 0f,
             });
             pageCount = Mathf.Max(pageCount, page + 1);
+            CollectBlurTargets(layer, entries[^1].factor);
         }
+    }
+
+    /// <summary>이 레이어에 속한 그림(Image 등)을 모아 둔다. 글자(TMP)와 따로 머티리얼을 쓰는 그림은 건드리지 않는다.</summary>
+    private void CollectBlurTargets(ParallaxLayer layer, float factor)
+    {
+        if (settings.blurMaterial == null) return;
+
+        if (!blurMaterials.TryGetValue(factor, out Material material))
+        {
+            material = new Material(settings.blurMaterial);
+            blurMaterials.Add(factor, material);
+        }
+        foreach (Graphic graphic in layer.GetComponentsInChildren<Graphic>(true))
+        {
+            bool ownedByLayer = graphic.GetComponentInParent<ParallaxLayer>(true) == layer; // 안쪽 레이어의 그림은 그 레이어가 맡는다
+            if (ownedByLayer && graphic is not TMP_Text && graphic.material == Graphic.defaultGraphicMaterial)
+                blurTargets.Add((graphic, material));
+        }
+    }
+
+    private void BlurBegin()
+    {
+        if (blurOn || blurTargets.Count == 0) return;
+        blurOn = true;
+        lastBlurView = view;
+        blurSpeed = 0f;
+        foreach (var (graphic, material) in blurTargets)
+        {
+            if (graphic != null) graphic.material = material;
+        }
+    }
+
+    private void BlurEnd()
+    {
+        if (!blurOn) return;
+        blurOn = false;
+        foreach (var (graphic, _) in blurTargets)
+        {
+            if (graphic != null) graphic.material = null; // 원래(기본) 머티리얼로
+        }
+    }
+
+    /// <summary>움직임이 빠를수록 길게: 번짐 길이 = 화면에서 움직이는 속도 × 셔터 시간.</summary>
+    private void LateUpdate()
+    {
+        if (!blurOn) return;
+
+        float moved = Mathf.Abs(view - lastBlurView) / Mathf.Max(Time.unscaledDeltaTime, 0.0001f);
+        lastBlurView = view;
+        blurSpeed = Mathf.Lerp(blurSpeed, moved, 0.5f);
+
+        float pixelsPerSecond = blurSpeed * CanvasWidth * rootCanvas.scaleFactor;
+        foreach (var (factor, material) in blurMaterials)
+            material.SetFloat(BlurPixelsId, Mathf.Min(pixelsPerSecond * factor * settings.blurExposure, settings.maxBlurPixels));
     }
 
 #if UNITY_EDITOR
@@ -110,6 +179,7 @@ public class SwipeParallax : MonoBehaviour, IBeginDragHandler, IDragHandler, IEn
         dragging = Enabled && !animating && pageCount > 1; // 이 화면에는 세로로 밀 것이 없으니 방향은 따지지 않고 가로 움직임만 쓴다
         startView = view;
         lastDeltaX = 0f;
+        if (dragging) BlurBegin();
     }
 
     public void OnDrag(PointerEventData eventData)
@@ -144,6 +214,7 @@ public class SwipeParallax : MonoBehaviour, IBeginDragHandler, IDragHandler, IEn
     private IEnumerator Snap(int targetPage)
     {
         animating = true;
+        BlurBegin();
         float from = view;
         float duration = Mathf.Max(0.01f, snapSeconds * Mathf.Abs(targetPage - from));
         for (float t = 0f; t < duration; t += Time.unscaledDeltaTime)
@@ -154,6 +225,7 @@ public class SwipeParallax : MonoBehaviour, IBeginDragHandler, IDragHandler, IEn
         }
         view = targetPage;
         Apply(view);
+        BlurEnd();
         animating = false;
         Arrived?.Invoke(targetPage);
     }

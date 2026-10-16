@@ -137,9 +137,14 @@ public class DayMainUI : MonoBehaviour
         if (state != MainState.DayEnding || nightStarting) return;
 
         // 낮 종료가 되면 손님이 아직 말하는 중이어도 스와이프로 선반을 오갈 수 있다(카탈로그가 열려 있는 동안은 막는다).
-        // 등불은 낮 종료 손님이 떠난 뒤, 카운터 화면에 있을 때만 켤 수 있다.
+        // 등불은 낮 종료 손님이 떠난 뒤, 카운터 화면에 있을 때만 켤 수 있고, 선반(부적) 화면으로 가면 사라진다.
         if (swipe != null) swipe.Enabled = !(catalogPopup != null && catalogPopup.activeSelf);
-        if (lantern != null) lantern.interactable = customerGone && (swipe == null || swipe.IsAtHome);
+        if (lantern != null)
+        {
+            bool atHome = swipe == null || swipe.IsAtHome;
+            lantern.gameObject.SetActive(atHome);
+            lantern.interactable = customerGone && atHome;
+        }
     }
 
     /// <summary>꽃 선택 페이지에 도착하면 카운터로 돌아올 수 없다(주문은 이미 수락했다).</summary>

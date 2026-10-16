@@ -20,3 +20,6 @@ MonoBehaviour:
   awayMid: 1.1
   awayNear: 1.25
   awayFront: 1.5
+  blurMaterial: {fileID: 2100000, guid: 6f1dcb73966b4274ca0da80cb5815a03, type: 2}
+  blurExposure: 0.012
+  maxBlurPixels: 50

@@ -1771,7 +1771,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::GameClock
   dontDestroyOnLoad: 1
   dayDurationSeconds: 300
-  moodDurationSeconds: 120
+  moodDurationSeconds: 110
   nightDurationSeconds: 180
 --- !u!4 &1513376232
 Transform:

@@ -116,7 +116,11 @@ public class FlowerSelectUI : MonoBehaviour
     private void SelectWrapper(int wrapperId)
     {
         selectedWrapperId = wrapperId;
-        if (wrapperPreview != null) wrapperPreview.SetActive(true);
+        if (wrapperPreview != null)
+        {
+            wrapperPreview.SetActive(true);
+            if (wrapperPreview.TryGetComponent(out Image previewImage)) previewImage.color = WrapperRegistry.Instance.GetById(wrapperId).color; // 프리셋 그림도 고른 포장지 색으로
+        }
         if (wrapperConfirmButton != null) wrapperConfirmButton.interactable = true;
         RefreshWrapperBoxes();
     }
