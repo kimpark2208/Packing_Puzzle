@@ -12,7 +12,7 @@ using UnityEngine.UI;
 /// 글로벌 UI는 별도 캔버스라 밀리지 않는다.
 /// - 이 컴포넌트는 Canvas에 붙는다: 화면의 그림(Image) 위에서 시작한 드래그는 계층을 타고 올라와 여기서 받는다(버튼 클릭은 그대로 된다).
 /// - 에디터에서는 모든 페이지가 오른쪽으로 이어져 보이도록 놓아 두고(첫 화면 옆에 다음 페이지), 실행하면 이 컴포넌트가 움직인다.
-/// - 켜고 끄는 것(Enabled)은 이 화면을 쓰는 쪽이 정한다(예: 낮 종료 메인은 DayMainUI).
+/// - 켜고 끄는 것(Enabled)은 이 화면을 쓰는 쪽이 정한다(예: 낮 종료 메인은 MainUI).
 /// </summary>
 public class SwipeParallax : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHandler
 {
@@ -33,8 +33,10 @@ public class SwipeParallax : MonoBehaviour, IBeginDragHandler, IDragHandler, IEn
 
     private readonly List<Entry> entries = new();
     private readonly List<(Graphic graphic, Material material)> blurTargets = new(); // 움직이는 동안만 블러 머티리얼로 바꿔 끼울 그림들
-    private readonly Dictionary<float, Material> blurMaterials = new();               // 레이어 속도(factor)별 머티리얼: 빠른 레이어일수록 길게 번진다
+    private readonly Dictionary<(float factor, float left, float right), Material> blurMaterials = new(); // 레이어 속도(factor)와 가장자리 풀기별 머티리얼: 빠른 레이어일수록 길게 번진다
     private static readonly int BlurPixelsId = Shader.PropertyToID("_BlurPixels");
+    private static readonly int FeatherLeftId = Shader.PropertyToID("_FeatherLeft");
+    private static readonly int FeatherRightId = Shader.PropertyToID("_FeatherRight");
     private bool blurOn;
     private float lastBlurView;
     private float blurSpeed;  // 페이지/초(부드럽게 다듬은 값)
@@ -107,21 +109,30 @@ public class SwipeParallax : MonoBehaviour, IBeginDragHandler, IDragHandler, IEn
         }
     }
 
-    /// <summary>이 레이어에 속한 그림(Image 등)을 모아 둔다. 글자(TMP)와 따로 머티리얼을 쓰는 그림은 건드리지 않는다.</summary>
+    /// <summary>이 레이어에 속한 그림(Image 등)을 모아 둔다. 글자(TMP)와 따로 머티리얼을 쓰는 그림은 건드리지 않는다.
+    /// 가장자리 섞기(BlendLeft/Right)는 레이어 자신의 그림에만 적용한다(안에 둔 다른 그림은 그대로).</summary>
     private void CollectBlurTargets(ParallaxLayer layer, float factor)
     {
         if (settings.blurMaterial == null) return;
 
-        if (!blurMaterials.TryGetValue(factor, out Material material))
-        {
-            material = new Material(settings.blurMaterial);
-            blurMaterials.Add(factor, material);
-        }
         foreach (Graphic graphic in layer.GetComponentsInChildren<Graphic>(true))
         {
             bool ownedByLayer = graphic.GetComponentInParent<ParallaxLayer>(true) == layer; // 안쪽 레이어의 그림은 그 레이어가 맡는다
-            if (ownedByLayer && graphic is not TMP_Text && graphic.material == Graphic.defaultGraphicMaterial)
-                blurTargets.Add((graphic, material));
+            bool blends = graphic.TryGetComponent(out PhaseBlend _); // 낮/노을 섞는 이미지는 스스로 머티리얼을 바꾸므로 기본 머티리얼이 아니어도 대상이다
+            if (!ownedByLayer || graphic is TMP_Text || (!blends && graphic.material != Graphic.defaultGraphicMaterial)) continue;
+
+            float width = ((RectTransform)graphic.transform).rect.width;
+            bool own = graphic.gameObject == layer.gameObject && width > 0f;
+            float left = own ? Mathf.Min(0.5f, layer.BlendLeft / width) : 0f;   // 그림 폭에 대한 비율(UV)
+            float right = own ? Mathf.Min(0.5f, layer.BlendRight / width) : 0f;
+            if (!blurMaterials.TryGetValue((factor, left, right), out Material material))
+            {
+                material = new Material(settings.blurMaterial);
+                material.SetFloat(FeatherLeftId, left);
+                material.SetFloat(FeatherRightId, right);
+                blurMaterials.Add((factor, left, right), material);
+            }
+            blurTargets.Add((graphic, material));
         }
     }
 
@@ -133,7 +144,9 @@ public class SwipeParallax : MonoBehaviour, IBeginDragHandler, IDragHandler, IEn
         blurSpeed = 0f;
         foreach (var (graphic, material) in blurTargets)
         {
-            if (graphic != null) graphic.material = material;
+            if (graphic == null) continue;
+            if (graphic.TryGetComponent(out PhaseBlend phase)) phase.BeginBlur(material); // 섞는 이미지는 섞기 + 블러 머티리얼을 스스로 고른다
+            else graphic.material = material;
         }
     }
 
@@ -143,7 +156,9 @@ public class SwipeParallax : MonoBehaviour, IBeginDragHandler, IDragHandler, IEn
         blurOn = false;
         foreach (var (graphic, _) in blurTargets)
         {
-            if (graphic != null) graphic.material = null; // 원래(기본) 머티리얼로
+            if (graphic == null) continue;
+            if (graphic.TryGetComponent(out PhaseBlend phase)) phase.EndBlur();
+            else graphic.material = null; // 원래(기본) 머티리얼로
         }
     }
 
@@ -157,8 +172,8 @@ public class SwipeParallax : MonoBehaviour, IBeginDragHandler, IDragHandler, IEn
         blurSpeed = Mathf.Lerp(blurSpeed, moved, 0.5f);
 
         float pixelsPerSecond = blurSpeed * CanvasWidth * rootCanvas.scaleFactor;
-        foreach (var (factor, material) in blurMaterials)
-            material.SetFloat(BlurPixelsId, Mathf.Min(pixelsPerSecond * factor * settings.blurExposure, settings.maxBlurPixels));
+        foreach (var (key, material) in blurMaterials)
+            material.SetFloat(BlurPixelsId, Mathf.Min(pixelsPerSecond * key.factor * settings.blurExposure, settings.maxBlurPixels));
     }
 
 #if UNITY_EDITOR

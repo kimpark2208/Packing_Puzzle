@@ -2,7 +2,7 @@ using TMPro;
 
 /// <summary>
 /// 손님 말풍선에 대사를 띄운다(낮 메인/밤 메인 공용). 대사 문구와 "어떤 상황에 어떤 대사"를 여기서 정하고,
-/// DayMainUI는 상황만 알려 준다. 주문 대사의 내용은 CustomerDialogue가 만든다.
+/// MainUI는 상황만 알려 준다. 주문 대사의 내용은 CustomerDialogue가 만든다.
 /// </summary>
 public class CustomerSpeech
 {
@@ -14,16 +14,20 @@ public class CustomerSpeech
     private const string NoOrderLine = "손님이 아직 정하지 못한 것 같아요...";
 
     private readonly TMP_Text bubbleText;
+    private readonly TypewriterText typewriter; // 말풍선에 붙어 있으면 대사를 한 글자씩 보여 준다(없으면 한 번에)
 
     public CustomerSpeech(TMP_Text bubbleText)
     {
         this.bubbleText = bubbleText;
+        typewriter = bubbleText != null ? bubbleText.GetComponent<TypewriterText>() : null;
     }
 
     public void Show(string line)
     {
-        if (bubbleText != null) bubbleText.text = line;
+        if (typewriter != null) typewriter.Play(line);
+        else if (bubbleText != null) bubbleText.text = line;
     }
+
 
     /// <summary>오늘의 주문을 말한다(주문이 아직 없으면 그 사정을 말한다).</summary>
     public void ShowOrder(DayPuzzleGenerator.DayOrder order)

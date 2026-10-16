@@ -6,7 +6,7 @@ using UnityEngine;
 using UnityEngine.UI;
 
 /// <summary>
-/// 꽃 선택 화면. 메인 씬(01DayMain)의 옆 페이지(ShelfRoot)이고, 주문을 수락한 뒤 스와이프로 들어온다(DayMainUI가 켠다). "포장지 선택 -> 꽃 선택" 순서를 그대로 따른다.
+/// 꽃 선택 화면. 메인 씬(01DayMain)의 옆 페이지(ShelfRoot)이고, 주문을 수락한 뒤 스와이프로 들어온다(MainUI가 켠다). "포장지 선택 -> 꽃 선택" 순서를 그대로 따른다.
 /// 1단계: WrapperPopup의 포장지 박스 7개 중 쓸 수 있는 것을 눌러 고르고 '선택 완료'를 누른다 (목표 점수/정답 레시피가 이때 확정됨).
 ///        쓸 수 없는 포장지(보유하지 않았거나 퍼즐이 아직 지원하지 않는 링 수)는 속이 빈 어두운 박스로만 보인다.
 /// 2단계: 포장지를 고르면 FlowerPopup(역할별 선반 4개)으로 전환되고, 역할(라인/폼/매스/필러)마다
@@ -59,6 +59,7 @@ public class FlowerSelectUI : MonoBehaviour
 
     [Header("꽃 선택 팝업 (역할별 선반. 꽃 수만큼 에디터에 슬롯을 놓아 두고, 그 자리를 그대로 쓴다)")]
     [SerializeField] private GameObject flowerPopup;
+    [SerializeField, Min(0f), Tooltip("포장지 팝업이 나가기 시작한 뒤 꽃 선택이 들어오기 시작하기까지의 시간(초). 0이면 동시에(고개를 드는 느낌), 포장지가 나가는 시간보다 크면 그 사이에 쉬는 시간이 생긴다.")] private float flowerEnterDelay;
     [SerializeField] private Shelf[] shelves;
     [SerializeField] private Button flowerConfirmButton; // 선택 완료. 없으면 더 담을 꽃이 없어지는 순간 자동으로 넘어간다
 
@@ -137,7 +138,7 @@ public class FlowerSelectUI : MonoBehaviour
 
     private void OnWrapperChosen(int wrapperId)
     {
-        if (GameManager.Instance == null) return;
+        if (GameManager.Instance == null || wrapperChosen) return; // 팝업이 사라지는 동안 다시 눌러도 무시한다
 
         GameManager.Instance.ChooseWrapper(wrapperId);
         wrapperChosen = true;
@@ -145,7 +146,15 @@ public class FlowerSelectUI : MonoBehaviour
         var order = GameManager.Instance.CurrentDayOrder;
         if (order == null) return;
 
-        if (wrapperPopup != null) wrapperPopup.SetActive(false);
+        PanelMotion.Close(wrapperPopup); // 포장지는 아래로 내려가고, 꽃 선택은 위에서 내려온다
+        StartCoroutine(ShowFlowerPopupAfterDelay(order));
+    }
+
+    /// <summary>포장지 팝업이 나가기 시작하고 flowerEnterDelay가 지나면 꽃 선택을 연다.</summary>
+    private System.Collections.IEnumerator ShowFlowerPopupAfterDelay(DayPuzzleGenerator.DayOrder order)
+    {
+        if (flowerEnterDelay > 0f) yield return new WaitForSecondsRealtime(flowerEnterDelay);
+
         if (flowerPopup != null) flowerPopup.SetActive(true);
 
         CreateSelection(order);

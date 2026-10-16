@@ -4107,6 +4107,8 @@ GameObject:
   - component: {fileID: 685273318}
   - component: {fileID: 685273323}
   - component: {fileID: 685273319}
+  - component: {fileID: 685273325}
+  - component: {fileID: 685273324}
   m_Layer: 0
   m_Name: DecoratePanel
   m_TagString: Untagged
@@ -4186,6 +4188,40 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 685273317}
   m_CullTransparentMesh: 1
+--- !u!114 &685273324
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 685273317}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 956ba500021445049859e0ffebd8be01, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PanelMotion
+  style: 1
+  seconds: 0.3
+  distance: 500
+  bounce: 0
+  fade: 1
+  playOnEnable: 1
+  showSound: {fileID: 0}
+  hideSound: {fileID: 0}
+  openSoundVolume: 1
+  closeSoundVolume: 1
+--- !u!225 &685273325
+CanvasGroup:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 685273317}
+  m_Enabled: 1
+  m_Alpha: 1
+  m_Interactable: 1
+  m_BlocksRaycasts: 1
+  m_IgnoreParentGroups: 0
 --- !u!1 &689150110
 GameObject:
   m_ObjectHideFlags: 0
@@ -4247,7 +4283,8 @@ MonoBehaviour:
   tapArea: {fileID: 339251987}
   hintText: {fileID: 464473602}
   stepSeconds: 0.9
-  moveSeconds: 0.3
+  moveSeconds: 0.6
+  riseDistance: 50
   fastScale: 0.2
   negativeColor: {r: 0.8, g: 0.38, b: 0.3, a: 1}
   positiveColor: {r: 0.45, g: 0.66, b: 0.38, a: 1}
@@ -6952,6 +6989,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1227432582}
   - component: {fileID: 1227432581}
+  - component: {fileID: 1227432583}
   m_Layer: 0
   m_Name: DayPuzzleUI
   m_TagString: Untagged
@@ -6990,6 +7028,20 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1227432583
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1227432580}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 95f1773491c45fb4d9b40452faec1973, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::SceneBgm
+  clip: {fileID: 8300000, guid: 9b3e36bd3b43054438166fdc12fbea9d, type: 3}
+  volume: 0.4
 --- !u!1 &1263605274
 GameObject:
   m_ObjectHideFlags: 0
@@ -8832,6 +8884,8 @@ MonoBehaviour:
   bouquetArea: {fileID: 110471155}
   ribbonAnchor: {fileID: 644625361}
   leafAnchor: {fileID: 295381780}
+  cardAnchor: {fileID: 0}
+  ornamentAnchor: {fileID: 0}
   maxSizeByCategory:
   - {x: 300, y: 300}
   - {x: 480, y: 480}
@@ -10838,7 +10892,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -300.00003, y: -83}
+  m_AnchoredPosition: {x: -300, y: -83}
   m_SizeDelta: {x: 770, y: 715}
   m_Pivot: {x: 1, y: 0.5}
 --- !u!114 &1744586046

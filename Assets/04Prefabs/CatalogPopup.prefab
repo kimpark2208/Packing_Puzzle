@@ -1431,6 +1431,7 @@ GameObject:
   - component: {fileID: 7509291666505617542}
   - component: {fileID: 8336936611778652098}
   - component: {fileID: 3929539121235147573}
+  - component: {fileID: 3967937879755641043}
   m_Layer: 0
   m_Name: Tab_Ect
   m_TagString: Untagged
@@ -1540,6 +1541,27 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls: []
+--- !u!114 &3967937879755641043
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5111525213130170741}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: de5f114964c9ec14d9f8c04a41491990, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PressSound
+  clips:
+  - {fileID: 8300000, guid: cc2f4ccaa5ba8bb4e94336ffd2b98eb9, type: 3}
+  - {fileID: 8300000, guid: c8bf02b0cc5e0f04aad8a4df688e1640, type: 3}
+  - {fileID: 8300000, guid: 8c0cd60937394ca4dbfbed46aa73ee51, type: 3}
+  - {fileID: 8300000, guid: c4704310a802d34439388d572b74a058, type: 3}
+  - {fileID: 8300000, guid: e4bef3ac125df9b49a1c881b81288c1b, type: 3}
+  watch: {fileID: 0}
+  whenWatchedActive: []
+  volume: 0.7
 --- !u!1 &5222389490516903482
 GameObject:
   m_ObjectHideFlags: 0
@@ -1552,6 +1574,8 @@ GameObject:
   - component: {fileID: 4054358296214284231}
   - component: {fileID: 5758678656530737403}
   - component: {fileID: 3203188826618914220}
+  - component: {fileID: 4773393497295630835}
+  - component: {fileID: 5178348799338236085}
   m_Layer: 0
   m_Name: CatalogPopup
   m_TagString: Untagged
@@ -1651,6 +1675,40 @@ MonoBehaviour:
   m_BlockingMask:
     serializedVersion: 2
     m_Bits: 4294967295
+--- !u!225 &4773393497295630835
+CanvasGroup:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5222389490516903482}
+  m_Enabled: 1
+  m_Alpha: 1
+  m_Interactable: 1
+  m_BlocksRaycasts: 1
+  m_IgnoreParentGroups: 0
+--- !u!114 &5178348799338236085
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5222389490516903482}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 956ba500021445049859e0ffebd8be01, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PanelMotion
+  style: 0
+  seconds: 0.3
+  distance: 300
+  bounce: 0
+  fade: 1
+  playOnEnable: 1
+  showSound: {fileID: 0}
+  hideSound: {fileID: 0}
+  openSoundVolume: 1
+  closeSoundVolume: 1
 --- !u!1 &5269873576621133810
 GameObject:
   m_ObjectHideFlags: 0
@@ -2122,6 +2180,7 @@ GameObject:
   - component: {fileID: 2813138528880822208}
   - component: {fileID: 7879430550107157107}
   - component: {fileID: 7977187191958762861}
+  - component: {fileID: 3686783878542513032}
   m_Layer: 0
   m_Name: Tab_Funiture
   m_TagString: Untagged
@@ -2231,6 +2290,27 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls: []
+--- !u!114 &3686783878542513032
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5875808187478154746}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: de5f114964c9ec14d9f8c04a41491990, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PressSound
+  clips:
+  - {fileID: 8300000, guid: cc2f4ccaa5ba8bb4e94336ffd2b98eb9, type: 3}
+  - {fileID: 8300000, guid: c8bf02b0cc5e0f04aad8a4df688e1640, type: 3}
+  - {fileID: 8300000, guid: 8c0cd60937394ca4dbfbed46aa73ee51, type: 3}
+  - {fileID: 8300000, guid: c4704310a802d34439388d572b74a058, type: 3}
+  - {fileID: 8300000, guid: e4bef3ac125df9b49a1c881b81288c1b, type: 3}
+  watch: {fileID: 0}
+  whenWatchedActive: []
+  volume: 0.7
 --- !u!1 &5985093385803235277
 GameObject:
   m_ObjectHideFlags: 0
@@ -2626,6 +2706,7 @@ GameObject:
   - component: {fileID: 511592855376950192}
   - component: {fileID: 4416952578222785028}
   - component: {fileID: 950882176554534696}
+  - component: {fileID: 7375901332883066366}
   m_Layer: 0
   m_Name: Tab_Artifact
   m_TagString: Untagged
@@ -2735,6 +2816,27 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls: []
+--- !u!114 &7375901332883066366
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6988473178929774425}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: de5f114964c9ec14d9f8c04a41491990, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PressSound
+  clips:
+  - {fileID: 8300000, guid: cc2f4ccaa5ba8bb4e94336ffd2b98eb9, type: 3}
+  - {fileID: 8300000, guid: c8bf02b0cc5e0f04aad8a4df688e1640, type: 3}
+  - {fileID: 8300000, guid: 8c0cd60937394ca4dbfbed46aa73ee51, type: 3}
+  - {fileID: 8300000, guid: c4704310a802d34439388d572b74a058, type: 3}
+  - {fileID: 8300000, guid: e4bef3ac125df9b49a1c881b81288c1b, type: 3}
+  watch: {fileID: 0}
+  whenWatchedActive: []
+  volume: 0.7
 --- !u!1 &7054325753987638468
 GameObject:
   m_ObjectHideFlags: 0
@@ -2996,6 +3098,7 @@ GameObject:
   - component: {fileID: 3726256631864371541}
   - component: {fileID: 2278142358931373010}
   - component: {fileID: 4827227685284096394}
+  - component: {fileID: 7845542391698395707}
   m_Layer: 0
   m_Name: CloseBTN
   m_TagString: Untagged
@@ -3119,6 +3222,23 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls: []
+--- !u!114 &7845542391698395707
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7531290190634299789}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: de5f114964c9ec14d9f8c04a41491990, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PressSound
+  clips:
+  - {fileID: 8300000, guid: 7b547371488374a4ab8ba04e7cfda24b, type: 3}
+  watch: {fileID: 0}
+  whenWatchedActive: []
+  volume: 1
 --- !u!1 &7639721140241823035
 GameObject:
   m_ObjectHideFlags: 0

@@ -110,6 +110,7 @@ public class DayPuzzleUI : MonoBehaviour
     private void OnFinishClicked()
     {
         if (finishButton != null) finishButton.interactable = false; // 결과 화면이 뜨는 동안 다시 누르지 못하게
+        PanelMotion.Close(decorateObjects[0]); // 꾸미기 창은 왼쪽으로 사라진다
         ShowResult(Settle(PuzzleEndKind.Completed));
     }
 

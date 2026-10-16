@@ -4915,6 +4915,7 @@ GameObject:
   - component: {fileID: 1988152242838999406}
   - component: {fileID: 2399202477014094457}
   - component: {fileID: 6570911181342384398}
+  - component: {fileID: 9156151564117023669}
   m_Layer: 3
   m_Name: TouchEffect
   m_TagString: Untagged
@@ -9817,3 +9818,21 @@ ParticleSystemRenderer:
   m_MeshWeighting1: 1
   m_MeshWeighting2: 1
   m_MeshWeighting3: 1
+--- !u!114 &9156151564117023669
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5494834991029031586}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ba99c53de49fed94d94be47ec0da67e1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::TouchSound
+  clips:
+  - {fileID: 8300000, guid: ff35e67f3cbe189488b553d4e108a033, type: 3}
+  - {fileID: 8300000, guid: 314fba870fbf81e498799729bacd8bdb, type: 3}
+  - {fileID: 8300000, guid: 2808d02e00b661b439f7e6cc96d23156, type: 3}
+  - {fileID: 8300000, guid: e0f096d342a3c4347bf1c6fd44e41d36, type: 3}
+  volume: 0.5

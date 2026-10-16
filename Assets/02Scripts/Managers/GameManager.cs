@@ -82,7 +82,7 @@ public class GameManager : Singleton<GameManager>
     public void BeginNewDay()
     {
         PrepareNewDay();
-        SceneManager.LoadScene(SceneDayMain);
+        SceneTransition.Go(SceneDayMain);
     }
 
     /// <summary>새 손님(오늘의 주문)을 정하고 메인 화면이 낮 손님을 보여 주도록 해 둔다.</summary>
@@ -111,7 +111,7 @@ public class GameManager : Singleton<GameManager>
     public void ConfirmFlowerSelection(List<FlowerData> chosen)
     {
         ChosenGachaPool = new List<FlowerData>(chosen);
-        SceneManager.LoadScene(SceneDayPuzzle);
+        SceneTransition.Go(SceneDayPuzzle);
     }
 
     /// <summary>카운터에서 등불을 켜면 밤이 시작된다: 로딩 씬에서 부적을 붙인 꽃의 퍼즐을 모두 만든 뒤, 밤 시간이 가득 차 흐르기 시작하고 밤 손님이 찾아온다.
@@ -170,7 +170,7 @@ public class GameManager : Singleton<GameManager>
     {
         orderInProgress = false;
         MainState = MainState.DayEnding;
-        SceneManager.LoadScene(SceneDayMain);
+        SceneTransition.Go(SceneDayMain);
     }
 
     // ========== 밤 ==========
@@ -248,7 +248,7 @@ public class GameManager : Singleton<GameManager>
     /// <summary>밤 손님의 부탁을 수락했을 때: 밤 퍼즐로 간다.</summary>
     public void StartNightPuzzle()
     {
-        SceneManager.LoadScene(SceneNightPuzzle);
+        SceneTransition.Go(SceneNightPuzzle);
     }
 
     /// <summary>밤 퍼즐 씬이 열렸을 때: 지금 풀 퍼즐을 알린다(보드가 이벤트로 받아 판을 만든다).</summary>
@@ -302,7 +302,7 @@ public class GameManager : Singleton<GameManager>
     {
         nightIndex++;
         MainState = MainState.NightCustomer;
-        SceneManager.LoadScene(SceneDayMain);
+        SceneTransition.Go(SceneDayMain);
     }
 
     /// <summary>디버그용: 지금 밤 퍼즐을 풀지 않고 성공한 것으로 처리한다(이 퍼즐의 꽃을 모두 쓴 것으로 보고 보상/해금/다음 손님까지 같은 흐름).</summary>
@@ -320,15 +320,15 @@ public class GameManager : Singleton<GameManager>
     {
         MainState = MainState.NightEnding;
 
-        if (SceneManager.GetActiveScene().name == SceneDayMain) return; // 이미 메인 화면이면(밤 손님을 만나는 중) 그 자리의 DayMainUI가 같은 이벤트를 받아 바로 처리한다
+        if (SceneManager.GetActiveScene().name == SceneDayMain) return; // 이미 메인 화면이면(밤 손님을 만나는 중) 그 자리의 MainUI가 같은 이벤트를 받아 바로 처리한다
 
-        SceneManager.LoadScene(SceneDayMain);
+        SceneTransition.Go(SceneDayMain);
     }
 
     /// <summary>밤이 끝나면(마지막 손님이 사라지면) 하루 결산 화면으로 간다.</summary>
     public void EndNight()
     {
-        SceneManager.LoadScene(SceneResult);
+        SceneTransition.Go(SceneResult);
     }
 
     /// <summary>결산 화면에서 다음으로: 날짜를 넘기고 다음 날 낮을 시작한다.</summary>

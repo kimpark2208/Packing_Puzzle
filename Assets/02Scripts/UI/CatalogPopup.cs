@@ -39,7 +39,7 @@ public class CatalogPopup : MonoBehaviour
     private void Awake()
     {
         itemTemplate.gameObject.SetActive(false);
-        closeButton.onClick.AddListener(() => gameObject.SetActive(false));
+        closeButton.onClick.AddListener(() => PanelMotion.Close(gameObject));
         tabBaseColors = new Color[tabs.Length];
         tabBaseHeights = new float[tabs.Length];
         for (int i = 0; i < tabs.Length; i++)
