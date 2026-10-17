@@ -10,10 +10,10 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 49f979e384517054798180863e4f8a5d, type: 3}
-  m_Name: Block_12_PentominoX_White
+  m_Name: Block_12_PentominoX_Blue
   m_EditorClassIdentifier: Assembly-CSharp::BlockData
   blockID: 12
-  color: 6
+  color: 3
   shapeGrid:
   - cols: 000100
   - cols: 010101

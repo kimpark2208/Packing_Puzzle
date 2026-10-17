@@ -10,10 +10,10 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 49f979e384517054798180863e4f8a5d, type: 3}
-  m_Name: Block_08_TetrominoL_White
+  m_Name: Block_08_TetrominoL_Red
   m_EditorClassIdentifier: Assembly-CSharp::BlockData
   blockID: 8
-  color: 6
+  color: 0
   shapeGrid:
   - cols: 0100
   - cols: 0100

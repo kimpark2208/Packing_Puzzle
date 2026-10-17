@@ -199,7 +199,7 @@ public static class ProceduralNightPuzzleGenerator
     }
 
     /// <summary>주어진 꽃을 하나씩은 반드시 쓰고(mandatoryCells칸) 남는 칸을 꽃들의 칸 수 조합으로 채울 수 있는지.</summary>
-    private static bool CanFillUsingAll(int target, int mandatoryCells, List<int> cellCounts)
+    public static bool CanFillUsingAll(int target, int mandatoryCells, List<int> cellCounts)
     {
         return CanReachExactSum(target - mandatoryCells, cellCounts);
     }
@@ -279,7 +279,7 @@ public static class ProceduralNightPuzzleGenerator
     }
 
     /// <summary>유일성은 따지지 않고, 이 벽 배치로 주어진 꽃을 모두 한 번 이상 써서 완전히 채울 수 있는 방법이 하나라도 있는지만 검사한다.</summary>
-    private static bool HasTilingUsingAll(int gridSize, List<BlockData> blocks, bool[,] wallGrid)
+    public static bool HasTilingUsingAll(int gridSize, List<BlockData> blocks, bool[,] wallGrid)
     {
         var dlx = BuildExactCoverInstance(gridSize, blocks, wallGrid, out int primaryColumnCount);
         if (primaryColumnCount == 0) return false;

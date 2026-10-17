@@ -40,3 +40,18 @@ MonoBehaviour:
     sprite: {fileID: 21300000, guid: fee48d85b1fbd0f429fc5cc53b2ba543, type: 3}
   - petalIndex: 4
     sprite: {fileID: 21300000, guid: aaab3daa5ddf6474a91978a8fd380084, type: 3}
+  petalGrid: '..####..
+
+    .######.
+
+    ..####..
+
+    ########
+
+    .######.
+
+    ########
+
+    .######.
+
+    ...##...'

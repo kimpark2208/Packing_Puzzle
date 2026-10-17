@@ -86,6 +86,7 @@ public class MainUI : MonoBehaviour
         SetUpSidePage();
         SetUpLantern();
         SetUpCatalog();
+        if (IsNight) FindFirstObjectByType<OrderPopup>(FindObjectsInactive.Include)?.SetTabVisible(false); // 주문서는 낮 손님의 주문이라 밤에는 숨긴다
 
         switch (state)
         {

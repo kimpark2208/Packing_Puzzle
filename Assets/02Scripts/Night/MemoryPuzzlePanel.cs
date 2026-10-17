@@ -83,6 +83,7 @@ public class MemoryPuzzlePanel : RepairPuzzlePanel
     private void ApplyFlowerArt(FlowerData art)
     {
         center.sprite = art.centerPartSprite;
+        center.enabled = art.centerPartSprite != null; // 중심 그림이 없는 꽃은 중심을 그리지 않는다
         for (int i = 0; i < petals.Length; i++) petals[i].targetGraphic.GetComponent<Image>().sprite = art.petalPartSprites[i];
     }
 

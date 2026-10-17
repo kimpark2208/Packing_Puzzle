@@ -28,6 +28,13 @@ public class OrderPopup : MonoBehaviour
         RefreshOrder(); // 씬에 들어온 시점의 주문(손님이 말한 주문)을 주문서에 미리 적어 둔다
     }
 
+    /// <summary>주문서 탭을 보이거나 숨긴다(숨길 때 열려 있는 팝업도 닫는다).</summary>
+    public void SetTabVisible(bool visible)
+    {
+        orderTab.gameObject.SetActive(visible);
+        if (!visible) orderPopup.SetActive(false);
+    }
+
     private void Toggle()
     {
         orderPopup.SetActive(!orderPopup.activeSelf);

@@ -7,8 +7,8 @@ using UnityEngine.UI;
 using Random = UnityEngine.Random;
 
 /// <summary>
-/// 꽃잎 흩어짐 수리 퍼즐: 꽃잎 붙이기. 줄기 위 꽃에 꽃잎 자리(어두운 윤곽) 6개가 있고, 떨어진 꽃잎 6장이 양옆에 흩어져 있다.
-/// 꽃잎을 끌어다 맞는 자리 근처에 놓으면 붙고, 다른 꽃잎의 자리 근처에 놓으면 처음 자리로 튕겨 돌아간다(어느 자리 근처도 아니면 놓은 곳에 그대로 있다). 끌고 있는 꽃잎이 어떤 자리에 가까워지면 그 자리가 흰 테두리로 깜빡인다(낮 퍼즐의 칸과 같다). 6장을 다 붙이면 성공이다.
+/// 꽃잎 흩어짐 수리 퍼즐: 꽃잎 붙이기. 줄기 위 꽃에 꽃잎 자리(어두운 윤곽)가 있고, 떨어진 꽃잎이 양옆에 흩어져 있다(진단에서 꽃에 남은 꽃잎 1~4장은 처음부터 붙어 있다).
+/// 꽃잎을 끌어다 맞는 자리 근처에 놓으면 붙고, 다른 꽃잎의 자리 근처에 놓으면 처음 자리로 튕겨 돌아간다(어느 자리 근처도 아니면 놓은 곳에 그대로 있다). 끌고 있는 꽃잎이 어떤 자리에 가까워지면 그 자리가 흰 테두리로 깜빡인다(낮 퍼즐의 칸과 같다). 꽃잎 6장이 모두 붙으면 성공이다.
 /// 이 퍼즐은 화병과 꽃을 숨기고, 패널 안에 줄기가 있는 꽃을 따로 보여 준다(그림은 진단 꽃의 그림을 쓴다).
 /// </summary>
 public class ScatterPuzzlePanel : RepairPuzzlePanel
@@ -43,6 +43,8 @@ public class ScatterPuzzlePanel : RepairPuzzlePanel
 
     private Vector3[] homePositions;
     private Quaternion[] homeRotations;
+    private readonly bool[] attached = new bool[FlowerData.PetalPartCount]; // 처음부터 꽃에 붙어 있는 꽃잎(진단에서 떨어지지 않은 꽃잎)
+    private Material silhouetteMaterial;                                     // 꽃잎 자리의 윤곽 머티리얼(붙어 있는 꽃잎 자리는 꽃잎 그림 그대로 보이도록 잠시 벗긴다)
     private int placed;
 
     public override bool HidesFlower => true;
@@ -52,13 +54,18 @@ public class ScatterPuzzlePanel : RepairPuzzlePanel
         StopAllCoroutines();
         if (Case != null) ApplyFlowerArt(Case.art);
         message.text = startMessage;
-        placed = 0;
+        silhouetteMaterial ??= slots[0].material;
+        Array.Clear(attached, 0, attached.Length);
+        if (Case != null) foreach (int kept in Case.keptPetals) attached[kept] = true;
+        placed = attached.Count(a => a);
 
         for (int i = 0; i < loosePetals.Length; i++)
         {
             PetalDrag petal = loosePetals[i];
-            slots[i].color = slotColor;
+            slots[i].color = attached[i] ? Color.white : slotColor;
+            slots[i].material = attached[i] ? null : silhouetteMaterial;
             slots[i].gameObject.SetActive(true);
+            petal.gameObject.SetActive(!attached[i]);
             LayoutOutline(i);
             ShowOutline(i, false);
 
@@ -97,6 +104,7 @@ public class ScatterPuzzlePanel : RepairPuzzlePanel
     {
         stemLeaf.sprite = art.stemLeafPartSprite;
         center.sprite = art.centerPartSprite;
+        center.enabled = art.centerPartSprite != null; // 중심 그림이 없는 꽃은 중심을 그리지 않는다
         for (int i = 0; i < slots.Length; i++) slots[i].sprite = loosePetals[i].Image.sprite = art.petalPartSprites[i];
     }
 
@@ -108,13 +116,13 @@ public class ScatterPuzzlePanel : RepairPuzzlePanel
         ScatterPetals();
     }
 
-    /// <summary>떨어진 꽃잎을 꽃잎 자리와 같은 크기로 맞추고, 영역들에 번갈아 가며 무작위 자리·각도로 흩어 놓는다(그림 중심이 고른 자리에 오게).</summary>
+    /// <summary>떨어진 꽃잎(붙어 있지 않은 꽃잎)을 꽃잎 자리와 같은 크기로 맞추고, 영역들에 번갈아 가며 무작위 자리·각도로 흩어 놓는다(그림 중심이 고른 자리에 오게).</summary>
     private void ScatterPetals()
     {
         homePositions = new Vector3[loosePetals.Length];
         homeRotations = new Quaternion[loosePetals.Length];
 
-        int[] order = Enumerable.Range(0, loosePetals.Length).OrderBy(_ => Random.value).ToArray();
+        int[] order = Enumerable.Range(0, loosePetals.Length).Where(i => !attached[i]).OrderBy(_ => Random.value).ToArray();
         for (int k = 0; k < order.Length; k++)
         {
             int i = order[k];
@@ -165,7 +173,7 @@ public class ScatterPuzzlePanel : RepairPuzzlePanel
         float best = snapDistance;
         for (int j = 0; j < slots.Length; j++)
         {
-            if (!slots[j].gameObject.activeSelf) continue;
+            if (!slots[j].gameObject.activeSelf || attached[j]) continue;
 
             float distance = Vector2.Distance(here, PanelPoint(slots[j].rectTransform, ArtCenter(slots[j])));
             if (distance >= best) continue;
