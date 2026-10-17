@@ -34,7 +34,7 @@ public class GameManager : Singleton<GameManager>
     /// <summary>다음에 열리는(또는 지금 열려 있는) 메인 화면이 보여 줄 상황. 메인 화면으로 가기 전에 정한다.</summary>
     public MainState MainState { get; private set; } = MainState.DayCustomer;
 
-    private const string DefaultRejectResponseLine = "그래요라고 하세요";
+    private const string DefaultRejectResponseLine = CustomerSpeech.DefaultForceAcceptLine;
 
     private string pendingCustomerLine;
     private string pendingRejectResponseLine = DefaultRejectResponseLine;
@@ -226,7 +226,7 @@ public class GameManager : Singleton<GameManager>
         if (nightIndex >= nightQueue.Count) return null;
 
         var names = nightQueue[nightIndex].requiredFlowerIds
-            .Select(id => FlowerRegistry.Instance != null ? FlowerRegistry.Instance.GetById(id) : null)
+            .Select(id => DataRegistry.Instance != null ? DataRegistry.Instance.GetFlower(id) : null)
             .Where(f => f != null)
             .Select(f => f.DisplayName);
         return string.Join(", ", names);
@@ -272,7 +272,7 @@ public class GameManager : Singleton<GameManager>
         var allowedBlocks = new List<BlockData>();
         foreach (int id in data.requiredBlockIds)
         {
-            var b = BlockRegistry.Instance.GetById(id);
+            var b = DataRegistry.Instance.GetBlock(id);
             if (b != null) allowedBlocks.Add(b);
         }
 
@@ -297,7 +297,7 @@ public class GameManager : Singleton<GameManager>
         {
             CurrencyManager.Instance.AddFlowerStock(id, nightRewardPerFlower);
 
-            FlowerData flower = FlowerRegistry.Instance != null ? FlowerRegistry.Instance.GetById(id) : null;
+            FlowerData flower = DataRegistry.Instance != null ? DataRegistry.Instance.GetFlower(id) : null;
             gains.Add(new KeyValuePair<string, int>(flower != null ? flower.DisplayName : $"꽃 {id}", nightRewardPerFlower));
         }
 

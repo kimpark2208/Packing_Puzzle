@@ -39,7 +39,7 @@ public static class ProceduralNightPuzzleGenerator
     /// <summary>퍼즐에 쓸 블록 MaxBlocksPerStage개를 블록 목록에서 무작위로 고른다(꽃과는 무관).</summary>
     public static List<BlockData> PickBlocks()
     {
-        return BlockRegistry.Instance != null ? BlockRegistry.Instance.PickRandom(MaxBlocksPerStage) : new List<BlockData>();
+        return DataRegistry.Instance != null ? DataRegistry.Instance.PickRandomBlocks(MaxBlocksPerStage) : new List<BlockData>();
     }
 
     /// <summary>주어진 꽃(최대 MaxBlocksPerStage종)을 모두 한 번 이상 써서 보드를 채울 수 있는 스테이지를 만든다.</summary>

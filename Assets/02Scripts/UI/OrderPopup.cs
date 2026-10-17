@@ -41,6 +41,6 @@ public class OrderPopup : MonoBehaviour
         int day = CurrencyManager.Instance != null ? CurrencyManager.Instance.CurrentDay : 1;
 
         orderNumberText.text = $"No. {day:0000}";
-        orderBodyText.text = order == null ? "" : CustomerDialogue.OrderLine(order);
+        orderBodyText.text = order == null ? "" : order.orderLine;
     }
 }

@@ -4,9 +4,10 @@ using UnityEngine;
 
 /// <summary>
 /// 게임 재화 및 상태 관리 (싱글톤)
-/// 현재 금액, 일수, 보유 포장지, 획득한 꽃, 요청한 꽃 등을 추적
+/// 현재 금액, 일수, 부적, 보유 포장지, 획득한 꽃과 꽃 재고, 오늘의 주문 요구사항을 추적한다.
+/// 에디터 전용 디버그 메뉴는 CurrencyManager.Debug.cs에 있다.
 /// </summary>
-public class CurrencyManager : Singleton<CurrencyManager>
+public partial class CurrencyManager : Singleton<CurrencyManager>
 {
     [SerializeField] private int initialMoney = 0;
     [SerializeField] private int initialFlowerStock = 20; // 모든 꽃의 시작 보유 수량
@@ -23,11 +24,11 @@ public class CurrencyManager : Singleton<CurrencyManager>
     private HashSet<int> ownedWrappers = new();
 
     // ========== 꽃 (Flower) ==========
-    private Dictionary<int, bool> obtainedFlowers = new();  // ID → 획득 여부
+    private HashSet<int> obtainedFlowers = new();           // 획득한 꽃 ID
     private Dictionary<int, int> flowerStock = new();       // ID → 보유 수량(해금 여부와는 별개)
 
     // ========== 고객 요구사항 ==========
-    private CustomerRequirementGenerator.CustomerRequirement currentRequirement;
+    private OrderComposer.CustomerRequirement currentRequirement;
 
     // ========== 프로퍼티 (읽기 전용) ==========
     public int CurrentMoney => currentMoney;
@@ -48,10 +49,10 @@ public class CurrencyManager : Singleton<CurrencyManager>
         todayScores.Add(score);
     }
     public IReadOnlyCollection<int> OwnedWrappers => ownedWrappers;
-    public CustomerRequirementGenerator.CustomerRequirement CurrentRequirement => currentRequirement;
+    public OrderComposer.CustomerRequirement CurrentRequirement => currentRequirement;
 
     /// <summary>DayPuzzleGenerator가 생성한 오늘의 요구사항을 단일 소스로 등록한다(표시용과 판정용이 어긋나지 않도록).</summary>
-    public void SetCurrentRequirement(CustomerRequirementGenerator.CustomerRequirement requirement)
+    public void SetCurrentRequirement(OrderComposer.CustomerRequirement requirement)
     {
         currentRequirement = requirement;
     }
@@ -73,7 +74,7 @@ public class CurrencyManager : Singleton<CurrencyManager>
 
         // 초기 꽃: 꽃 시트에서 획득 일차가 0인 꽃(1 금어초 라인, 2 소국 필러, 3 백합 폼). 주문에서 이름이나 말장난으로 부탁받을 수 있는 꽃이다.
         // 꽃 선택에서는 획득 여부와 상관없이 등록된 모든 꽃을 고를 수 있다.
-        foreach (int id in new[] { 1, 2, 3 }) obtainedFlowers[id] = true;
+        foreach (int id in new[] { 1, 2, 3 }) obtainedFlowers.Add(id);
 
         // 보유 수량은 등록된 모든 꽃이 initialFlowerStock(GetFlowerStock의 기본값)이고, 지정한 꽃만 0이다.
         foreach (int id in outOfStockFlowerIds) flowerStock[id] = 0;
@@ -191,9 +192,8 @@ public class CurrencyManager : Singleton<CurrencyManager>
     /// <summary>꽃을 해금한다(이미 해금했으면 아무 일도 없다).</summary>
     public void ObtainFlower(int flowerId)
     {
-        if (obtainedFlowers.GetValueOrDefault(flowerId)) return;
+        if (!obtainedFlowers.Add(flowerId)) return;
 
-        obtainedFlowers[flowerId] = true;
         Debug.Log($"[CurrencyManager] 꽃 {flowerId} 획득");
     }
 
@@ -202,13 +202,7 @@ public class CurrencyManager : Singleton<CurrencyManager>
     /// </summary>
     public List<int> GetObtainedFlowerIds()
     {
-        var result = new List<int>();
-        foreach (var kvp in obtainedFlowers)
-        {
-            if (kvp.Value)
-                result.Add(kvp.Key);
-        }
-        return result;
+        return obtainedFlowers.ToList();
     }
 
     // ========== 일수 진행 ==========
@@ -226,49 +220,4 @@ public class CurrencyManager : Singleton<CurrencyManager>
         EventBus.RaiseDayAdvanced(currentDay);
         Debug.Log($"[CurrencyManager] 일수 진행: Day {currentDay}");
     }
-
-#if UNITY_EDITOR
-    private bool debugOpen;
-
-    private void OnGUI()
-    {
-        if (GUILayout.Button(debugOpen ? "Debug ▲ 닫기" : "Debug ▼ 열기")) debugOpen = !debugOpen;
-        if (!debugOpen) return;
-
-        if (GUILayout.Button("Debug: +1000 금액"))
-            AddMoney(1000);
-
-        if (GUILayout.Button("Debug: 포장지 3 언락"))
-            UnlockWrapper(3);
-
-        if (GUILayout.Button("Debug: 다음 날"))
-            AdvanceDay();
-
-        if (GUILayout.Button("Debug: 하루 시간 -1분") && GameClock.Instance != null)
-            GameClock.Instance.SkipDayTime(60f);
-
-        if (GUILayout.Button("Debug: 밤 퍼즐 스킵(성공)") && GameManager.Instance != null)
-            GameManager.Instance.DebugSkipNightPuzzle();
-
-        if (GUILayout.Button("Debug: 밤 시간 -1분") && GameClock.Instance != null)
-            GameClock.Instance.SkipNightTime(60f);
-
-        if (GUILayout.Button("Debug: 손님 기분 -20%") && GameClock.Instance != null)
-            GameClock.Instance.DrainMood(0.2f);
-
-        if (GUILayout.Button("Debug: 리롤 횟수 +1"))
-            FindFirstObjectByType<GachaManager>()?.AddRerolls(1);
-
-        if (GUILayout.Button("Debug: 낮 퍼즐 강제 제출"))
-            FindFirstObjectByType<DayPuzzleUI>()?.DebugForceSubmit();
-
-        if (GUILayout.Button("Debug: 캐릭터 새로 뽑기"))
-            FindFirstObjectByType<CharacterGenerator>()?.Randomize();
-
-        if (GUILayout.Button($"Debug: 배속 x{Time.timeScale:0.#} (x1 → x2 → x4 → x8)"))
-            Time.timeScale = Time.timeScale >= 8f ? 1f : Time.timeScale * 2f;
-
-        GUILayout.Label($"현재 금액: {CurrentMoney}\n현재 일수: {CurrentDay}\n보유 포장지: {ownedWrappers.Count}개");
-    }
-#endif
 }

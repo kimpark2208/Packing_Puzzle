@@ -2,7 +2,7 @@ using TMPro;
 
 /// <summary>
 /// 손님 말풍선에 대사를 띄운다(낮 메인/밤 메인 공용). 대사 문구와 "어떤 상황에 어떤 대사"를 여기서 정하고,
-/// MainUI는 상황만 알려 준다. 주문 대사의 내용은 CustomerDialogue가 만든다.
+/// MainUI는 상황만 알려 준다. 주문 대사의 내용은 주문(DayOrder.orderLine)이 이미 들고 있다.
 /// </summary>
 public class CustomerSpeech
 {
@@ -32,7 +32,7 @@ public class CustomerSpeech
     /// <summary>오늘의 주문을 말한다(주문이 아직 없으면 그 사정을 말한다).</summary>
     public void ShowOrder(DayPuzzleGenerator.DayOrder order)
     {
-        Show(order == null ? NoOrderLine : CustomerDialogue.OrderLine(order));
+        Show(order == null ? NoOrderLine : order.orderLine);
     }
 
     public void ShowReject() => Show(RejectLine);

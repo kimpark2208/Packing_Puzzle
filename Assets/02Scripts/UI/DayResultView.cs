@@ -95,7 +95,7 @@ public class DayResultView : MonoBehaviour
             shownAny = true;
 
             running += entry.Value;
-            SetMainPill($"{SettlementFormatter.Label(entry.Key)}  {SettlementFormatter.Signed(entry.Value)}", entry.Value < 0 ? negativeColor : positiveColor);
+            SetMainPill($"{Label(entry.Key)}  {Signed(entry.Value)}", entry.Value < 0 ? negativeColor : positiveColor);
             RisePills(hadPrev);
 
             yield return MoveGauge(ScoreTier.Clamp(running));
@@ -174,6 +174,24 @@ public class DayResultView : MonoBehaviour
         }
         pillRoutine = null;
     }
+
+    /// <summary>점수 사유를 결과 화면에 보여 줄 문구로 바꾼다.</summary>
+    private static string Label(ScoreReason reason)
+    {
+        switch (reason)
+        {
+            case ScoreReason.FlowerLight: return "꽃의 빛";
+            case ScoreReason.RequirementMet: return "요구사항 달성";
+            case ScoreReason.RequirementOver: return "요구사항 초과 달성";
+            case ScoreReason.MoodGood: return "손님 기분 좋음";
+            case ScoreReason.Collapse: return "꽃다발 붕괴";
+            case ScoreReason.MoodBad: return "손님 기분 나쁨";
+            case ScoreReason.RequirementMissed: return "요구사항 미달성";
+            default: return reason.ToString();
+        }
+    }
+
+    private static string Signed(int value) => value > 0 ? $"+{value}" : value.ToString();
 
     private static Color WithAlpha(Color color, float alpha) => new Color(color.r, color.g, color.b, alpha);
 

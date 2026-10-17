@@ -1,7 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
-using static CustomerRequirementGenerator;
 
 /// <summary>
 /// 손님의 주문을 만든다: 요구사항(퍼즐 조건)과 그것을 말하는 대사, 되묻기 대사.
@@ -10,9 +9,38 @@ using static CustomerRequirementGenerator;
 /// - 꽃 은유형: 꽃의 특수주문(말장난, 확률은 flowerSpecialOrderChance)이나 색 은유("동백 같은 꽃").
 /// - 포장지 직설형: 템플릿에 포장지 색 이름. 포장지 은유형: 그 색의 은유 문장(없으면 직설형).
 /// 되묻기 대사는 특수주문이 있는 꽃의 1차·2차 되묻기만 있다.
+/// 요구사항(CustomerRequirement)의 형태와, 그것을 만들 재료(획득한 꽃, 프리셋이 받아 줄 수 있는 개수)도 여기에 있다.
+/// 프리셋이 주어지면 그 프리셋으로 풀 수 있는 요구사항만 만든다(칸당 꽃 한 송이이므로 역할별 칸 수가 상한).
 /// </summary>
 public static class OrderComposer
 {
+    public enum RequirementType
+    {
+        Color,   // 색상 기반: "빨간색 꽃을 3개 이상 사용하세요"
+        Flower   // 꽃 기반: "금어초(와 소국)를 하나 이상씩 사용하세요"
+    }
+
+    public struct CustomerRequirement
+    {
+        public int requirementId;        // 요구사항 고유 ID (일수)
+        public RequirementType type;     // 색상/꽃 기반
+        public FlowerData.Color color;   // 색상 기반: 요구한 꽃 색
+        public int flowerId;             // 꽃 기반: 요구한 첫 번째 꽃
+        public int flowerId2;            // 꽃 기반: 요구한 두 번째 꽃(한 종이면 -1)
+        public int minCount;             // 색상 기반: 최소 개수. 꽃 기반: 말한 꽃의 종류 수(종류마다 한 송이 이상)
+        public int baseAmount;           // 이 퍼즐의 기본 금액(정산 점수 구간의 배율이 곱해진다)
+
+        /// <summary>꽃 기반에서 요구한 꽃 ID들(한 종이면 하나, 두 종이면 둘).</summary>
+        public IEnumerable<int> FlowerTargets()
+        {
+            yield return flowerId;
+            if (flowerId2 >= 0) yield return flowerId2;
+        }
+    }
+
+    /// <summary>퍼즐 기본 금액(임시: 모든 주문이 같다). 100 = 초반에 0~25점 꽃다발 1개를 판매한 정도.</summary>
+    private const int BaseAmount = 100;
+
     public struct Result
     {
         public CustomerRequirement requirement;
@@ -34,7 +62,7 @@ public static class OrderComposer
             templates.FillDefaults();
         }
 
-        var requirement = new CustomerRequirement { requirementId = day, baseAmount = BaseAmount, targetId2 = -1 };
+        var requirement = new CustomerRequirement { requirementId = day, baseAmount = BaseAmount, flowerId2 = -1 };
         string[] reask = NoLines;
 
         string flowerPart = null;
@@ -100,10 +128,8 @@ public static class OrderComposer
             : ColorPalette.ToKoreanName((FlowerData.Color)color) + "색";
 
         requirement.type = RequirementType.Color;
-        requirement.targetId = color;
-        requirement.targetId2 = -1;
+        requirement.color = (FlowerData.Color)color;
         requirement.minCount = count;
-        requirement.description = $"<b>{name}</b> 꽃을 <b>{count}개</b> 이상 사용하세요";
 
         string line = t.colorDirect[Random.Range(0, t.colorDirect.Count)];
         line = KoreanParticle.Replace(line, "색", name, $"<b>{name}</b>");
@@ -153,23 +179,51 @@ public static class OrderComposer
     private static string FlowerFallback(ref CustomerRequirement requirement)
     {
         requirement.type = RequirementType.Color;
-        requirement.targetId = Random.Range(0, 6);
-        requirement.targetId2 = -1;
+        requirement.color = (FlowerData.Color)Random.Range(0, 6);
         requirement.minCount = 2;
-        string name = ColorPalette.ToKoreanName((FlowerData.Color)requirement.targetId) + "색";
-        requirement.description = $"<b>{name}</b> 꽃을 <b>2개</b> 이상 사용하세요";
+        string name = ColorPalette.ToKoreanName(requirement.color) + "색";
         return $"<b>{name}</b> 꽃 <b>2개</b>는 꼭 넣어주세요.";
     }
 
     private static void SetFlower(ref CustomerRequirement requirement, FlowerData first, FlowerData second)
     {
         requirement.type = RequirementType.Flower;
-        requirement.targetId = first.flowerID;
-        requirement.targetId2 = second != null ? second.flowerID : -1;
+        requirement.flowerId = first.flowerID;
+        requirement.flowerId2 = second != null ? second.flowerID : -1;
         requirement.minCount = second != null ? 2 : 1; // 말한 꽃마다 한 송이 이상
-        requirement.description = second != null
-            ? $"<b>{first.DisplayName}</b>, <b>{second.DisplayName}</b>을(를) 한 송이 이상씩 사용하세요"
-            : $"<b>{first.DisplayName}</b>을(를) 한 송이 이상 사용하세요";
+    }
+
+    // ── 요구사항 재료 ────────────────────────────────────────────────────────
+
+    /// <summary>플레이어가 획득한 꽃(FlowerData) 목록.</summary>
+    private static List<FlowerData> ObtainedFlowers()
+    {
+        if (CurrencyManager.Instance == null || DataRegistry.Instance == null) return new List<FlowerData>();
+        return CurrencyManager.Instance.GetObtainedFlowerIds()
+            .Select(id => DataRegistry.Instance.GetFlower(id))
+            .Where(f => f != null)
+            .ToList();
+    }
+
+    /// <summary>프리셋에서 이 꽃을 최대 몇 송이 놓을 수 있나 (그 꽃의 역할 칸 수).</summary>
+    private static int FlowerCapacity(WrapperPresetData preset, FlowerData flower)
+    {
+        return preset == null ? int.MaxValue : preset.CountByTag(flower.flowerRole);
+    }
+
+    /// <summary>프리셋에서 이 색 꽃을 최대 몇 송이 놓을 수 있나 (그 색 꽃이 있는 역할들의 칸 수 합).</summary>
+    private static int ColorCapacity(WrapperPresetData preset, FlowerData.Color color)
+    {
+        if (preset == null) return int.MaxValue;
+        return ObtainedFlowers().Where(f => f.color == color).Select(f => f.flowerRole).Distinct().Sum(role => preset.CountByTag(role));
+    }
+
+    /// <summary>꽃 두 종을 한 송이씩 놓을 수 있나: 서로 다른 역할이면 각 역할에 한 칸씩, 같은 역할이면 그 역할에 두 칸이 있어야 한다.</summary>
+    private static bool CanPlacePair(WrapperPresetData preset, FlowerData a, FlowerData b)
+    {
+        if (preset == null) return true;
+        if (a.flowerRole == b.flowerRole) return preset.CountByTag(a.flowerRole) >= 2;
+        return FlowerCapacity(preset, a) >= 1 && FlowerCapacity(preset, b) >= 1;
     }
 
     private static string PickPhrase(OrderTemplateData t, FlowerData.Color color)

@@ -7,7 +7,7 @@ using UnityEngine.UI;
 /// 메인(손님 주문) 화면. 낮 손님/낮 종료/밤 손님/밤 종료를 이 씬 하나에서 보여 준다(MainState).
 /// 손님 캐릭터 자리 + 말풍선(주문 힌트) + 응답 버튼 2개("다시 여쭤볼게요" / "포장 시작할게요") + 설정 팝업 + 카탈로그 팝업(전화 버튼으로 열림).
 /// 낮 손님의 주문을 수락하면 응답 버튼이 사라지고, 잠시 뒤 옆 페이지의 꽃 선택(FlowerSelectUI)으로 자동으로 넘어간다(한 번 가면 돌아올 수 없다).
-/// UI 요소는 전부 씬 하이라키에 미리 배치되어 있고, 이 스크립트는 인스펙터 참조 없이 이름으로 찾아서(SceneFind) 로직을 수행한다.
+/// UI 요소는 전부 씬 하이라키에 미리 배치되어 있고, 이 스크립트는 인스펙터 참조 없이 이름(SceneObjectNames)으로 찾아서(SceneFind) 로직을 수행한다.
 ///
 /// 어떤 상황인지는 GameManager가 씬을 열기 전에 정해 두므로(MainState, 오늘의 주문 CurrentDayOrder) Start()에서 스스로 읽어 온다.
 /// 화면 모습은 같은 오브젝트의 MainLook이 바꾼다(낮 손님은 낮, 낮 종료는 노을, 밤 손님과 밤 종료는 밤).
@@ -15,19 +15,6 @@ using UnityEngine.UI;
 /// </summary>
 public class MainUI : MonoBehaviour
 {
-    // 씬에서 찾을 오브젝트 이름. 이름을 바꾸면 여기도 같이 바꾼다.
-    private const string BubbleTextName = "BubbleText";
-    private const string RejectButtonName = "RejectBTN";
-    private const string AcceptButtonName = "AcceptBTN";
-    private const string TelephoneName = "CounterTelephone"; // 낮/밤 모습이 같은 오브젝트 하나를 쓴다(MainLook이 그림만 바꾼다)
-    private const string CatalogPopupName = "CatalogPopup";
-    private const string BubbleContainerName = "BubbleContainer";
-    private const string DayCharacterName = "DayCharacterArea"; // 낮 손님을 무작위로 만드는 CharacterGenerator가 붙은 오브젝트
-    private static readonly string[] CharacterRootNames = { DayCharacterName, "NightCharacterArea" };
-    private const string LanternToggleName = "LanternToggle";
-    private const string ShelfRootName = "ShelfRoot"; // 메인 옆 페이지: 낮 손님이면 꽃 선택, 낮 종료면 꽃 선반(부적)
-    private const string CharmPillName = "CharmUse"; // 부적 화면에만 나오는 "부적 n / 6" 표시
-
     [SerializeField] private float timeUpHideDelay = 5f;
     [SerializeField] private float lanternDelay = 0.5f; // 전등을 켠 뒤 밤 요청 화면으로 넘어가기까지의 시간
     [SerializeField, Min(0f), Tooltip("이전 손님이 나간 뒤 새 손님이 들어오기까지 쉬는 시간(초).")] private float customerSwapDelay = 0.3f;
@@ -66,6 +53,8 @@ public class MainUI : MonoBehaviour
     private MainLook mainLook;       // 화면 모습(낮/노을/밤)과 섞기
     private bool changingCustomer;   // 손님이 바뀌는 중(말풍선 -> 나가는 모션 -> 들어오는 모션 -> 말풍선). 그동안은 응답 버튼을 무시한다
 
+    private static GameManager Game => GameManager.Instance;
+
     private bool IsNight => state == MainState.NightCustomer || state == MainState.NightEnding;
 
     private void OnEnable()
@@ -81,63 +70,22 @@ public class MainUI : MonoBehaviour
 
     private void Start()
     {
-        state = GameManager.Instance != null ? GameManager.Instance.MainState : MainState.DayCustomer;
-        order = GameManager.Instance != null ? GameManager.Instance.CurrentDayOrder : null;
+        state = Game != null ? Game.MainState : MainState.DayCustomer;
+        order = Game != null ? Game.CurrentDayOrder : null;
         Initialize();
     }
 
     private void Initialize()
     {
-        var scene = gameObject.scene;
-        speech = new CustomerSpeech(SceneFind.One<TMP_Text>(scene, BubbleTextName));
-        bubbleContainer = SceneFind.One<Transform>(scene, BubbleContainerName)?.gameObject;
-        catalogPopup = SceneFind.One<Transform>(scene, CatalogPopupName)?.gameObject;
-        characterRoots = System.Array.ConvertAll(CharacterRootNames, n => SceneFind.One<Transform>(scene, n)?.gameObject);
-        character = SceneFind.One<CharacterGenerator>(scene, DayCharacterName);
-
-        Button reject = SceneFind.One<Button>(scene, RejectButtonName);
-        Button accept = SceneFind.One<Button>(scene, AcceptButtonName);
-        rejectButton = reject != null ? reject.gameObject : null;
-        acceptButton = accept != null ? accept.gameObject : null;
-        reject?.onClick.AddListener(OnRejectClicked);
-        accept?.onClick.AddListener(OnAcceptClicked);
+        FindSceneObjects();
 
         mainLook = GetComponent<MainLook>();
         mainLook?.Apply(state);
         Bgm.Play(state == MainState.DayCustomer ? dayBgm : state == MainState.DayEnding ? dayEndBgm : nightBgm, bgmVolume);
 
-        // 옆 페이지(ShelfRoot)는 낮 손님(꽃 선택)과 낮 종료(꽃 선반)에만 켜 둔다(다른 상황에서는 스와이프로도 갈 수 없다). 둘은 같은 선반을 쓰므로 상황에 맞는 쪽만 켠다.
-        GameObject shelfRoot = SceneFind.One<Transform>(scene, ShelfRootName)?.gameObject;
-        bool hasSidePage = state == MainState.DayCustomer || state == MainState.DayEnding;
-        if (shelfRoot != null) shelfRoot.SetActive(hasSidePage);
-        shelf = shelfRoot != null ? shelfRoot.GetComponentInChildren<NightRequestUI>(true) : null;
-        if (shelf != null) shelf.gameObject.SetActive(state == MainState.DayEnding);
-        FlowerSelectUI flowerSelect = shelfRoot != null ? shelfRoot.GetComponentInChildren<FlowerSelectUI>(true) : null;
-        if (flowerSelect != null) flowerSelect.gameObject.SetActive(state == MainState.DayCustomer);
-        SceneFind.One<Transform>(scene, CharmPillName)?.gameObject.SetActive(state == MainState.DayEnding);
-        swipe = FindFirstObjectByType<SwipeParallax>();
-        if (swipe != null)
-        {
-            swipe.Enabled = false;
-            swipe.Arrived += OnSwipeArrived;
-        }
-
-        lantern = SceneFind.One<Toggle>(scene, LanternToggleName);
-        if (lantern != null)
-        {
-            lantern.gameObject.SetActive(state == MainState.DayEnding || IsNight); // 전등은 낮이 끝난 시점과 밤 동안에만 나타난다(낮 영업 중에는 숨긴다)
-            lantern.SetIsOnWithoutNotify(false);
-            lantern.interactable = false; // 낮 종료 손님이 떠난 뒤에야 켤 수 있다(HideCustomer). 밤에는 켜진 모습을 보여 주기만 한다
-            if (IsNight && nightLanternSprite != null && lantern.targetGraphic is Image nightImage) nightImage.sprite = nightLanternSprite;
-            lantern.onValueChanged.AddListener(OnLanternChanged);
-        }
-
-        // 전화기를 누르면 카탈로그가 열리고 닫힌다. 팝업의 닫기 버튼도 스스로 끄므로 열림 상태를 따로 들고 있지 않는다.
-        if (catalogPopup != null)
-        {
-            foreach (Button telephone in SceneFind.All<Button>(scene, TelephoneName)) telephone.onClick.AddListener(ToggleCatalog);
-            catalogPopup.SetActive(false);
-        }
+        SetUpSidePage();
+        SetUpLantern();
+        SetUpCatalog();
 
         switch (state)
         {
@@ -146,6 +94,68 @@ public class MainUI : MonoBehaviour
             case MainState.NightCustomer: BeginNightCustomer(); break;
             case MainState.NightEnding: BeginNightEnd(); break;
         }
+    }
+
+    /// <summary>씬에서 이 화면이 쓰는 오브젝트를 이름으로 찾아 두고 응답 버튼을 잇는다.</summary>
+    private void FindSceneObjects()
+    {
+        var scene = gameObject.scene;
+        speech = new CustomerSpeech(SceneFind.One<TMP_Text>(scene, SceneObjectNames.BubbleText));
+        bubbleContainer = SceneFind.One<Transform>(scene, SceneObjectNames.BubbleContainer)?.gameObject;
+        catalogPopup = SceneFind.One<Transform>(scene, SceneObjectNames.CatalogPopup)?.gameObject;
+        characterRoots = System.Array.ConvertAll(SceneObjectNames.CharacterRoots, n => SceneFind.One<Transform>(scene, n)?.gameObject);
+        character = SceneFind.One<CharacterGenerator>(scene, SceneObjectNames.DayCharacter);
+
+        Button reject = SceneFind.One<Button>(scene, SceneObjectNames.RejectButton);
+        Button accept = SceneFind.One<Button>(scene, SceneObjectNames.AcceptButton);
+        rejectButton = reject != null ? reject.gameObject : null;
+        acceptButton = accept != null ? accept.gameObject : null;
+        reject?.onClick.AddListener(OnRejectClicked);
+        accept?.onClick.AddListener(OnAcceptClicked);
+    }
+
+    /// <summary>옆 페이지(꽃 선택/꽃 선반)와 스와이프를 상황에 맞게 준비한다.</summary>
+    private void SetUpSidePage()
+    {
+        var scene = gameObject.scene;
+        // 옆 페이지(ShelfRoot)는 낮 손님(꽃 선택)과 낮 종료(꽃 선반)에만 켜 둔다(다른 상황에서는 스와이프로도 갈 수 없다). 둘은 같은 선반을 쓰므로 상황에 맞는 쪽만 켠다.
+        GameObject shelfRoot = SceneFind.One<Transform>(scene, SceneObjectNames.ShelfRoot)?.gameObject;
+        bool hasSidePage = state == MainState.DayCustomer || state == MainState.DayEnding;
+        if (shelfRoot != null) shelfRoot.SetActive(hasSidePage);
+        shelf = shelfRoot != null ? shelfRoot.GetComponentInChildren<NightRequestUI>(true) : null;
+        if (shelf != null) shelf.gameObject.SetActive(state == MainState.DayEnding);
+        FlowerSelectUI flowerSelect = shelfRoot != null ? shelfRoot.GetComponentInChildren<FlowerSelectUI>(true) : null;
+        if (flowerSelect != null) flowerSelect.gameObject.SetActive(state == MainState.DayCustomer);
+        SceneFind.One<Transform>(scene, SceneObjectNames.CharmPill)?.gameObject.SetActive(state == MainState.DayEnding);
+        swipe = FindFirstObjectByType<SwipeParallax>();
+        if (swipe != null)
+        {
+            swipe.Enabled = false;
+            swipe.Arrived += OnSwipeArrived;
+        }
+    }
+
+    /// <summary>전등(낮 종료와 밤에만 나타난다)을 상황에 맞게 준비한다.</summary>
+    private void SetUpLantern()
+    {
+        lantern = SceneFind.One<Toggle>(gameObject.scene, SceneObjectNames.LanternToggle);
+        if (lantern != null)
+        {
+            lantern.gameObject.SetActive(state == MainState.DayEnding || IsNight); // 전등은 낮이 끝난 시점과 밤 동안에만 나타난다(낮 영업 중에는 숨긴다)
+            lantern.SetIsOnWithoutNotify(false);
+            lantern.interactable = false; // 낮 종료 손님이 떠난 뒤에야 켤 수 있다(HideCustomer). 밤에는 켜진 모습을 보여 주기만 한다
+            if (IsNight && nightLanternSprite != null && lantern.targetGraphic is Image nightImage) nightImage.sprite = nightLanternSprite;
+            lantern.onValueChanged.AddListener(OnLanternChanged);
+        }
+    }
+
+    /// <summary>전화기를 누르면 카탈로그가 열리고 닫히게 잇는다. 팝업의 닫기 버튼도 스스로 끄므로 열림 상태를 따로 들고 있지 않는다.</summary>
+    private void SetUpCatalog()
+    {
+        if (catalogPopup == null) return;
+
+        foreach (Button telephone in SceneFind.All<Button>(gameObject.scene, SceneObjectNames.Telephone)) telephone.onClick.AddListener(ToggleCatalog);
+        catalogPopup.SetActive(false);
     }
 
     /// <summary>
@@ -198,7 +208,7 @@ public class MainUI : MonoBehaviour
     /// <summary>낮 손님: 주문을 말한다. 이전 손님의 반응 대사가 있으면 그것부터 말한다.</summary>
     private void BeginDayCustomer()
     {
-        string angryLine = GameManager.Instance != null ? GameManager.Instance.ConsumePendingCustomerLine() : null;
+        string angryLine = Game != null ? Game.ConsumePendingCustomerLine() : null;
         showingAngryLine = !string.IsNullOrEmpty(angryLine);
         if (showingAngryLine)
         {
@@ -221,7 +231,7 @@ public class MainUI : MonoBehaviour
         if (character == null) return;
 
         character.Randomize();
-        if (GameManager.Instance != null) GameManager.Instance.CustomerLook = character.Current;
+        if (Game != null) Game.CustomerLook = character.Current;
         if (!arrive) return;
 
         character.gameObject.SetActive(true); // 나갔던 손님 자리를 다시 켠다
@@ -260,6 +270,11 @@ public class MainUI : MonoBehaviour
     private void SetBubble(bool on)
     {
         if (bubbleContainer != null) bubbleContainer.SetActive(on);
+        SetAnswerButtons(on);
+    }
+
+    private void SetAnswerButtons(bool on)
+    {
         if (rejectButton != null) rejectButton.SetActive(on);
         if (acceptButton != null) acceptButton.SetActive(on);
     }
@@ -269,7 +284,7 @@ public class MainUI : MonoBehaviour
     {
         if (character == null) return;
 
-        if (GameManager.Instance != null && GameManager.Instance.CustomerLook is CharacterAppearance look) character.Apply(look);
+        if (Game != null && Game.CustomerLook is CharacterAppearance look) character.Apply(look);
         else ShowNewCustomer();
     }
 
@@ -292,10 +307,10 @@ public class MainUI : MonoBehaviour
     /// <summary>밤 손님: 지금 풀 퍼즐에 나올 꽃을 말하고, 수락하면 밤 퍼즐로 간다. 풀 퍼즐이 더 없으면 밤을 끝낸다.</summary>
     private void BeginNightCustomer()
     {
-        string flowers = GameManager.Instance != null ? GameManager.Instance.NightCustomerFlowerNames() : null;
+        string flowers = Game != null ? Game.NightCustomerFlowerNames() : null;
         if (flowers == null)
         {
-            if (GameManager.Instance != null) GameManager.Instance.EndNight();
+            Game?.EndNight();
             return;
         }
         SayAfterReveal(() => speech.ShowNightCustomer(flowers));
@@ -332,7 +347,7 @@ public class MainUI : MonoBehaviour
         if (leaving) { HideCustomer(); return; }
         if (state == MainState.NightCustomer)
         {
-            if (GameManager.Instance != null) GameManager.Instance.StartNightPuzzle();
+            Game?.StartNightPuzzle();
             return;
         }
         if (showingAngryLine)
@@ -343,9 +358,8 @@ public class MainUI : MonoBehaviour
         }
 
         GameClock.Instance?.StartMood(); // 주문을 수락하는 순간부터 손님 기분 시간이 줄어든다
-        if (GameManager.Instance != null) GameManager.Instance.AcceptOrder();
-        if (rejectButton != null) rejectButton.SetActive(false); // 수락한 뒤에는 응답 버튼이 필요 없다
-        if (acceptButton != null) acceptButton.SetActive(false);
+        Game?.AcceptOrder();
+        SetAnswerButtons(false); // 수락한 뒤에는 응답 버튼이 필요 없다
         StartCoroutine(GoToFlowerSelectAfterDelay());
     }
 
@@ -375,7 +389,7 @@ public class MainUI : MonoBehaviour
         float blend = mainLook != null ? mainLook.PlayNightBlend() : 0f; // 전등을 켜면 노을 → 밤으로 확 섞이고, 다 섞인 뒤에 밤이 시작된다
         float jingle = nightStartJingle != null ? nightStartJingle.length : 0f; // 전등 소리가 끝날 때까지 기다린다
         yield return new WaitForSeconds(Mathf.Max(lanternDelay, blend, jingle));
-        if (GameManager.Instance != null) GameManager.Instance.StartNight(shelf != null ? new List<int>(shelf.CharmedFlowerIds) : new List<int>());
+        Game?.StartNight(shelf != null ? new List<int>(shelf.CharmedFlowerIds) : new List<int>());
     }
 
     /// <summary>마무리 대사를 한 손님: 잠시 후(또는 응답 버튼을 누르면 바로) 말풍선과 캐릭터가 사라진다.</summary>

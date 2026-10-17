@@ -14,7 +14,7 @@ public static class DayPuzzleGenerator
     {
         // ---- 손님이 등장하는 순간부터 알 수 있는 것 (포장지 선택 전) ----
         public int day;
-        public CustomerRequirementGenerator.CustomerRequirement requirement;
+        public OrderComposer.CustomerRequirement requirement;
 
         /// <summary>주문을 풀 수 있는 프리셋을 가진 포장지. 손님의 힌트가 이 포장지를 가리킨다. 플레이어가 반드시 이걸 골라야 하는 건 아니다.</summary>
         public int hintWrapperId;
@@ -43,7 +43,7 @@ public static class DayPuzzleGenerator
         var pool = new List<(int wrapperId, int presetIndex)>();
         foreach (int id in CurrencyManager.Instance.OwnedWrappers)
         {
-            WrapperData data = WrapperRegistry.Instance != null ? WrapperRegistry.Instance.GetById(id) : null;
+            WrapperData data = DataRegistry.Instance != null ? DataRegistry.Instance.GetWrapper(id) : null;
             if (data == null) continue;
             for (int i = 0; i < data.presets.Count; i++)
             {
@@ -61,7 +61,7 @@ public static class DayPuzzleGenerator
             var pick = pool[Random.Range(0, pool.Count)];
             hintWrapperId = pick.wrapperId;
             hintPresetIndex = pick.presetIndex;
-            WrapperData hintData = WrapperRegistry.Instance.GetById(hintWrapperId);
+            WrapperData hintData = DataRegistry.Instance.GetWrapper(hintWrapperId);
             preset = hintData.presets[hintPresetIndex];
             hintColor = hintData.wrapperColor;
             hintColorName = hintData.ColorName; // 포장지 선택 화면에 보이는 색과 같은 이름
@@ -90,7 +90,7 @@ public static class DayPuzzleGenerator
     {
         int presetIndex = chosenWrapperId == order.hintWrapperId ? order.hintPresetIndex : RandomPlayablePresetIndex(chosenWrapperId);
 
-        order.wrapper = WrapperRegistry.Instance != null ? WrapperRegistry.Instance.GetById(chosenWrapperId) : null;
+        order.wrapper = DataRegistry.Instance != null ? DataRegistry.Instance.GetWrapper(chosenWrapperId) : null;
         bool validIndex = order.wrapper != null && presetIndex >= 0 && presetIndex < order.wrapper.presets.Count;
         order.preset = validIndex ? order.wrapper.presets[presetIndex] : null;
     }
@@ -98,7 +98,7 @@ public static class DayPuzzleGenerator
     /// <summary>해당 포장지의 보드가 지원하는 프리셋 중 무작위 번호. 없으면 -1.</summary>
     private static int RandomPlayablePresetIndex(int wrapperId)
     {
-        WrapperData data = WrapperRegistry.Instance != null ? WrapperRegistry.Instance.GetById(wrapperId) : null;
+        WrapperData data = DataRegistry.Instance != null ? DataRegistry.Instance.GetWrapper(wrapperId) : null;
         if (data == null) return -1;
 
         var indices = new List<int>();

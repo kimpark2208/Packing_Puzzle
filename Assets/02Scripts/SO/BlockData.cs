@@ -7,7 +7,7 @@ public struct BlockRow
 }
 
 /// <summary>
-/// 퍼즐용 블록(폴리오미노 모양). 꽃(FlowerData)과는 일대일로 이어지지 않는다: 블록이 필요한 퍼즐은 블록 목록(BlockRegistry)에서 골라 조합해 만든다.
+/// 퍼즐용 블록(폴리오미노 모양). 꽃(FlowerData)과는 일대일로 이어지지 않는다: 블록이 필요한 퍼즐은 블록 목록(DataRegistry)에서 골라 조합해 만든다.
 /// 밤 퍼즐의 블록 그리기에서 모양, 칸 그림, 미리보기 그림, 색을 여기서 가져온다.
 /// </summary>
 [CreateAssetMenu(fileName = "BlockData", menuName = "Puzzle/BlockData", order = 2)]

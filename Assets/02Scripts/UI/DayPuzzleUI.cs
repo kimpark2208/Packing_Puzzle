@@ -25,12 +25,6 @@ public class DayPuzzleUI : MonoBehaviour
     [Header("퍼즐 점수 정산 규칙 수치")]
     [SerializeField] private ScoreRuleSettings scoreSettings;
 
-    // 씬에서 찾을 오브젝트 이름. 이름을 바꾸면 여기도 같이 바꾼다.
-    private const string FlowerBucketName = "FlowerBucket";
-    private const string DecoratePanelName = "DecoratePanel";
-    private const string UndoButtonName = "UndoBTN";
-    private const string RetryButtonName = "RetryBTN";
-    private const string FinishButtonName = "ConfirmBTN"; // 작업 완료 버튼
     private const string FinishLabel = "작업 완료";
 
     private const float CollapseAutoProceedDelay = 1.2f;
@@ -81,9 +75,9 @@ public class DayPuzzleUI : MonoBehaviour
     private void SetUpDecorateStage()
     {
         Scene scene = gameObject.scene;
-        flowerBucket = SceneFind.One<Transform>(scene, FlowerBucketName)?.gameObject;
+        flowerBucket = SceneFind.One<Transform>(scene, SceneObjectNames.FlowerBucket)?.gameObject;
 
-        finishButton = SceneFind.One<Button>(scene, FinishButtonName);
+        finishButton = SceneFind.One<Button>(scene, SceneObjectNames.FinishButton);
         if (finishButton != null)
         {
             finishButton.onClick.AddListener(OnFinishClicked);
@@ -93,9 +87,9 @@ public class DayPuzzleUI : MonoBehaviour
 
         decorateObjects = new[]
         {
-            SceneFind.One<Transform>(scene, DecoratePanelName)?.gameObject,
-            SceneFind.One<Transform>(scene, UndoButtonName)?.gameObject,
-            SceneFind.One<Transform>(scene, RetryButtonName)?.gameObject,
+            SceneFind.One<Transform>(scene, SceneObjectNames.DecoratePanel)?.gameObject,
+            SceneFind.One<Transform>(scene, SceneObjectNames.UndoButton)?.gameObject,
+            SceneFind.One<Transform>(scene, SceneObjectNames.RetryButton)?.gameObject,
             finishButton != null ? finishButton.gameObject : null,
         };
         SetDecorating(false);
