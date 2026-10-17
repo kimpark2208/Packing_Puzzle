@@ -68,8 +68,6 @@ GameObject:
   - component: {fileID: 4767326363621051072}
   - component: {fileID: 3284812810805315515}
   - component: {fileID: 2750318177330541}
-  - component: {fileID: 8225987030938653256}
-  - component: {fileID: 256416733155516571}
   m_Layer: 0
   m_Name: ColorWheelArea
   m_TagString: Untagged
@@ -96,7 +94,7 @@ RectTransform:
   m_AnchorMin: {x: 0.5, y: 0}
   m_AnchorMax: {x: 0.5, y: 0}
   m_AnchoredPosition: {x: 0, y: -10}
-  m_SizeDelta: {x: 100, y: 100}
+  m_SizeDelta: {x: 120, y: 120}
   m_Pivot: {x: 0.5, y: 1}
 --- !u!222 &3284812810805315515
 CanvasRenderer:
@@ -136,34 +134,6 @@ MonoBehaviour:
   m_FillOrigin: 0
   m_UseSpriteMesh: 0
   m_PixelsPerUnitMultiplier: 1
---- !u!225 &8225987030938653256
-CanvasGroup:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 284326282800976932}
-  m_Enabled: 1
-  m_Alpha: 0
-  m_Interactable: 1
-  m_BlocksRaycasts: 1
-  m_IgnoreParentGroups: 0
---- !u!114 &256416733155516571
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 284326282800976932}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: ae7cae191b7e96c46b3b35bb647a27b4, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::ColorWheelHud
-  wheel: {fileID: 9162799726335366661}
-  pin: {fileID: 1092843556222659330}
-  follow: 10
-  fadeSeconds: 0.3
 --- !u!1 &351239846681772109
 GameObject:
   m_ObjectHideFlags: 0
@@ -793,7 +763,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 4ccfe4ed7486af842980dff6c0e3574c, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::InfoPopups
+  m_EditorClassIdentifier: Assembly-CSharp::OrderPopup
   orderTab: {fileID: 8936489890416900867}
   orderPopup: {fileID: 5304128017315462094}
   orderClose: {fileID: 8338557385303570682}
@@ -1129,6 +1099,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1427536270193336188}
   - component: {fileID: 6004621401877033181}
+  - component: {fileID: 3314491776230781940}
   m_Layer: 0
   m_Name: Clock
   m_TagString: Untagged
@@ -1166,6 +1137,22 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1868366344884818179}
   m_CullTransparentMesh: 1
+--- !u!114 &3314491776230781940
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1868366344884818179}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ae7cae191b7e96c46b3b35bb647a27b4, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ColorWheelHud
+  area: {fileID: 284326282800976932}
+  wheel: {fileID: 9162799726335366661}
+  pin: {fileID: 4048133639983911901}
+  follow: 10
 --- !u!1 &2194514556246710938
 GameObject:
   m_ObjectHideFlags: 0
@@ -1992,11 +1979,11 @@ RectTransform:
   m_Children: []
   m_Father: {fileID: 4767326363621051072}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0.5, y: 0.5}
-  m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 0, y: 30}
-  m_SizeDelta: {x: 20, y: 24}
-  m_Pivot: {x: 0.5, y: 0.1}
+  m_AnchorMin: {x: 0.5, y: 1}
+  m_AnchorMax: {x: 0.5, y: 1}
+  m_AnchoredPosition: {x: 0, y: -20}
+  m_SizeDelta: {x: 20, y: 25}
+  m_Pivot: {x: 0.5, y: 0}
 --- !u!222 &7192246231861938248
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -3687,7 +3674,7 @@ RectTransform:
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
   m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 94, y: 94}
+  m_SizeDelta: {x: 115, y: 115}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &157686179335238213
 CanvasRenderer:
@@ -3710,7 +3697,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
   m_Material: {fileID: 0}
-  m_Color: {r: 0.9150943, g: 0.89553994, b: 0.80718225, a: 1}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1

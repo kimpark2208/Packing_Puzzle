@@ -4,7 +4,7 @@ using System.Collections.Generic;
 public struct PuzzleCounts
 {
     public Dictionary<int, int> colorCounts;   // 색상ID -> 사용 개수
-    public Dictionary<int, int> flowerCounts;  // 꽃(blockID) -> 사용 개수
+    public Dictionary<int, int> flowerCounts;  // 꽃(flowerID) -> 사용 개수
 }
 
 /// <summary>낮 퍼즐 보드에 놓인 꽃의 색/꽃별 개수를 센다(금액 계산은 Settlement 폴더의 규칙들이 한다).</summary>
@@ -29,7 +29,7 @@ public static class PuzzleCounter
                 result.colorCounts.TryGetValue(colorId, out int c);
                 result.colorCounts[colorId] = c + 1;
 
-                int flowerId = flower.blockID;
+                int flowerId = flower.flowerID;
                 result.flowerCounts.TryGetValue(flowerId, out int f);
                 result.flowerCounts[flowerId] = f + 1;
             }

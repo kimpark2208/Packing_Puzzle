@@ -26,7 +26,7 @@ public static class EventBus
     public static event Action OnNightTimeUp;
 
     /// <summary>밤 퍼즐 씬이 열려 풀 퍼즐이 정해졌다(보드가 받아 판을 만든다)</summary>
-    public static event Action<NightPuzzleData, List<FlowerData>> OnNightStageReady;
+    public static event Action<NightPuzzleData, List<BlockData>> OnNightStageReady;
 
     /// <summary>밤 퍼즐을 풀었다 (획득한 꽃 ID들)</summary>
     public static event Action<List<int>> OnNightStageCompleted;
@@ -37,7 +37,7 @@ public static class EventBus
     /// <summary>밤 퍼즐 결과 팝업에서 확인을 눌렀다</summary>
     public static event Action OnNightResultConfirmed;
 
-    public static void RaiseNightStageReady(NightPuzzleData data, List<FlowerData> allowedBlocks) => OnNightStageReady?.Invoke(data, allowedBlocks);
+    public static void RaiseNightStageReady(NightPuzzleData data, List<BlockData> allowedBlocks) => OnNightStageReady?.Invoke(data, allowedBlocks);
     public static void RaiseNightStageCompleted(List<int> obtainedFlowerIds) => OnNightStageCompleted?.Invoke(obtainedFlowerIds);
     public static void RaiseNightResultConfirmed() => OnNightResultConfirmed?.Invoke();
 

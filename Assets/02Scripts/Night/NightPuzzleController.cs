@@ -8,7 +8,7 @@ using UnityEngine.UI;
 /// <summary>
 /// 일반/잉여 밤 퍼즐 보드.
 /// 한 번의 드래그로 하나의 블럭을 배치한다. 드래그 도중 같은 칸을 재통과해도 취소하지 않으며,
-/// 처음 방문한 고유 셀의 집합만 후보 FlowerData들의 회전/반전 변형과 비교한다.
+/// 처음 방문한 고유 셀의 집합만 후보 BlockData들의 회전/반전 변형과 비교한다.
 /// GameManager가 만든 퍼즐 큐의 현재 퍼즐을 EventBus.OnNightStageReady로 받아 로드하고, 풀면 OnNightStageCompleted를 발행한다.
 /// </summary>
 public class NightPuzzleController : MonoBehaviour
@@ -21,7 +21,7 @@ public class NightPuzzleController : MonoBehaviour
 
     [Header("Test Only (인스펙터에서 직접 테스트할 때)")]
     [SerializeField] private int testGridSize = 5;
-    [SerializeField] private List<FlowerData> testAllowedBlocks = new();
+    [SerializeField] private List<BlockData> testAllowedBlocks = new();
 
     [Header("모바일 터치 오차 허용")]
     [Tooltip("각 칸의 터치 판정 영역을 시각적 경계보다 이만큼(px) 더 넓힌다. 특히 그리드 가장자리 칸은 바깥쪽으로 여유가 없어 손가락이 살짝 벗어나면 아예 아무 칸도 감지되지 않는데, 이를 완화한다.")]
@@ -29,7 +29,8 @@ public class NightPuzzleController : MonoBehaviour
 
     private bool[,] filled;
     private int[,] placedBlockIds;
-    private Dictionary<int, int> placedBlockFlowerId = new(); // placedBlockId -> flowerId(blockID)
+    private Dictionary<int, int> placedBlockBlockId = new(); // placedBlockId -> 그 블록의 blockID
+    private List<int> rewardFlowerIds = new();                 // 이 퍼즐을 풀면 받는 꽃 ID(GameManager가 만든 퍼즐 데이터에서)
     private int nextPlacedBlockId;
     private int gridSize;
 
@@ -90,18 +91,20 @@ public class NightPuzzleController : MonoBehaviour
     }
 
     /// <summary>절차적으로 생성된 퍼즐 하나를 이 보드에 로드한다.</summary>
-    private void LoadPuzzle(int size, List<FlowerData> allowedBlocks, bool[,] wallGrid)
+    private void LoadPuzzle(int size, List<BlockData> allowedBlocks, bool[,] wallGrid)
     {
         loadedExternally = true;
+        rewardFlowerIds = new List<int>();
         shapeValidator = new NightShapePuzzleValidator(allowedBlocks, wallGrid);
         Validator = shapeValidator;
         CreateBoard(size, wallGrid);
         UpdateFlowerBlockPreview(allowedBlocks);
     }
 
-    private void LoadPuzzle(NightPuzzleData data, List<FlowerData> allowedBlocks)
+    private void LoadPuzzle(NightPuzzleData data, List<BlockData> allowedBlocks)
     {
         LoadPuzzle(data.gridSize, allowedBlocks, data.wallGrid ?? new bool[data.gridSize, data.gridSize]);
+        rewardFlowerIds = data.requiredFlowerIds != null ? data.requiredFlowerIds.Distinct().ToList() : new List<int>(); // 블록은 꽃과 무관하므로 보상 꽃은 퍼즐 데이터에서 받는다
     }
 
     /// <summary>
@@ -111,7 +114,7 @@ public class NightPuzzleController : MonoBehaviour
     /// 직접 계산해서 배치한다. 블록이 많으면 여러 줄로 나누고 크기를 줄여, 가장자리 여백(flowerBlockPadding)을
     /// 뺀 컨테이너 안에 항상 들어오게 한다(한 칸의 최대 크기는 flowerBlockPreviewSize).
     /// </summary>
-    private void UpdateFlowerBlockPreview(List<FlowerData> allowedBlocks)
+    private void UpdateFlowerBlockPreview(List<BlockData> allowedBlocks)
     {
         if (flowerBlockContainer == null) return;
 
@@ -151,7 +154,7 @@ public class NightPuzzleController : MonoBehaviour
 
         for (int i = 0; i < count; i++)
         {
-            FlowerData block = validBlocks[i];
+            BlockData block = validBlocks[i];
             int row = i / columns;
             int indexInRow = i % columns;
             int itemsInRow = row == rows - 1 ? count - row * columns : columns; // 마지막 줄은 남는 만큼만 가운데로 모은다
@@ -190,7 +193,7 @@ public class NightPuzzleController : MonoBehaviour
         cells = new NightCellView[size, size];
         filled = new bool[size, size];
         placedBlockIds = new int[size, size];
-        placedBlockFlowerId.Clear();
+        placedBlockBlockId.Clear();
         nextPlacedBlockId = 0;
 
         for (int row = 0; row < size; row++)
@@ -437,7 +440,7 @@ public class NightPuzzleController : MonoBehaviour
         if (blockId < 0 || erasedBlockIds.Contains(blockId)) return;
 
         erasedBlockIds.Add(blockId);
-        placedBlockFlowerId.Remove(blockId);
+        placedBlockBlockId.Remove(blockId);
 
         int rowCount = placedBlockIds.GetLength(0);
         int colCount = placedBlockIds.GetLength(1);
@@ -469,7 +472,7 @@ public class NightPuzzleController : MonoBehaviour
             return;
         }
 
-        FlowerData matched = currentDrawIsInvalid ? null : shapeValidator.GetExactMatchBlock(currentPathSet);
+        BlockData matched = currentDrawIsInvalid ? null : shapeValidator.GetExactMatchBlock(currentPathSet);
 
         if (matched != null)
         {
@@ -485,7 +488,7 @@ public class NightPuzzleController : MonoBehaviour
                 placedBlockIds[coord.y, coord.x] = placedBlockId;
             }
 
-            placedBlockFlowerId[placedBlockId] = matched.blockID;
+            placedBlockBlockId[placedBlockId] = matched.blockID;
             CheckCompletion();
         }
         else
@@ -507,7 +510,7 @@ public class NightPuzzleController : MonoBehaviour
     private void CheckCompletion()
     {
         // 칸을 모두 채우고, 주어진 꽃을 모두 한 번 이상 써야 완료다(하나만 쓰고 채운 채로는 끝나지 않는다).
-        if (Validator != null && Validator.IsPuzzleComplete(filled) && Validator.AreAllBlocksUsed(placedBlockFlowerId.Values))
+        if (Validator != null && Validator.IsPuzzleComplete(filled) && Validator.AreAllBlocksUsed(placedBlockBlockId.Values))
         {
             OnPuzzleCompleted();
         }
@@ -516,7 +519,7 @@ public class NightPuzzleController : MonoBehaviour
     private void OnPuzzleCompleted()
     {
         puzzleCompleted = true;
-        List<int> obtainedFlowerIds = placedBlockFlowerId.Values.Distinct().ToList();
+        List<int> obtainedFlowerIds = rewardFlowerIds;
 
         foreach (int flowerId in obtainedFlowerIds)
         {

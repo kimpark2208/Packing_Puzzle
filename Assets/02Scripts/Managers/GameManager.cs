@@ -19,10 +19,11 @@ public class GameManager : Singleton<GameManager>
     public const string SceneResult = "03Result";
 
     [SerializeField] private int nightRewardPerFlower = 6; // 밤 퍼즐을 완료하면 퍼즐에 쓴 꽃 종류마다 늘어나는 보유 수량
+    [SerializeField, Tooltip("밤 퍼즐(귀신 손님과 퍼즐) 사용 여부. 밤 퍼즐 개편 중에는 꺼 두면 전등을 켠 뒤 바로 하루 결산으로 간다.")] private bool nightPuzzleEnabled;
     [SerializeField, Min(1)] private int nightStagesToPrepare = 6; // 낮에서 밤으로 넘어가는 로딩에서 미리 만들어 두는 밤 퍼즐 수(부적 퍼즐 + 모자란 만큼의 잉여 퍼즐)
 
-    [Header("색 주문에서 색 이름 대신 비유 문구(\"동백 같은 꽃\")로 말하는 확률")]
-    [SerializeField, Range(0f, 1f)] private float colorMetaphorChance = 0.2f;
+    [Header("손님 주문 대사의 템플릿과 확률(직설형/은유형 비율, 특수주문 확률 포함)")]
+    [SerializeField] private OrderTemplateData orderTemplates;
 
     public DayPuzzleGenerator.DayOrder CurrentDayOrder { get; private set; }
     public List<FlowerData> ChosenGachaPool { get; private set; } = new();
@@ -91,7 +92,7 @@ public class GameManager : Singleton<GameManager>
         dayEndPending = false;
         orderInProgress = false;
         MainState = MainState.DayCustomer;
-        CurrentDayOrder = DayPuzzleGenerator.GenerateOrder(CurrencyManager.Instance.CurrentDay, colorMetaphorChance);
+        CurrentDayOrder = DayPuzzleGenerator.GenerateOrder(CurrencyManager.Instance.CurrentDay, orderTemplates);
         CurrencyManager.Instance.SetCurrentRequirement(CurrentDayOrder.requirement);
     }
 
@@ -118,6 +119,12 @@ public class GameManager : Singleton<GameManager>
     /// 로딩 동안은 밤 시간이 흐르지 않는다(밤 시간은 밤 화면이 열려야 흐른다).</summary>
     public void StartNight(List<int> charmedFlowerIds)
     {
+        if (!nightPuzzleEnabled)
+        {
+            EndNight();
+            return;
+        }
+
         GameClock.Instance?.BeginNight();
         SceneLoader.Load(SceneDayMain, GenerateNightStagesWork(charmedFlowerIds));
     }
@@ -219,7 +226,7 @@ public class GameManager : Singleton<GameManager>
         if (nightIndex >= nightQueue.Count) return null;
 
         var names = nightQueue[nightIndex].requiredFlowerIds
-            .Select(id => BlockRegistry.Instance != null ? BlockRegistry.Instance.GetById(id) : null)
+            .Select(id => FlowerRegistry.Instance != null ? FlowerRegistry.Instance.GetById(id) : null)
             .Where(f => f != null)
             .Select(f => f.DisplayName);
         return string.Join(", ", names);
@@ -232,7 +239,7 @@ public class GameManager : Singleton<GameManager>
         {
             if (pendingRequestStages.Count > 0)
             {
-                nightQueue.Add(ProceduralNightPuzzleGenerator.GenerateStage(NightGridSize, pendingRequestStages.Dequeue(), isBonusStage: false));
+                nightQueue.Add(ProceduralNightPuzzleGenerator.GenerateStage(NightGridSize, ProceduralNightPuzzleGenerator.PickBlocks(), pendingRequestStages.Dequeue(), isBonusStage: false)); // 블록은 꽃과 무관하게 블록 목록에서 고르고, 꽃은 보상으로만 이어진다
             }
             else if (ProceduralNightPuzzleGenerator.TryGenerateBonusStage(NightGridSize, CurrencyManager.Instance.GetObtainedFlowerIds(), out NightPuzzleData bonus))
             {
@@ -262,8 +269,8 @@ public class GameManager : Singleton<GameManager>
         }
 
         NightPuzzleData data = nightQueue[nightIndex];
-        var allowedBlocks = new List<FlowerData>();
-        foreach (int id in data.requiredFlowerIds)
+        var allowedBlocks = new List<BlockData>();
+        foreach (int id in data.requiredBlockIds)
         {
             var b = BlockRegistry.Instance.GetById(id);
             if (b != null) allowedBlocks.Add(b);
@@ -278,7 +285,7 @@ public class GameManager : Singleton<GameManager>
     /// <summary>낮 퍼즐이 끝났을 때: 실제로 칸에 놓은 꽃 한 송이마다 보유 수량을 1씩 소모한다(한 번만).</summary>
     public void ConsumeUsedFlowers(IEnumerable<FlowerData> used)
     {
-        foreach (FlowerData flower in used) CurrencyManager.Instance.AddFlowerStock(flower.blockID, -1);
+        foreach (FlowerData flower in used) CurrencyManager.Instance.AddFlowerStock(flower.flowerID, -1);
         ChosenGachaPool = new List<FlowerData>();
     }
 
@@ -290,7 +297,7 @@ public class GameManager : Singleton<GameManager>
         {
             CurrencyManager.Instance.AddFlowerStock(id, nightRewardPerFlower);
 
-            FlowerData flower = BlockRegistry.Instance != null ? BlockRegistry.Instance.GetById(id) : null;
+            FlowerData flower = FlowerRegistry.Instance != null ? FlowerRegistry.Instance.GetById(id) : null;
             gains.Add(new KeyValuePair<string, int>(flower != null ? flower.DisplayName : $"꽃 {id}", nightRewardPerFlower));
         }
 

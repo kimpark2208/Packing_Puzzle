@@ -177,7 +177,7 @@ public class FlowerSelectUI : MonoBehaviour
 
     private static int StockOf(FlowerData flower)
     {
-        return CurrencyManager.Instance != null ? CurrencyManager.Instance.GetFlowerStock(flower.blockID) : 0;
+        return CurrencyManager.Instance != null ? CurrencyManager.Instance.GetFlowerStock(flower.flowerID) : 0;
     }
 
     /// <summary>포장지 단계/보유 여부와 상관없이 등록된 모든 꽃을 후보로 보여준다.</summary>
@@ -187,13 +187,13 @@ public class FlowerSelectUI : MonoBehaviour
         RefreshLabels();
         RefreshConfirmButton();
 
-        if (BlockRegistry.Instance == null) return;
+        if (FlowerRegistry.Instance == null) return;
 
         foreach (var shelf in shelves)
         {
             List<RectTransform> shelfSpots = spots[shelf];
             int i = 0;
-            foreach (var flower in BlockRegistry.Instance.AllBlocks.Where(b => b.flowerRole == shelf.role))
+            foreach (var flower in FlowerRegistry.Instance.AllFlowers.Where(b => b.flowerRole == shelf.role))
             {
                 if (i >= shelfSpots.Count)
                 {
@@ -203,7 +203,7 @@ public class FlowerSelectUI : MonoBehaviour
 
                 RectTransform slot = shelfSpots[i];
                 slot.gameObject.SetActive(true);
-                slot.name = $"Slot_{flower.blockID}";
+                slot.name = $"Slot_{flower.flowerID}";
                 BindFlowerSlot(slot, flower);
                 i++;
             }
@@ -302,7 +302,7 @@ public class FlowerSelectUI : MonoBehaviour
         if (view.badge != null)
         {
             // 보유 수량은 퍼즐이 끝난 뒤에 소모된다(선택 중에는 그대로). 마이너스는 임시로 0으로 표시한다.
-            int owned = Mathf.Max(0, CurrencyManager.Instance != null ? CurrencyManager.Instance.GetFlowerStock(block.blockID) : 0);
+            int owned = Mathf.Max(0, CurrencyManager.Instance != null ? CurrencyManager.Instance.GetFlowerStock(block.flowerID) : 0);
             view.badge.text = $"x{owned}"; // 담은 꽃은 위로 올라오는 것으로만 보여 준다
         }
     }

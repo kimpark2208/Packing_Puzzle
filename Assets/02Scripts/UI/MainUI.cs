@@ -39,6 +39,7 @@ public class MainUI : MonoBehaviour
     [Header("소리")]
     [SerializeField, Tooltip("낮 손님 동안 나오는 배경음악(낮 퍼즐 씬과 같은 곡이면 이어서 나온다).")] private AudioClip dayBgm;
     [SerializeField, Tooltip("낮 종료(부적 화면) 동안 나오는 배경음악.")] private AudioClip dayEndBgm;
+    [SerializeField, Tooltip("밤 동안 나오는 배경음악(밤 퍼즐 씬과 같은 곡이면 이어서 나온다).")] private AudioClip nightBgm;
     [SerializeField, Range(0f, 1f)] private float bgmVolume = 0.4f;
     [SerializeField, Tooltip("전등을 켜면 나오는 소리. 이 소리가 끝난 뒤에 밤이 시작된다.")] private AudioClip nightStartJingle;
     [SerializeField, Range(0f, 1f)] private float nightStartJingleVolume = 0.7f;
@@ -103,7 +104,7 @@ public class MainUI : MonoBehaviour
 
         mainLook = GetComponent<MainLook>();
         mainLook?.Apply(state);
-        Bgm.Play(state == MainState.DayCustomer ? dayBgm : state == MainState.DayEnding ? dayEndBgm : null, bgmVolume); // 밤에는 음악이 없다
+        Bgm.Play(state == MainState.DayCustomer ? dayBgm : state == MainState.DayEnding ? dayEndBgm : nightBgm, bgmVolume);
 
         // 옆 페이지(ShelfRoot)는 낮 손님(꽃 선택)과 낮 종료(꽃 선반)에만 켜 둔다(다른 상황에서는 스와이프로도 갈 수 없다). 둘은 같은 선반을 쓰므로 상황에 맞는 쪽만 켠다.
         GameObject shelfRoot = SceneFind.One<Transform>(scene, ShelfRootName)?.gameObject;
@@ -148,15 +149,10 @@ public class MainUI : MonoBehaviour
     }
 
     /// <summary>
-    /// 대사를 시작한다. 씬 전환의 페이드가 아직 걷히는 중이면 말풍선과 응답 버튼을 숨겨 두었다가, 다 걷힌 뒤에 보이고 대사(와 말소리)를 시작한다.
+    /// 대사를 시작한다. 말풍선과 응답 버튼을 숨겨 두었다가, 씬 전환의 페이드가 다 걷힌 뒤(걷힐 게 없으면 한 프레임 뒤)에 보이고 대사(와 말소리)를 시작한다.
     /// </summary>
     private void SayAfterReveal(System.Action say)
     {
-        if (!SceneTransition.Busy)
-        {
-            say();
-            return;
-        }
         SetBubble(false);
         StartCoroutine(SayAfterRevealRoutine(say));
     }
@@ -327,7 +323,7 @@ public class MainUI : MonoBehaviour
         if (changingCustomer) return;
         if (leaving) { HideCustomer(); return; }
         if (showingAngryLine) speech.Show(forceAcceptLine);
-        else speech.ShowReject();
+        else speech.ShowReask(order);
     }
 
     private void OnAcceptClicked()

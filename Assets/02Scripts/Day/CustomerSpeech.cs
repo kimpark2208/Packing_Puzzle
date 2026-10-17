@@ -37,6 +37,13 @@ public class CustomerSpeech
 
     public void ShowReject() => Show(RejectLine);
 
+    /// <summary>"다시 여쭤볼게요": 누를 때마다 주문의 1차, 2차 되묻기 대사를 차례로 말한다(특수주문이 있는 꽃의 주문만 있다). 더 없으면 거절 대사를 말한다.</summary>
+    public void ShowReask(DayPuzzleGenerator.DayOrder order)
+    {
+        if (order != null && order.reaskIndex < order.reaskLines.Length) Show(order.reaskLines[order.reaskIndex++]);
+        else ShowReject();
+    }
+
     public void ShowTimeUp() => Show(TimeUpLine);
 
     public void ShowNightEnd() => Show(NightEndLine);

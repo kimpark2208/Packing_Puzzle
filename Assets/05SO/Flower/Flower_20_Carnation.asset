@@ -1,0 +1,37 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 74a634c29bfedc144ae03bdc4755ce48, type: 3}
+  m_Name: Flower_20_Carnation
+  m_EditorClassIdentifier: Assembly-CSharp::FlowerData
+  flowerID: 20
+  flowerName: "\uCE74\uB124\uC774\uC158"
+  color: 5
+  flowerRole: 1
+  acquireDay: 68
+  specialOrder: "\uC5B4\uC81C \uBD88\uD6A8\uB97C \uB108\uBB34 \uC800\uC9C8\uB7EC\uC11C
+    \uC624\uB298 \uD6A8\uB3C4 \uC880 \uD574\uC57C\uACA0\uC5B4\uC694."
+  specialReask1: "\uC5B4\uBC84\uC774\uB0A0\uC5D0 \uB4DC\uB9AC\uB294 \uADF8 \uAF43\uC774\uC694."
+  specialReask2: 
+  iconSprite: {fileID: 5267846085700657980, guid: 82748470c25479a47893d3f493979a6d, type: 3}
+  stemSprite: {fileID: 5856240631183992178, guid: b9f97a0c03bea8c49ac2b17ce37cf466, type: 3}
+  dayFillSprite: {fileID: -7947520275284844246, guid: c4cc9d24df5aacd45aa60b02a921f6b6, type: 3}
+  stemLeafPartSprite: {fileID: 0}
+  centerPartSprite: {fileID: 0}
+  petalPartSprites:
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  lossPetalIndex: 0
+  lossPetalSprite: {fileID: 0}

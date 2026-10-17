@@ -1,0 +1,39 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 74a634c29bfedc144ae03bdc4755ce48, type: 3}
+  m_Name: Flower_08_Rose
+  m_EditorClassIdentifier: Assembly-CSharp::FlowerData
+  flowerID: 8
+  flowerName: "\uC7A5\uBBF8"
+  color: 6
+  flowerRole: 1
+  acquireDay: 17
+  specialOrder: "\uADF8\uAC70 \uC544\uC138\uC694? \uD30C\uB780 \uC7A5\uBBF8\uB294
+    \uD770 \uC7A5\uBBF8\uB97C \uC5FC\uC0C9\uD574\uC11C \uB9CC\uB4DC\uB294 \uAC70\uB798\uC694.
+    \uC804 \uC5FC\uC0C9\uC744 \uD558\uBA74 \uB450\uD53C\uAC00 \uC544\uD30C\uC11C
+    \uBCC4\uB85C \uC548 \uC88B\uC544\uD574\uC694."
+  specialReask1: "\uB124, \uC5FC\uC0C9 \uC548 \uD55C \uADF8 \uC7A5\uBBF8\uAC00 \uC88B\uACA0\uC5B4\uC694."
+  specialReask2: 
+  iconSprite: {fileID: 5791527228225854534, guid: e81146cc06c5ac546903aeed60801079, type: 3}
+  stemSprite: {fileID: 5856240631183992178, guid: b9f97a0c03bea8c49ac2b17ce37cf466, type: 3}
+  dayFillSprite: {fileID: -8763125123694568423, guid: 560daf14085f39544941438f5a5c72ae, type: 3}
+  stemLeafPartSprite: {fileID: 0}
+  centerPartSprite: {fileID: 0}
+  petalPartSprites:
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  lossPetalIndex: 0
+  lossPetalSprite: {fileID: 0}

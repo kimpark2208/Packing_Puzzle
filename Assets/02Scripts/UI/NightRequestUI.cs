@@ -41,14 +41,14 @@ public class NightRequestUI : MonoBehaviour
     /// <summary>에디터에 놓아 둔 슬롯 자리에 역할별로 모든 꽃을 채운다. 꽃보다 자리가 많으면 남는 자리는 숨긴다.</summary>
     private void BuildShelves()
     {
-        if (BlockRegistry.Instance == null) return;
+        if (FlowerRegistry.Instance == null) return;
 
         foreach (Shelf shelf in shelves)
         {
             var spots = new List<RectTransform>();
             foreach (Transform child in shelf.slotParent) spots.Add((RectTransform)child);
 
-            var flowers = BlockRegistry.Instance.AllBlocks.Where(b => b.flowerRole == shelf.role).ToList();
+            var flowers = FlowerRegistry.Instance.AllFlowers.Where(b => b.flowerRole == shelf.role).ToList();
             for (int i = 0; i < spots.Count; i++)
             {
                 bool used = i < flowers.Count;
@@ -62,19 +62,19 @@ public class NightRequestUI : MonoBehaviour
 
     private void BindSlot(RectTransform slot, FlowerData flower)
     {
-        slot.name = $"Slot_{flower.blockID}";
+        slot.name = $"Slot_{flower.flowerID}";
         FlowerPieceView.GetOrAdd(slot.gameObject).Apply(flower, flower.stemSprite, false);
 
         Transform badge = FindIn(slot, "CountBadge");
         TMP_Text badgeText = badge != null ? badge.GetComponentInChildren<TMP_Text>(true) : null;
-        if (badgeText != null) badgeText.text = $"x{Mathf.Max(0, CurrencyManager.Instance != null ? CurrencyManager.Instance.GetFlowerStock(flower.blockID) : 0)}"; // 재고 표시(0이어도 그대로 보여 준다)
+        if (badgeText != null) badgeText.text = $"x{Mathf.Max(0, CurrencyManager.Instance != null ? CurrencyManager.Instance.GetFlowerStock(flower.flowerID) : 0)}"; // 재고 표시(0이어도 그대로 보여 준다)
 
         FindIn(slot, "Check")?.gameObject.SetActive(false); // 꽃 선택 화면용 체크 표시: 여기서는 Charm(부적 뱃지)이 그 역할이라 항상 끈다
 
         Transform charm = FindIn(slot, "Charm");
         if (charm != null)
         {
-            charmBadges[flower.blockID] = charm.gameObject;
+            charmBadges[flower.flowerID] = charm.gameObject;
             charm.gameObject.SetActive(false);
         }
 
@@ -86,7 +86,7 @@ public class NightRequestUI : MonoBehaviour
             click = slot.gameObject.AddComponent<Button>();
             click.transition = Selectable.Transition.None;
         }
-        int id = flower.blockID;
+        int id = flower.flowerID;
         click.onClick.AddListener(() => ToggleCharm(id));
     }
 

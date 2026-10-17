@@ -8,9 +8,12 @@ public class WrapperData : ScriptableObject
     [Header("상점/보유 목록의 포장지 번호 (ShopManager의 포장지 itemId와 같음)")]
     public int wrapperId;
 
-    [Header("포장지 색 (손님이 \"○○색 포장지\"라고 말할 때의 이름 + 표시 색)")]
-    public string colorName;
+    [Header("포장지 색: 색 종류(손님이 \"○○색 포장지\"라고 말할 때의 이름과 주문 은유의 기준) + 화면에 보이는 색(RGB)")]
+    public WrapperColor wrapperColor;
     public Color color = Color.white;
+
+    /// <summary>손님이 말하는 포장지 색 이름("빨간", "남" …). 뒤에 "색"을 붙여 말한다.</summary>
+    public string ColorName => ColorPalette.ToKoreanName(wrapperColor);
 
     [Header("포장지 크기 (동심원 개수)")]
     [Range(1, 4)] public int ringCount = 3;

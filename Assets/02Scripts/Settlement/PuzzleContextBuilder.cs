@@ -14,8 +14,18 @@ public static class PuzzleContextBuilder
 
         var requirement = CurrencyManager.Instance != null ? CurrencyManager.Instance.CurrentRequirement : default;
         var counts = PuzzleCounter.CollectCounts();
-        var usedCounts = requirement.type == CustomerRequirementGenerator.RequirementType.Color ? counts.colorCounts : counts.flowerCounts;
-        usedCounts.TryGetValue(requirement.targetId, out int used);
+        int used = 0;
+        if (requirement.type == CustomerRequirementGenerator.RequirementType.Color)
+        {
+            counts.colorCounts.TryGetValue(requirement.targetId, out used);
+        }
+        else
+        {
+            foreach (int flowerId in requirement.FlowerTargets()) // 말한 꽃마다 한 송이 이상: 쓴 꽃 종류 수가 요구(minCount)를 채워야 한다
+            {
+                if (counts.flowerCounts.TryGetValue(flowerId, out int n) && n > 0) used++;
+            }
+        }
 
         float mood = GameClock.Instance != null ? GameClock.Instance.MoodRatio : 1f;
 

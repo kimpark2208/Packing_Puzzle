@@ -323,6 +323,7 @@ GameObject:
   - component: {fileID: 438470796}
   - component: {fileID: 438470795}
   - component: {fileID: 438470794}
+  - component: {fileID: 438470800}
   m_Layer: 0
   m_Name: Bootstrap
   m_TagString: Untagged
@@ -344,8 +345,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::GameFlowController
   dontDestroyOnLoad: 1
   nightRewardPerFlower: 6
+  nightPuzzleEnabled: 0
   nightStagesToPrepare: 6
-  colorMetaphorChance: 0.2
+  orderTemplates: {fileID: 11400000, guid: 2ae78ed91dcbc6b40a3ef90af7a34901, type: 2}
 --- !u!114 &438470795
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -359,7 +361,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::BlockRegistry
   dontDestroyOnLoad: 1
-  allBlocks:
+  allFlowers:
   - {fileID: 11400000, guid: 0fd7e801d344731e1ebbd2ad81e67929, type: 2}
   - {fileID: 11400000, guid: 2cee97a2a4448bd77c8c6e5b0b02d02a, type: 2}
   - {fileID: 11400000, guid: 54be2c2f4f04102a72cff051f9762d00, type: 2}
@@ -426,6 +428,40 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &438470800
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 438470793}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2e0f922dfa0670443906d4689becdbce, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::BlockRegistry
+  dontDestroyOnLoad: 1
+  allBlocks:
+  - {fileID: 11400000, guid: 733827758cbee3f42b48f0915ffee054, type: 2}
+  - {fileID: 11400000, guid: bfe57bf922b012147ad888a6594c7f9a, type: 2}
+  - {fileID: 11400000, guid: 9b5b3845d6f874348a3e419ec21a65bb, type: 2}
+  - {fileID: 11400000, guid: 3942fca27091fb3438fcfbf0d4298872, type: 2}
+  - {fileID: 11400000, guid: c20d61723fd5fbf4e8d3ea80e7469403, type: 2}
+  - {fileID: 11400000, guid: 6c05ccd228eebab4cadb54a671f1704a, type: 2}
+  - {fileID: 11400000, guid: 99b76f4f85a9ff54ea5941956e5afae7, type: 2}
+  - {fileID: 11400000, guid: 05c2dfdb841a05143aab9393c8acab0b, type: 2}
+  - {fileID: 11400000, guid: 220a037adadd2494e848a2432c40be41, type: 2}
+  - {fileID: 11400000, guid: 354d5a040bd8b3745890bcfffe5d6d6c, type: 2}
+  - {fileID: 11400000, guid: fb522aade05053d44a7952e1b0f38a63, type: 2}
+  - {fileID: 11400000, guid: e16c48c53667cd44f8d5a57716d01785, type: 2}
+  - {fileID: 11400000, guid: 123ec10b2d0faaf429bdfce9836c0140, type: 2}
+  - {fileID: 11400000, guid: 5f0aa236307e6454b8d5bb5dfd6505bd, type: 2}
+  - {fileID: 11400000, guid: 1d1da8c45231fb94abd6f1ec666f6049, type: 2}
+  - {fileID: 11400000, guid: 0a0d1aab60ec45245b2425e7c69a7c3c, type: 2}
+  - {fileID: 11400000, guid: 1b598b6d7dd532b4b885229d2510234e, type: 2}
+  - {fileID: 11400000, guid: da83ce809b40d9340ab44a9040853029, type: 2}
+  - {fileID: 11400000, guid: df82d61f8fe916a44a8ceb7c401bb614, type: 2}
+  - {fileID: 11400000, guid: fbecbfbdb9a126540b4f22995ae1f77c, type: 2}
 --- !u!114 &541353321
 MonoBehaviour:
   m_ObjectHideFlags: 0
