@@ -511,10 +511,6 @@ PrefabInstance:
       propertyPath: m_Color.r
       value: 0.985
       objectReference: {fileID: 0}
-    - target: {fileID: 4748189110768277058, guid: 610fd5a8078941a4ca73912e1fffb4e0, type: 3}
-      propertyPath: m_Enabled
-      value: 0
-      objectReference: {fileID: 0}
     - target: {fileID: 4866016311862581343, guid: 610fd5a8078941a4ca73912e1fffb4e0, type: 3}
       propertyPath: m_Name
       value: VaseTemplate
@@ -691,42 +687,6 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 354690573}
     m_Modifications:
-    - target: {fileID: 837472904541944141, guid: af117c95609589b41b51040ec35add83, type: 3}
-      propertyPath: m_SizeDelta.y
-      value: 164
-      objectReference: {fileID: 0}
-    - target: {fileID: 2625968779944911722, guid: af117c95609589b41b51040ec35add83, type: 3}
-      propertyPath: m_AnchorMax.y
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 2625968779944911722, guid: af117c95609589b41b51040ec35add83, type: 3}
-      propertyPath: m_AnchorMin.y
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 2625968779944911722, guid: af117c95609589b41b51040ec35add83, type: 3}
-      propertyPath: m_SizeDelta.x
-      value: 508
-      objectReference: {fileID: 0}
-    - target: {fileID: 2625968779944911722, guid: af117c95609589b41b51040ec35add83, type: 3}
-      propertyPath: m_SizeDelta.y
-      value: 156
-      objectReference: {fileID: 0}
-    - target: {fileID: 2625968779944911722, guid: af117c95609589b41b51040ec35add83, type: 3}
-      propertyPath: m_AnchoredPosition.x
-      value: 255
-      objectReference: {fileID: 0}
-    - target: {fileID: 2625968779944911722, guid: af117c95609589b41b51040ec35add83, type: 3}
-      propertyPath: m_AnchoredPosition.y
-      value: -78
-      objectReference: {fileID: 0}
-    - target: {fileID: 3478506199136937188, guid: af117c95609589b41b51040ec35add83, type: 3}
-      propertyPath: m_AnchorMax.x
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 3478506199136937188, guid: af117c95609589b41b51040ec35add83, type: 3}
-      propertyPath: m_AnchorMax.y
-      value: 1
-      objectReference: {fileID: 0}
     - target: {fileID: 5115919464239701110, guid: af117c95609589b41b51040ec35add83, type: 3}
       propertyPath: m_Pivot.x
       value: 0.5
@@ -807,21 +767,9 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 5178348799338236085, guid: af117c95609589b41b51040ec35add83, type: 3}
-      propertyPath: openSoundVolume
-      value: 0.8
-      objectReference: {fileID: 0}
-    - target: {fileID: 5178348799338236085, guid: af117c95609589b41b51040ec35add83, type: 3}
-      propertyPath: closeSoundVolume
-      value: 0.25
-      objectReference: {fileID: 0}
     - target: {fileID: 5222389490516903482, guid: af117c95609589b41b51040ec35add83, type: 3}
       propertyPath: m_Name
       value: CatalogPopup
-      objectReference: {fileID: 0}
-    - target: {fileID: 5222389490516903482, guid: af117c95609589b41b51040ec35add83, type: 3}
-      propertyPath: m_IsActive
-      value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -1386,10 +1334,6 @@ PrefabInstance:
       propertyPath: m_Color.r
       value: 0.95100003
       objectReference: {fileID: 0}
-    - target: {fileID: 4748189110768277058, guid: 610fd5a8078941a4ca73912e1fffb4e0, type: 3}
-      propertyPath: m_Enabled
-      value: 0
-      objectReference: {fileID: 0}
     - target: {fileID: 4866016311862581343, guid: 610fd5a8078941a4ca73912e1fffb4e0, type: 3}
       propertyPath: m_Name
       value: VaseTemplate (3)
@@ -1611,7 +1555,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 1}
   m_AnchorMax: {x: 0.5, y: 1}
-  m_AnchoredPosition: {x: 540.00006, y: -125}
+  m_AnchoredPosition: {x: 540.0001, y: -125}
   m_SizeDelta: {x: 360, y: 330}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &269494684
@@ -2155,10 +2099,6 @@ PrefabInstance:
       propertyPath: m_Color.r
       value: 0.865
       objectReference: {fileID: 0}
-    - target: {fileID: 4748189110768277058, guid: 610fd5a8078941a4ca73912e1fffb4e0, type: 3}
-      propertyPath: m_Enabled
-      value: 0
-      objectReference: {fileID: 0}
     - target: {fileID: 4866016311862581343, guid: 610fd5a8078941a4ca73912e1fffb4e0, type: 3}
       propertyPath: m_Name
       value: VaseTemplate
@@ -2425,10 +2365,6 @@ PrefabInstance:
       propertyPath: m_AnchoredPosition.y
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 4748189110768277058, guid: 610fd5a8078941a4ca73912e1fffb4e0, type: 3}
-      propertyPath: m_Enabled
-      value: 0
-      objectReference: {fileID: 0}
     - target: {fileID: 4866016311862581343, guid: 610fd5a8078941a4ca73912e1fffb4e0, type: 3}
       propertyPath: m_Name
       value: VaseTemplate
@@ -2611,7 +2547,7 @@ MonoBehaviour:
   lanternDelay: 0.3
   customerSwapDelay: 0.3
   forcedSwipeSound: {fileID: 8300000, guid: 232571b78f6f28c4d9b9a9aee2dfa565, type: 3}
-  forcedSwipeVolume: 0.3
+  forcedSwipeVolume: 0.2
   acceptToSelectDelay: 0.5
   nightLanternSprite: {fileID: 21300000, guid: 0b7900ebf3714434d9bf95bd5a39a1b1, type: 3}
   dayBgm: {fileID: 8300000, guid: 9b3e36bd3b43054438166fdc12fbea9d, type: 3}
@@ -2847,10 +2783,6 @@ PrefabInstance:
     - target: {fileID: 3523686384693230873, guid: 610fd5a8078941a4ca73912e1fffb4e0, type: 3}
       propertyPath: m_Color.r
       value: 0.95100003
-      objectReference: {fileID: 0}
-    - target: {fileID: 4748189110768277058, guid: 610fd5a8078941a4ca73912e1fffb4e0, type: 3}
-      propertyPath: m_Enabled
-      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 4866016311862581343, guid: 610fd5a8078941a4ca73912e1fffb4e0, type: 3}
       propertyPath: m_Name
@@ -3104,10 +3036,6 @@ PrefabInstance:
       propertyPath: m_Color.r
       value: 0.95100003
       objectReference: {fileID: 0}
-    - target: {fileID: 4748189110768277058, guid: 610fd5a8078941a4ca73912e1fffb4e0, type: 3}
-      propertyPath: m_Enabled
-      value: 0
-      objectReference: {fileID: 0}
     - target: {fileID: 4866016311862581343, guid: 610fd5a8078941a4ca73912e1fffb4e0, type: 3}
       propertyPath: m_Name
       value: VaseTemplate (2)
@@ -3335,10 +3263,6 @@ PrefabInstance:
     - target: {fileID: 3523686384693230873, guid: 610fd5a8078941a4ca73912e1fffb4e0, type: 3}
       propertyPath: m_Color.r
       value: 0.95100003
-      objectReference: {fileID: 0}
-    - target: {fileID: 4748189110768277058, guid: 610fd5a8078941a4ca73912e1fffb4e0, type: 3}
-      propertyPath: m_Enabled
-      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 4866016311862581343, guid: 610fd5a8078941a4ca73912e1fffb4e0, type: 3}
       propertyPath: m_Name
@@ -4826,10 +4750,6 @@ PrefabInstance:
       propertyPath: m_Color.r
       value: 0.985
       objectReference: {fileID: 0}
-    - target: {fileID: 4748189110768277058, guid: 610fd5a8078941a4ca73912e1fffb4e0, type: 3}
-      propertyPath: m_Enabled
-      value: 0
-      objectReference: {fileID: 0}
     - target: {fileID: 4866016311862581343, guid: 610fd5a8078941a4ca73912e1fffb4e0, type: 3}
       propertyPath: m_Name
       value: VaseTemplate (1)
@@ -5330,6 +5250,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::TypewriterText
   charactersPerSecond: 30
   voice: {fileID: 729435961}
+  sentencePause: 0.4
 --- !u!82 &729435961
 AudioSource:
   m_ObjectHideFlags: 0
@@ -5733,10 +5654,6 @@ PrefabInstance:
       propertyPath: m_Color.r
       value: 0.994
       objectReference: {fileID: 0}
-    - target: {fileID: 4748189110768277058, guid: 610fd5a8078941a4ca73912e1fffb4e0, type: 3}
-      propertyPath: m_Enabled
-      value: 0
-      objectReference: {fileID: 0}
     - target: {fileID: 4866016311862581343, guid: 610fd5a8078941a4ca73912e1fffb4e0, type: 3}
       propertyPath: m_Name
       value: VaseTemplate (3)
@@ -5933,10 +5850,6 @@ PrefabInstance:
     - target: {fileID: 3523686384693230873, guid: 610fd5a8078941a4ca73912e1fffb4e0, type: 3}
       propertyPath: m_Color.r
       value: 0.994
-      objectReference: {fileID: 0}
-    - target: {fileID: 4748189110768277058, guid: 610fd5a8078941a4ca73912e1fffb4e0, type: 3}
-      propertyPath: m_Enabled
-      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 4866016311862581343, guid: 610fd5a8078941a4ca73912e1fffb4e0, type: 3}
       propertyPath: m_Name
@@ -7477,10 +7390,6 @@ PrefabInstance:
       propertyPath: m_Color.r
       value: 0.994
       objectReference: {fileID: 0}
-    - target: {fileID: 4748189110768277058, guid: 610fd5a8078941a4ca73912e1fffb4e0, type: 3}
-      propertyPath: m_Enabled
-      value: 0
-      objectReference: {fileID: 0}
     - target: {fileID: 4866016311862581343, guid: 610fd5a8078941a4ca73912e1fffb4e0, type: 3}
       propertyPath: m_Name
       value: VaseTemplate (1)
@@ -7810,10 +7719,6 @@ PrefabInstance:
     - target: {fileID: 3523686384693230873, guid: 610fd5a8078941a4ca73912e1fffb4e0, type: 3}
       propertyPath: m_Color.r
       value: 0.95100003
-      objectReference: {fileID: 0}
-    - target: {fileID: 4748189110768277058, guid: 610fd5a8078941a4ca73912e1fffb4e0, type: 3}
-      propertyPath: m_Enabled
-      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 4866016311862581343, guid: 610fd5a8078941a4ca73912e1fffb4e0, type: 3}
       propertyPath: m_Name
@@ -9253,10 +9158,6 @@ PrefabInstance:
       propertyPath: m_Color.r
       value: 0.865
       objectReference: {fileID: 0}
-    - target: {fileID: 4748189110768277058, guid: 610fd5a8078941a4ca73912e1fffb4e0, type: 3}
-      propertyPath: m_Enabled
-      value: 0
-      objectReference: {fileID: 0}
     - target: {fileID: 4866016311862581343, guid: 610fd5a8078941a4ca73912e1fffb4e0, type: 3}
       propertyPath: m_Name
       value: VaseTemplate (1)
@@ -9878,10 +9779,6 @@ PrefabInstance:
     - target: {fileID: 3523686384693230873, guid: 610fd5a8078941a4ca73912e1fffb4e0, type: 3}
       propertyPath: m_Color.r
       value: 0.985
-      objectReference: {fileID: 0}
-    - target: {fileID: 4748189110768277058, guid: 610fd5a8078941a4ca73912e1fffb4e0, type: 3}
-      propertyPath: m_Enabled
-      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 4866016311862581343, guid: 610fd5a8078941a4ca73912e1fffb4e0, type: 3}
       propertyPath: m_Name
@@ -10699,10 +10596,6 @@ PrefabInstance:
       propertyPath: m_Color.r
       value: 0.865
       objectReference: {fileID: 0}
-    - target: {fileID: 4748189110768277058, guid: 610fd5a8078941a4ca73912e1fffb4e0, type: 3}
-      propertyPath: m_Enabled
-      value: 0
-      objectReference: {fileID: 0}
     - target: {fileID: 4866016311862581343, guid: 610fd5a8078941a4ca73912e1fffb4e0, type: 3}
       propertyPath: m_Name
       value: VaseTemplate (4)
@@ -11238,10 +11131,6 @@ PrefabInstance:
       propertyPath: m_Color.r
       value: 0.865
       objectReference: {fileID: 0}
-    - target: {fileID: 4748189110768277058, guid: 610fd5a8078941a4ca73912e1fffb4e0, type: 3}
-      propertyPath: m_Enabled
-      value: 0
-      objectReference: {fileID: 0}
     - target: {fileID: 4866016311862581343, guid: 610fd5a8078941a4ca73912e1fffb4e0, type: 3}
       propertyPath: m_Name
       value: VaseTemplate (3)
@@ -11579,10 +11468,6 @@ PrefabInstance:
     - target: {fileID: 3523686384693230873, guid: 610fd5a8078941a4ca73912e1fffb4e0, type: 3}
       propertyPath: m_Color.r
       value: 0.994
-      objectReference: {fileID: 0}
-    - target: {fileID: 4748189110768277058, guid: 610fd5a8078941a4ca73912e1fffb4e0, type: 3}
-      propertyPath: m_Enabled
-      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 4866016311862581343, guid: 610fd5a8078941a4ca73912e1fffb4e0, type: 3}
       propertyPath: m_Name
@@ -12224,10 +12109,6 @@ PrefabInstance:
       propertyPath: m_Color.r
       value: 0.985
       objectReference: {fileID: 0}
-    - target: {fileID: 4748189110768277058, guid: 610fd5a8078941a4ca73912e1fffb4e0, type: 3}
-      propertyPath: m_Enabled
-      value: 0
-      objectReference: {fileID: 0}
     - target: {fileID: 4866016311862581343, guid: 610fd5a8078941a4ca73912e1fffb4e0, type: 3}
       propertyPath: m_Name
       value: VaseTemplate (4)
@@ -12791,10 +12672,6 @@ PrefabInstance:
     - target: {fileID: 3523686384693230873, guid: 610fd5a8078941a4ca73912e1fffb4e0, type: 3}
       propertyPath: m_Color.r
       value: 0.985
-      objectReference: {fileID: 0}
-    - target: {fileID: 4748189110768277058, guid: 610fd5a8078941a4ca73912e1fffb4e0, type: 3}
-      propertyPath: m_Enabled
-      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 4866016311862581343, guid: 610fd5a8078941a4ca73912e1fffb4e0, type: 3}
       propertyPath: m_Name
@@ -13639,10 +13516,6 @@ PrefabInstance:
       propertyPath: m_Color.r
       value: 0.865
       objectReference: {fileID: 0}
-    - target: {fileID: 4748189110768277058, guid: 610fd5a8078941a4ca73912e1fffb4e0, type: 3}
-      propertyPath: m_Enabled
-      value: 0
-      objectReference: {fileID: 0}
     - target: {fileID: 4866016311862581343, guid: 610fd5a8078941a4ca73912e1fffb4e0, type: 3}
       propertyPath: m_Name
       value: VaseTemplate (2)
@@ -14482,42 +14355,6 @@ PrefabInstance:
     - target: {fileID: 977614618721726121, guid: e5214c83b2723424693bfef4d45ed6ba, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 1451442231829324966, guid: e5214c83b2723424693bfef4d45ed6ba, type: 3}
-      propertyPath: m_IsActive
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 1530627966078128367, guid: e5214c83b2723424693bfef4d45ed6ba, type: 3}
-      propertyPath: m_Material
-      value: 
-      objectReference: {fileID: 2100000, guid: e246ba74c514f1d41aa8d3ae81c1696a, type: 2}
-    - target: {fileID: 3577109836999407441, guid: e5214c83b2723424693bfef4d45ed6ba, type: 3}
-      propertyPath: graphic
-      value: 
-      objectReference: {fileID: 0}
-    - target: {fileID: 7512464634239313938, guid: e5214c83b2723424693bfef4d45ed6ba, type: 3}
-      propertyPath: m_AnchorMax.x
-      value: 0.5
-      objectReference: {fileID: 0}
-    - target: {fileID: 7512464634239313938, guid: e5214c83b2723424693bfef4d45ed6ba, type: 3}
-      propertyPath: m_AnchorMax.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 7512464634239313938, guid: e5214c83b2723424693bfef4d45ed6ba, type: 3}
-      propertyPath: m_AnchorMin.x
-      value: 0.5
-      objectReference: {fileID: 0}
-    - target: {fileID: 7512464634239313938, guid: e5214c83b2723424693bfef4d45ed6ba, type: 3}
-      propertyPath: m_SizeDelta.x
-      value: 300
-      objectReference: {fileID: 0}
-    - target: {fileID: 7512464634239313938, guid: e5214c83b2723424693bfef4d45ed6ba, type: 3}
-      propertyPath: m_SizeDelta.y
-      value: 300
-      objectReference: {fileID: 0}
-    - target: {fileID: 7512464634239313938, guid: e5214c83b2723424693bfef4d45ed6ba, type: 3}
-      propertyPath: m_AnchoredPosition.y
-      value: 85
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []

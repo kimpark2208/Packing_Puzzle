@@ -2,11 +2,9 @@
 public enum WrapperColor
 {
     Red,
-    Orange,
     Yellow,
     Green,
     Blue,
-    Navy,
     Purple,
     Pink,
     White

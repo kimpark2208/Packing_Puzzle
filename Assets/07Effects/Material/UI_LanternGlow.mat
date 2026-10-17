@@ -45,8 +45,8 @@ Material:
     - _CenterY: 0.52
     - _ColorMask: 15
     - _Falloff: 2
-    - _Intensity: 3
-    - _Radius: 0.4
+    - _Intensity: 2
+    - _Radius: 0.3
     - _RadiusX: 0.5
     - _RadiusY: 0.29
     - _Stencil: 0

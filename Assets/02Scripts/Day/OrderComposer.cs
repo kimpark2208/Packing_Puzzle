@@ -8,7 +8,8 @@ using UnityEngine;
 /// - 꽃 직설형: 꽃 한 종이나 두 종을 말하는 템플릿, 또는 색만 말하는 템플릿.
 /// - 꽃 은유형: 꽃의 특수주문(말장난, 확률은 flowerSpecialOrderChance)이나 색 은유("동백 같은 꽃").
 /// - 포장지 직설형: 템플릿에 포장지 색 이름. 포장지 은유형: 그 색의 은유 문장(없으면 직설형).
-/// 되묻기 대사는 특수주문이 있는 꽃의 1차·2차 되묻기만 있다.
+/// 되묻기(1회, 2회) 대사도 여기서 미리 만든다(PlainReasks, SpecialReasks). 되묻기에서는 꽃의 색 은유와 포장지 은유를 은유 없이 바로 말한다.
+/// 꽃 부분과 포장지 부분은 주문 전체 템플릿(OrderTemplateData.fullOrder)에 넣어 말한다. 단, 꽃의 특수주문은 전체 템플릿을 쓰지 않고 그대로 말한 뒤 포장지 부분을 잇는다.
 /// 요구사항(CustomerRequirement)의 형태와, 그것을 만들 재료(획득한 꽃, 프리셋이 받아 줄 수 있는 개수)도 여기에 있다.
 /// 프리셋이 주어지면 그 프리셋으로 풀 수 있는 요구사항만 만든다(칸당 꽃 한 송이이므로 역할별 칸 수가 상한).
 /// </summary>
@@ -41,14 +42,15 @@ public static class OrderComposer
     /// <summary>퍼즐 기본 금액(임시: 모든 주문이 같다). 100 = 초반에 0~25점 꽃다발 1개를 판매한 정도.</summary>
     private const int BaseAmount = 100;
 
+    private const string FlowerSlot = "[꽃템플릿]";     // 주문 전체 템플릿에서 꽃 부분이 들어갈 자리
+    private const string WrapperSlot = "[포장지템플릿]"; // 포장지 부분이 들어갈 자리
+
     public struct Result
     {
         public CustomerRequirement requirement;
         public string line;          // 손님이 말하는 주문 전체(꽃 부분 + 포장지 부분)
-        public string[] reaskLines;  // 되묻기에 대한 대사들(1차, 2차). 없으면 빈 배열
+        public string[] reaskLines;  // 되묻기를 누를 때마다 말하는 대사 전체(1회, 2회)
     }
-
-    private static readonly string[] NoLines = System.Array.Empty<string>();
 
     /// <param name="preset">null이면 제한 없이 만든다(씬 단독 실행 등).</param>
     /// <param name="wrapperColor">손님이 말할 포장지의 색 종류(WrapperData.wrapperColor). 모르면 null(은유 없이 fallbackColorName으로 직설형만).</param>
@@ -63,26 +65,86 @@ public static class OrderComposer
         }
 
         var requirement = new CustomerRequirement { requirementId = day, baseAmount = BaseAmount, flowerId2 = -1 };
-        string[] reask = NoLines;
+        FlowerData special = null; // 꽃의 특수주문(말장난)으로 말했으면 그 꽃
+        bool flowerMetaphor = false;
 
         string flowerPart = null;
-        if (Random.value < templates.metaphorChance) flowerPart = TryFlowerMetaphor(ref requirement, preset, templates, out reask);
+        string flowerDirectPart = null; // 색 은유일 때, 같은 색을 은유 없이 바로 말한 꽃 부분(되묻기용)
+        if (Random.value < templates.metaphorChance)
+        {
+            flowerPart = TryFlowerMetaphor(ref requirement, preset, templates, out special, out flowerDirectPart);
+            flowerMetaphor = flowerPart != null;
+        }
         if (flowerPart == null) flowerPart = TryFlowerDirect(ref requirement, preset, templates);
         if (flowerPart == null) flowerPart = FlowerFallback(ref requirement);
 
         string wrapperName = wrapperColor.HasValue ? ColorPalette.ToKoreanName(wrapperColor.Value) : fallbackColorName;
         string wrapperPart = wrapperColor.HasValue && Random.value < templates.metaphorChance ? TryWrapperMetaphor(wrapperColor.Value, templates) : null;
+        bool wrapperMetaphor = wrapperPart != null;
         if (wrapperPart == null) wrapperPart = WrapperDirect(wrapperName, templates);
 
-        Debug.Log($"[OrderComposer] Day {day} 주문: {flowerPart} {wrapperPart}");
-        return new Result { requirement = requirement, line = $"{flowerPart} {wrapperPart}".Trim(), reaskLines = reask };
+        // 꽃의 특수주문과 되묻기는 주문 전체 템플릿 없이 두 부분을 붙여서 말한다. 되묻기에서는 꽃의 색 은유와 포장지 은유를 은유 없이 바로 말한다.
+        string joined = $"{flowerPart} {wrapperPart}";
+        string wrapperDirectPart = wrapperMetaphor ? WrapperDirect(wrapperName, templates) : wrapperPart;
+        string restated = $"{flowerDirectPart ?? flowerPart} {wrapperDirectPart}";
+        string[] reask = special != null
+            ? SpecialReasks(special, restated, wrapperDirectPart, templates)
+            : PlainReasks(restated, !flowerMetaphor && !wrapperMetaphor, templates);
+
+        Debug.Log($"[OrderComposer] Day {day} 주문: {joined}");
+        return new Result { requirement = requirement, line = special != null ? joined : Frame(flowerPart, wrapperPart, templates), reaskLines = reask };
+    }
+
+    /// <summary>주문 전체 템플릿(꽃·포장지 자리가 모두 있는 것) 중 하나에 두 부분을 끼운다. 쓸 만한 템플릿이 없으면 두 부분을 붙여서 말한다.</summary>
+    private static string Frame(string flowerPart, string wrapperPart, OrderTemplateData t)
+    {
+        var frames = (t.fullOrder ?? new List<string>())
+            .Where(s => !string.IsNullOrWhiteSpace(s) && s.Contains(FlowerSlot) && s.Contains(WrapperSlot))
+            .ToList();
+        if (frames.Count == 0) return $"{flowerPart} {wrapperPart}";
+
+        return frames[Random.Range(0, frames.Count)].Trim().Replace(FlowerSlot, flowerPart).Replace(WrapperSlot, wrapperPart);
+    }
+
+    // ── 되묻기 ───────────────────────────────────────────────────────────────
+
+    /// <summary>
+    /// 되묻기(1회, 2회) 대사: 주문 전체 템플릿 없이 꽃 부분과 포장지 부분을 붙여 다시 말하고, 횟수에 맞는 말을 덧붙인다.
+    /// 둘 다 직설형이면 reaskAfterDirect를, 은유가 들어 있으면 reaskAfterMetaphor를 덧붙인다(빈 칸이면 덧붙이지 않는다).
+    /// </summary>
+    private static string[] PlainReasks(string joined, bool bothDirect, OrderTemplateData t)
+    {
+        string[] after = bothDirect ? t.reaskAfterDirect : t.reaskAfterMetaphor;
+        var lines = new string[2];
+        for (int i = 0; i < 2; i++)
+        {
+            string extra = after != null && i < after.Length && IsLine(after[i]) ? after[i].Trim() : "";
+            lines[i] = $"{joined} {extra}".Trim();
+        }
+        return lines;
+    }
+
+    /// <summary>
+    /// 꽃의 특수주문일 때의 되묻기: 1회는 그 꽃의 1차 되묻기, 2회는 2차 되묻기에 포장지 부분(은유였어도 바로 말한 것)을 이어 말한다.
+    /// 꽃의 되묻기 문장이 비어 있는 차례는 은유 주문의 되묻기(PlainReasks)로 대신한다.
+    /// </summary>
+    private static string[] SpecialReasks(FlowerData flower, string restated, string wrapperDirectPart, OrderTemplateData t)
+    {
+        string[] own = { flower.specialReask1, flower.specialReask2 };
+        string[] plain = PlainReasks(restated, false, t);
+
+        var lines = new string[2];
+        for (int i = 0; i < 2; i++) lines[i] = IsLine(own[i]) ? $"{own[i].Trim()} {wrapperDirectPart}" : plain[i];
+        return lines;
     }
 
     // ── 꽃 부분 ──────────────────────────────────────────────────────────────
 
-    private static string TryFlowerMetaphor(ref CustomerRequirement requirement, WrapperPresetData preset, OrderTemplateData t, out string[] reask)
+    /// <param name="special">꽃의 특수주문(말장난)으로 말했으면 그 꽃, 아니면 null. 특수주문은 그 자체로 한 편의 대사라서 주문 전체 템플릿에 넣지 않는다.</param>
+    private static string TryFlowerMetaphor(ref CustomerRequirement requirement, WrapperPresetData preset, OrderTemplateData t, out FlowerData special, out string direct)
     {
-        reask = NoLines;
+        special = null;
+        direct = null;
 
         if (Random.value < t.flowerSpecialOrderChance)
         {
@@ -91,11 +153,11 @@ public static class OrderComposer
             {
                 FlowerData flower = specials[Random.Range(0, specials.Count)];
                 SetFlower(ref requirement, flower, null);
-                reask = new[] { flower.specialReask1, flower.specialReask2 }.Where(IsLine).Select(s => s.Trim()).ToArray();
+                special = flower;
                 return flower.specialOrder.Trim();
             }
         }
-        return TryColor(ref requirement, preset, t, metaphor: true);
+        return TryColor(ref requirement, preset, t, metaphor: true, out direct);
     }
 
     private static string TryFlowerDirect(ref CustomerRequirement requirement, WrapperPresetData preset, OrderTemplateData t)
@@ -106,8 +168,12 @@ public static class OrderComposer
     }
 
     /// <summary>색 주문(직설형은 "빨강색", 은유형은 "동백 같은"으로 말한다). 놓을 수 있는 색이 없으면 null.</summary>
-    private static string TryColor(ref CustomerRequirement requirement, WrapperPresetData preset, OrderTemplateData t, bool metaphor)
+    private static string TryColor(ref CustomerRequirement requirement, WrapperPresetData preset, OrderTemplateData t, bool metaphor) => TryColor(ref requirement, preset, t, metaphor, out _);
+
+    /// <param name="direct">은유형일 때, 같은 색과 개수를 은유 없이 바로 말한 문장(되묻기용). 직설형이면 null.</param>
+    private static string TryColor(ref CustomerRequirement requirement, WrapperPresetData preset, OrderTemplateData t, bool metaphor, out string direct)
     {
+        direct = null;
         if (t.colorDirect == null || t.colorDirect.Count == 0) return null;
 
         var colors = new List<int>();
@@ -131,9 +197,10 @@ public static class OrderComposer
         requirement.color = (FlowerData.Color)color;
         requirement.minCount = count;
 
-        string line = t.colorDirect[Random.Range(0, t.colorDirect.Count)];
-        line = KoreanParticle.Replace(line, "색", name, $"<b>{name}</b>");
-        return KoreanParticle.Replace(line, "개수", $"{count}개", $"<b>{count}개</b>");
+        string template = t.colorDirect[Random.Range(0, t.colorDirect.Count)];
+        string Fill(string colorName) => KoreanParticle.Replace(KoreanParticle.Replace(template, "색", colorName, $"<b>{colorName}</b>"), "개수", $"{count}개", $"<b>{count}개</b>");
+        if (metaphor) direct = Fill(ColorPalette.ToKoreanName((FlowerData.Color)color) + "색");
+        return Fill(name);
     }
 
     /// <summary>꽃 이름을 말하는 주문(템플릿의 [꽃이름] 개수만큼 서로 다른 꽃). 놓을 수 있는 꽃이 모자라면 null.</summary>

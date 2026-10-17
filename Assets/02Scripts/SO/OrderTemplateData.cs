@@ -31,6 +31,13 @@ public class OrderTemplateData : ScriptableObject
     [Range(0f, 1f), Tooltip("꽃 부분, 포장지 부분이 각각 은유형으로 나올 확률(반반이면 0.5). 꽃은 직설인데 포장지는 은유인 식으로 섞일 수 있다.")] public float metaphorChance = 0.5f;
     [Range(0f, 1f), Tooltip("꽃 은유형 중에서 꽃의 특수주문(말장난 주문)으로 말할 확률. 나머지는 색 은유로 말한다. 특수주문이 있는 꽃이 없으면 색 은유로 간다.")] public float flowerSpecialOrderChance = 0.1f;
 
+    [Header("주문 전체 템플릿: [꽃템플릿] 자리에 꽃 부분 대사가, [포장지템플릿] 자리에 포장지 부분 대사가 들어간다(둘 다 있어야 쓴다). 비어 있으면 꽃 부분 뒤에 포장지 부분을 이어 붙인다")]
+    [TextArea] public List<string> fullOrder = new();
+
+    [Header("되묻기: 주문 전체 템플릿 없이 꽃 부분과 포장지 부분(은유였어도 바로 말한다)을 붙여서 다시 말하고, 누른 횟수(1회, 2회)에 맞는 말을 덧붙인다")]
+    [Tooltip("꽃·포장지가 모두 직설형일 때 덧붙이는 말(1회, 2회).")] public string[] reaskAfterDirect = { "제 주문이 어렵나요?", "이게 어려운 주문은 아니잖아요?" };
+    [Tooltip("은유가 들어 있을 때(꽃 특수주문 제외) 덧붙이는 말(1회, 2회). 빈 칸이면 덧붙이지 않는다.")] public string[] reaskAfterMetaphor = { "", "제가 말을 어렵게하나요?" };
+
     [Header("꽃 직설형 템플릿: [꽃이름]이 하나면 꽃 한 종, 둘이면 꽃 두 종을 말한다")]
     [TextArea] public List<string> flowerDirect = new();
 
@@ -102,6 +109,14 @@ public class OrderTemplateData : ScriptableObject
         metaphorChance = 0.5f;
         flowerSpecialOrderChance = 0.1f;
 
+        reaskAfterDirect = new[] { "제 주문이 어렵나요?", "이게 어려운 주문은 아니잖아요?" };
+        reaskAfterMetaphor = new[] { "", "제가 말을 어렵게하나요?" };
+
+        fullOrder = new List<string>
+        {
+            "친구 생일이에요! [꽃템플릿] [포장지템플릿] 이쁘게 만들어주세요!",
+            "고백을 하려고해요... [꽃템플릿] [포장지템플릿]",
+        };
         flowerDirect = new List<string>
         {
             "[꽃이름] 한 송이는 꼭 들어가야 해요.",

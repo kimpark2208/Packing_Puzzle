@@ -9,7 +9,7 @@ public static class Bgm
 {
     private static Runner runner;
 
-    /// <summary>음악을 튼다(null이면 끈다). 이미 나오는 음악이면 그대로 두고 볼륨만 맞춘다. fadeSeconds = 볼륨 0 ↔ 1을 오가는 시간.</summary>
+    /// <summary>음악을 튼다(null이면 끈다). 이미 나오는 음악이면 볼륨도 그대로 둔다(처음 튼 씬의 볼륨이 이어진다). fadeSeconds = 볼륨 0 ↔ 1을 오가는 시간.</summary>
     public static void Play(AudioClip clip, float volume = 0.5f, float fadeSeconds = 1f)
     {
         if (runner == null)
@@ -20,6 +20,8 @@ public static class Bgm
             Object.DontDestroyOnLoad(go);
             runner = go.AddComponent<Runner>();
         }
+        if (clip != null && runner.Wanted == clip) return; // 이미 나오는(또는 켜지는 중인) 음악은 볼륨도 그대로 이어 둔다: 씬마다 볼륨 값이 달라도 소리가 튀지 않는다
+
         runner.Wanted = clip;
         runner.WantedVolume = volume;
         runner.FadeSeconds = Mathf.Max(fadeSeconds, 0.01f);

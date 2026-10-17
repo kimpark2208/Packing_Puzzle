@@ -20,8 +20,9 @@ MonoBehaviour:
   specialOrder: "\uC548\uAC1C\uAC00 \uB080 \uC0C8\uBCBD \uC5EC\uBA85\uC744 \uBCF4\uBA70
     \uC0DD\uAC01\uC5D0 \uC7A0\uAE30\uACE4 \uD558\uC9C0."
   specialReask1: "\uC0DD\uAC01\uC5D0 \uC7A0\uAE30\uACE4 \uD558\uC9C0. \uADF8 \uC548\uAC1C\uB97C
-    \uBCF4\uBA70\u2026 \uC548\uAC1C\u2026 \uC548\uAC1C\uAF43."
-  specialReask2: 
+    \uBCF4\uBA70\u2026 \uC548\uAC1C\u2026 "
+  specialReask2: "\uC548\uAC1C\uB97C \uB2EE\uC740 \uAF43... \uADF8\uB798 \uC548\uAC1C\uAF43...\uC774\uB77C\uB294
+    \uC774\uB984\uC774\uC5C8\uB358\uAC00?"
   iconSprite: {fileID: 7063445062853087527, guid: 133ed902eb78116429f4e19cbf0d67d6, type: 3}
   stemSprite: {fileID: 5856240631183992178, guid: b9f97a0c03bea8c49ac2b17ce37cf466, type: 3}
   dayFillSprite: {fileID: -2764537206855289646, guid: ff27b819afb375b499366b7b05aa9148, type: 3}

@@ -39,11 +39,9 @@ public static class ColorPalette
         switch (color)
         {
             case WrapperColor.Red: return "빨간";
-            case WrapperColor.Orange: return "주황";
             case WrapperColor.Yellow: return "노란";
             case WrapperColor.Green: return "초록";
             case WrapperColor.Blue: return "파란";
-            case WrapperColor.Navy: return "남";
             case WrapperColor.Purple: return "보라";
             case WrapperColor.Pink: return "분홍";
             case WrapperColor.White: return "흰";

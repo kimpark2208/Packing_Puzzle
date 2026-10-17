@@ -24,7 +24,7 @@ public static class DayPuzzleGenerator
         /// <summary>손님이 말하는 주문 대사 전체(꽃 부분 + 포장지 부분). 손님이 올 때 한 번 정해서, 대사가 다시 나와도 바뀌지 않는다.</summary>
         public string orderLine;
 
-        /// <summary>되묻기에 대한 대사들(1차, 2차). 특수주문이 있는 꽃일 때만 있다.</summary>
+        /// <summary>되묻기를 누를 때마다 말하는 대사 전체(1회, 2회). 붙여서 다시 말하기(포장지는 바로 말한다)와 덧붙이는 말까지 들어 있다(OrderComposer가 만든다).</summary>
         public string[] reaskLines = System.Array.Empty<string>();
         public int reaskIndex; // 지금까지 보여 준 되묻기 대사 수
 

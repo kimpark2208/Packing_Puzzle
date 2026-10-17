@@ -22,7 +22,7 @@ MonoBehaviour:
     \uC804 \uC5FC\uC0C9\uC744 \uD558\uBA74 \uB450\uD53C\uAC00 \uC544\uD30C\uC11C
     \uBCC4\uB85C \uC548 \uC88B\uC544\uD574\uC694."
   specialReask1: "\uB124, \uC5FC\uC0C9 \uC548 \uD55C \uADF8 \uC7A5\uBBF8\uAC00 \uC88B\uACA0\uC5B4\uC694."
-  specialReask2: 
+  specialReask2: "\uC7A5\uBBF8\uC694 \uC7A5\uBBF8! \uD770\uC7A5\uBBF8\uB9CC \uD314\uC796\uC544\uC694?"
   iconSprite: {fileID: 5791527228225854534, guid: e81146cc06c5ac546903aeed60801079, type: 3}
   stemSprite: {fileID: 5856240631183992178, guid: b9f97a0c03bea8c49ac2b17ce37cf466, type: 3}
   dayFillSprite: {fileID: -8763125123694568423, guid: 560daf14085f39544941438f5a5c72ae, type: 3}

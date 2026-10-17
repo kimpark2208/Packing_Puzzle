@@ -19,8 +19,10 @@ MonoBehaviour:
   acquireDay: 0
   specialOrder: "\uD070 \uB098\uB77C\uB97C \uB300\uAD6D\uC774\uB77C\uACE0 \uD558\uC8E0.
     \uADF8\uB7FC \uC791\uC740 \uB098\uB77C\uB294 \uBB50\uB77C\uACE0 \uD560\uAE4C\uC694?"
-  specialReask1: 
-  specialReask2: 
+  specialReask1: "\uB10C\uC13C\uC2A4 \uD034\uC988\uC608\uC694! \uB300\uAD6D, \uC911\uAD6D
+    \uADF8 \uB2E4\uC74C\uC740??"
+  specialReask2: "\uC18C\uAD6D\uC774\uC694 \uC18C\uAD6D. \uC774\uB807\uAC8C \uC13C\uC2A4\uAC00
+    \uC5C6\uC5B4\uC11C\uC57C!"
   iconSprite: {fileID: -3182467019310743072, guid: a88ffab4d83f02c4d8bd22562c2faccc, type: 3}
   stemSprite: {fileID: 5856240631183992178, guid: b9f97a0c03bea8c49ac2b17ce37cf466, type: 3}
   dayFillSprite: {fileID: -3480653308909891845, guid: 29875a58e269b374195376c434488224, type: 3}
