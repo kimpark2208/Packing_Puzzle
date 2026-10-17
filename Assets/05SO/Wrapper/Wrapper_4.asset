@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: Wrapper_4
   m_EditorClassIdentifier: Assembly-CSharp::WrapperData
   wrapperId: 4
-  colorName: "\uCD08\uB85D"
+  wrapperColor: 2
   color: {r: 0.3, g: 0.75, b: 0.35, a: 1}
   ringCount: 3
   maxFlowerTypes: 8

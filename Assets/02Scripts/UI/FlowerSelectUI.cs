@@ -6,7 +6,7 @@ using UnityEngine;
 using UnityEngine.UI;
 
 /// <summary>
-/// 꽃 선택 화면. 메인 씬(01DayMain)의 옆 페이지(ShelfRoot)이고, 주문을 수락한 뒤 스와이프로 들어온다(DayMainUI가 켠다). "포장지 선택 -> 꽃 선택" 순서를 그대로 따른다.
+/// 꽃 선택 화면. 메인 씬(01DayMain)의 옆 페이지(ShelfRoot)이고, 주문을 수락한 뒤 스와이프로 들어온다(MainUI가 켠다). "포장지 선택 -> 꽃 선택" 순서를 그대로 따른다.
 /// 1단계: WrapperPopup의 포장지 박스 7개 중 쓸 수 있는 것을 눌러 고르고 '선택 완료'를 누른다 (목표 점수/정답 레시피가 이때 확정됨).
 ///        쓸 수 없는 포장지(보유하지 않았거나 퍼즐이 아직 지원하지 않는 링 수)는 속이 빈 어두운 박스로만 보인다.
 /// 2단계: 포장지를 고르면 FlowerPopup(역할별 선반 4개)으로 전환되고, 역할(라인/폼/매스/필러)마다
@@ -59,6 +59,7 @@ public class FlowerSelectUI : MonoBehaviour
 
     [Header("꽃 선택 팝업 (역할별 선반. 꽃 수만큼 에디터에 슬롯을 놓아 두고, 그 자리를 그대로 쓴다)")]
     [SerializeField] private GameObject flowerPopup;
+    [SerializeField, Min(0f), Tooltip("포장지 팝업이 나가기 시작한 뒤 꽃 선택이 들어오기 시작하기까지의 시간(초). 0이면 동시에(고개를 드는 느낌), 포장지가 나가는 시간보다 크면 그 사이에 쉬는 시간이 생긴다.")] private float flowerEnterDelay;
     [SerializeField] private Shelf[] shelves;
     [SerializeField] private Button flowerConfirmButton; // 선택 완료. 없으면 더 담을 꽃이 없어지는 순간 자동으로 넘어간다
 
@@ -96,7 +97,7 @@ public class FlowerSelectUI : MonoBehaviour
             box.rolls.gameObject.SetActive(usable);
             if (usable)
             {
-                box.rolls.color = WrapperRegistry.Instance.GetById(box.wrapperId).color;
+                box.rolls.color = DataRegistry.Instance.GetWrapper(box.wrapperId).color;
                 int id = box.wrapperId;
                 box.button.onClick.AddListener(() => SelectWrapper(id));
             }
@@ -107,8 +108,8 @@ public class FlowerSelectUI : MonoBehaviour
     /// <summary>보유한 포장지이고, 퍼즐이 지원하는 링 수의 프리셋이 있어야 쓸 수 있다.</summary>
     private static bool IsWrapperUsable(int wrapperId)
     {
-        if (CurrencyManager.Instance == null || WrapperRegistry.Instance == null) return false;
-        WrapperData data = WrapperRegistry.Instance.GetById(wrapperId);
+        if (CurrencyManager.Instance == null || DataRegistry.Instance == null) return false;
+        WrapperData data = DataRegistry.Instance.GetWrapper(wrapperId);
         return data != null && CurrencyManager.Instance.OwnedWrappers.Contains(wrapperId)
             && data.presets.Count > 0 && data.ringCount <= DayPuzzleController.SupportedRings;
     }
@@ -116,7 +117,11 @@ public class FlowerSelectUI : MonoBehaviour
     private void SelectWrapper(int wrapperId)
     {
         selectedWrapperId = wrapperId;
-        if (wrapperPreview != null) wrapperPreview.SetActive(true);
+        if (wrapperPreview != null)
+        {
+            wrapperPreview.SetActive(true);
+            if (wrapperPreview.TryGetComponent(out Image previewImage)) previewImage.color = DataRegistry.Instance.GetWrapper(wrapperId).color; // 프리셋 그림도 고른 포장지 색으로
+        }
         if (wrapperConfirmButton != null) wrapperConfirmButton.interactable = true;
         RefreshWrapperBoxes();
     }
@@ -133,7 +138,7 @@ public class FlowerSelectUI : MonoBehaviour
 
     private void OnWrapperChosen(int wrapperId)
     {
-        if (GameManager.Instance == null) return;
+        if (GameManager.Instance == null || wrapperChosen) return; // 팝업이 사라지는 동안 다시 눌러도 무시한다
 
         GameManager.Instance.ChooseWrapper(wrapperId);
         wrapperChosen = true;
@@ -141,7 +146,15 @@ public class FlowerSelectUI : MonoBehaviour
         var order = GameManager.Instance.CurrentDayOrder;
         if (order == null) return;
 
-        if (wrapperPopup != null) wrapperPopup.SetActive(false);
+        PanelMotion.Close(wrapperPopup); // 포장지는 아래로 내려가고, 꽃 선택은 위에서 내려온다
+        StartCoroutine(ShowFlowerPopupAfterDelay(order));
+    }
+
+    /// <summary>포장지 팝업이 나가기 시작하고 flowerEnterDelay가 지나면 꽃 선택을 연다.</summary>
+    private System.Collections.IEnumerator ShowFlowerPopupAfterDelay(DayPuzzleGenerator.DayOrder order)
+    {
+        if (flowerEnterDelay > 0f) yield return new WaitForSecondsRealtime(flowerEnterDelay);
+
         if (flowerPopup != null) flowerPopup.SetActive(true);
 
         CreateSelection(order);
@@ -164,7 +177,7 @@ public class FlowerSelectUI : MonoBehaviour
 
     private static int StockOf(FlowerData flower)
     {
-        return CurrencyManager.Instance != null ? CurrencyManager.Instance.GetFlowerStock(flower.blockID) : 0;
+        return CurrencyManager.Instance != null ? CurrencyManager.Instance.GetFlowerStock(flower.flowerID) : 0;
     }
 
     /// <summary>포장지 단계/보유 여부와 상관없이 등록된 모든 꽃을 후보로 보여준다.</summary>
@@ -174,13 +187,13 @@ public class FlowerSelectUI : MonoBehaviour
         RefreshLabels();
         RefreshConfirmButton();
 
-        if (BlockRegistry.Instance == null) return;
+        if (DataRegistry.Instance == null) return;
 
         foreach (var shelf in shelves)
         {
             List<RectTransform> shelfSpots = spots[shelf];
             int i = 0;
-            foreach (var flower in BlockRegistry.Instance.AllBlocks.Where(b => b.flowerRole == shelf.role))
+            foreach (var flower in DataRegistry.Instance.Flowers.Where(b => b.flowerRole == shelf.role))
             {
                 if (i >= shelfSpots.Count)
                 {
@@ -190,7 +203,7 @@ public class FlowerSelectUI : MonoBehaviour
 
                 RectTransform slot = shelfSpots[i];
                 slot.gameObject.SetActive(true);
-                slot.name = $"Slot_{flower.blockID}";
+                slot.name = $"Slot_{flower.flowerID}";
                 BindFlowerSlot(slot, flower);
                 i++;
             }
@@ -215,21 +228,15 @@ public class FlowerSelectUI : MonoBehaviour
         }
     }
 
-    // 슬롯 프리셋마다 자식 위치가 달라(화병은 Button이 VaseImage에 있다) 이름으로 깊이 찾는다.
-    private static Transform FindIn(RectTransform slot, string childName)
-    {
-        return slot.GetComponentsInChildren<Transform>(true).FirstOrDefault(t => t.name == childName);
-    }
-
     private void BindFlowerSlot(RectTransform slot, FlowerData block)
     {
         // 줄기 꽃 이미지(stemSprite)가 비어있으면 프리팹의 기본 이미지를 그대로 둔다.
         FlowerPieceView view = FlowerPieceView.GetOrAdd(slot.gameObject);
         view.Apply(block, block.stemSprite, false);
 
-        Transform badgeT = FindIn(slot, "CountBadge");
-        Transform checkT = FindIn(slot, "Check");
-        FindIn(slot, "Charm")?.gameObject.SetActive(false); // 부적 뱃지는 부적 화면에서만 쓴다
+        Transform badgeT = FlowerPieceView.FindIn(slot, "CountBadge");
+        Transform checkT = FlowerPieceView.FindIn(slot, "Check");
+        FlowerPieceView.FindIn(slot, "Charm")?.gameObject.SetActive(false); // 부적 뱃지는 부적 화면에서만 쓴다
         var slotView = new SlotView
         {
             piece = view,
@@ -244,16 +251,7 @@ public class FlowerSelectUI : MonoBehaviour
         views[block] = slotView;
         RefreshSlot(block);
 
-        // 화병 앞면·뱃지처럼 안쪽 버튼 위에 겹친 그림이 클릭을 먼저 받으면 안쪽 버튼에는 클릭이 닿지 않는다.
-        // 그래서 클릭은 슬롯 맨 위에서 받고(자식 그림이 받은 클릭은 위로 올라온다), 안쪽 버튼은 꺼 둔다.
-        foreach (Button inner in slot.GetComponentsInChildren<Button>(true)) inner.enabled = false;
-        Button click = slot.GetComponent<Button>();
-        if (click == null)
-        {
-            click = slot.gameObject.AddComponent<Button>();
-            click.transition = Selectable.Transition.None;
-        }
-        click.onClick.AddListener(() => OnSlotClicked(block));
+        FlowerPieceView.AttachClick(slot, () => OnSlotClicked(block));
     }
 
     /// <summary>꽃을 누르면 선택 규칙(FlowerSelection)에 따라 담거나 비우거나 바꿔 담는다. 선택이 바뀌면 모든 꽃의 표시를 다시 그린다.</summary>
@@ -289,7 +287,7 @@ public class FlowerSelectUI : MonoBehaviour
         if (view.badge != null)
         {
             // 보유 수량은 퍼즐이 끝난 뒤에 소모된다(선택 중에는 그대로). 마이너스는 임시로 0으로 표시한다.
-            int owned = Mathf.Max(0, CurrencyManager.Instance != null ? CurrencyManager.Instance.GetFlowerStock(block.blockID) : 0);
+            int owned = Mathf.Max(0, CurrencyManager.Instance != null ? CurrencyManager.Instance.GetFlowerStock(block.flowerID) : 0);
             view.badge.text = $"x{owned}"; // 담은 꽃은 위로 올라오는 것으로만 보여 준다
         }
     }

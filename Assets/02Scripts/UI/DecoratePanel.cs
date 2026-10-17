@@ -2,19 +2,20 @@ using System.Collections.Generic;
 using System.Linq;
 using TMPro;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
 /// <summary>
 /// 꾸미기 창(낮 퍼즐 화면 왼쪽): 탭 2개("꽃다발 꾸미기"/"꽃다발 모양"), 항목 칩 4개, 카드 그리드. 탭과 칩은 씬에 미리 배치되어 있고,
 /// 카드는 꾸미기 용품(DecorationData)마다 카드 프리팹을 복제해 그리드(GridLayoutGroup이 있는 Content)에 채운다.
-/// - 꽃다발 꾸미기 탭: 칩이 가리키는 항목(리본/풀/카드/장식)의 카드. 리본/풀은 카드를 누르면 앵커에 놓이고, 카드/장식은 카드에서 끌어다 꽃다발에 놓는다(DecorationCardView).
+/// - 꽃다발 꾸미기 탭: 칩이 가리키는 항목(리본/풀/카드/장식)의 카드. 카드를 누르면 그 용품이 꽃다발의 기본 자리에 놓이고, 놓인 용품은 꽃다발 위에서 끌어서 옮긴다(DecorationPlacer).
 /// - 꽃다발 모양 탭: 포장지 항목의 카드. 누르면 꽃다발 이미지가 그 포장지 그림으로 바뀐다.
 /// </summary>
 public class DecoratePanel : MonoBehaviour
 {
     private static readonly Color TabOn = new(0.96f, 0.95f, 0.93f), TabOff = new(0.85f, 0.84f, 0.82f);
     private static readonly Color ChipOn = new(0.45f, 0.45f, 0.45f), ChipOff = new(1f, 1f, 1f);
-    private static readonly Color CardOn = new(0.92f, 0.92f, 0.9f), CardOff = new(1f, 1f, 1f);
+    private static readonly Color CardOn = new(0.6f, 0.6f, 0.6f), CardOff = new(1f, 1f, 1f);
     private static readonly Color TextDark = new(0.25f, 0.25f, 0.25f);
 
     [SerializeField] private Button[] tabs;
@@ -48,7 +49,20 @@ public class DecoratePanel : MonoBehaviour
             chip = i;
             SpawnCards();
         });
+        if (placer != null) placer.Removed += Refresh;
         SpawnCards();
+    }
+
+    private void OnDestroy()
+    {
+        if (placer != null) placer.Removed -= Refresh;
+    }
+
+    /// <summary>고른 탭은 선택 상태(초록색)로 남긴다. 카드나 칩을 누르면 선택이 그쪽으로 옮겨 가 풀리므로 탭으로 되돌려 놓는다.</summary>
+    private void LateUpdate()
+    {
+        EventSystem events = EventSystem.current;
+        if (events != null && tab < tabs.Length && events.currentSelectedGameObject != tabs[tab].gameObject) events.SetSelectedGameObject(tabs[tab].gameObject);
     }
 
     /// <summary>지금 탭(과 칩)에 해당하는 카드로 다시 채운다.</summary>
@@ -87,12 +101,11 @@ public class DecoratePanel : MonoBehaviour
             picture.preserveAspect = true; // 카드 칸이 달라도 그림의 가로세로 비율을 지킨다
             picture.raycastTarget = false;
 
-            created.GetComponent<DecorationCardView>().Bind(item, placer);
             created.onClick.AddListener(() =>
             {
                 if (placer == null) return;
                 if (item.category == DecorationCategory.Wrapper) placer.SelectShape(item); // 꽃다발 모양: 포장지 그림으로 바꾼다
-                else if (DecorationPlacer.IsAnchored(item.category)) placer.ToggleAnchored(item); // 리본/풀: 앵커에 놓는다(카드/장식은 끌어서 놓는다)
+                else placer.Place(item);                                                  // 나머지: 기본 자리에 놓는다(그 뒤엔 꽃다발 위에서 끌어 옮긴다)
                 Refresh();
             });
             cards.Add(created);
@@ -120,8 +133,9 @@ public class DecoratePanel : MonoBehaviour
         for (int i = 0; i < chips.Length; i++) Paint(chips[i], i == chip ? ChipOn : ChipOff, i == chip ? Color.white : TextDark);
         for (int i = 0; i < cards.Count; i++)
         {
-            bool picked = placer != null && (shown[i].category == DecorationCategory.Wrapper ? placer.IsShapeSelected(shown[i]) : placer.IsPlaced(shown[i])); // 앵커에 놓였거나 지금 모양인 카드는 고른 표시
+            bool picked = placer != null && (shown[i].category == DecorationCategory.Wrapper ? placer.IsShapeSelected(shown[i]) : shown[i].category == DecorationCategory.Ribbon && placer.IsPlaced(shown[i])); // 지금 모양인 포장지와 꽃다발에 놓인 리본의 카드만 어둡게
             Paint(cards[i], picked ? CardOn : CardOff, TextDark);
+            cards[i].transform.Find("Image").GetComponent<Image>().color = picked ? CardOn : Color.white; // 그림도 같이 어둡게
             Outline border = cards[i].GetComponent<Outline>();
             if (border != null) border.effectColor = picked ? new Color(0.35f, 0.35f, 0.35f) : new Color(0.8f, 0.8f, 0.8f);
         }

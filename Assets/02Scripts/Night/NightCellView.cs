@@ -70,6 +70,9 @@ public class NightCellView : MonoBehaviour
         filledRect = filledImage.rectTransform;
     }
 
+    /// <summary>드래그 중 올바른 모양일 때 칸에 보이는 미리보기 색을 정한다(기본은 반투명 흰색).</summary>
+    public void SetValidPreviewColor(Color color) => validPreviewColor = color;
+
     public void Initialize(Vector2Int coord)
     {
         if (filledImage == null)
@@ -82,13 +85,14 @@ public class NightCellView : MonoBehaviour
         SetEmpty();
     }
 
-    public void SetAsWall()
+    /// <summary>막힌 칸으로 만든다. 그림을 주면 그 그림(가시 등)을, 안 주면 단색을 그린다.</summary>
+    public void SetAsWall(Sprite sprite = null, Color? color = null)
     {
         IsWall = true;
         State = CellVisualState.Confirmed;
 
-        filledImage.sprite = null;
-        filledImage.color = wallColor;
+        filledImage.sprite = sprite;
+        filledImage.color = color ?? wallColor;
         filledImage.enabled = true;
 
         filledRect.localScale = Vector3.one * confirmedScale;

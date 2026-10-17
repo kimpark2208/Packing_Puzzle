@@ -17,6 +17,9 @@ public class BlockDrag : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDra
 
     public event Action<GameObject> OnPlaced;
 
+    /// <summary>플레이어가 꽃을 집었다(드래그 시작). 컬러휠이 그 꽃의 색을 가리킬 때 쓴다.</summary>
+    public static event Action<FlowerData> Grabbed;
+
     /// <summary>이 꽃을 맡길 수 있는 보관 칸(바구니의 꽃에만 GachaManager가 정해 준다). null이면 맡길 수 없다.</summary>
     public FlowerStorageSlot storeTarget;
 
@@ -62,6 +65,7 @@ public class BlockDrag : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDra
         transform.SetParent(rootCanvas.transform, true);
         canvasGroup.blocksRaycasts = false;
         FollowPointer(eventData);
+        Grabbed?.Invoke(blockData);
     }
 
     public void OnDrag(PointerEventData eventData)

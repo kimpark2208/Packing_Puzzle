@@ -50,7 +50,7 @@ public class GachaManager : MonoBehaviour
     private static FlowerPool NewPool(IEnumerable<FlowerData> flowers)
     {
         var order = GameManager.Instance != null ? GameManager.Instance.CurrentDayOrder : null;
-        System.Func<FlowerData, int> stockOf = CurrencyManager.Instance != null ? f => CurrencyManager.Instance.GetFlowerStock(f.blockID) : null;
+        System.Func<FlowerData, int> stockOf = CurrencyManager.Instance != null ? f => CurrencyManager.Instance.GetFlowerStock(f.flowerID) : null;
         return new FlowerPool(flowers, order != null ? order.preset : null, stockOf);
     }
 
@@ -146,7 +146,7 @@ public class GachaManager : MonoBehaviour
         draggable.storeTarget = storageSlot;
 
         FlowerPieceView view = FlowerPieceView.GetOrAdd(block);
-        view.Apply(flower, flower.iconSprite != null ? flower.iconSprite : flower.dayPieceSprite, true);
+        view.Apply(flower, flower.iconSprite, true);
 
         // FlowerImage의 Button은 선택 화면(클릭으로 고르기)용이라 드래그로 놓는 버켓에서는 꺼둔다.
         Transform flowerImageT = block.transform.Find("FlowerImage");

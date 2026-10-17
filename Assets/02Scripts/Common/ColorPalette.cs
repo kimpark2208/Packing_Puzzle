@@ -2,7 +2,7 @@ using UnityEngine;
 
 /// <summary>
 /// FlowerData.Color enum을 실제 렌더링 색상 및 한글 이름으로 변환하는 공용 팔레트.
-/// 색상 관련 매핑이 여러 스크립트(BlockDrag, WrapperSlot, CustomerRequirementGenerator 등)에 흩어지는 것을 방지한다.
+/// 색상 관련 매핑이 여러 스크립트(BlockDrag, WrapperSlot, OrderComposer 등)에 흩어지는 것을 방지한다.
 /// </summary>
 public static class ColorPalette
 {
@@ -30,6 +30,22 @@ public static class ColorPalette
             case FlowerData.FlowerRole.Mass: return new Color(0.55f, 0.75f, 0.95f);
             case FlowerData.FlowerRole.Form: return new Color(0.95f, 0.60f, 0.75f);
             default: return new Color(0.98f, 0.78f, 0.35f);
+        }
+    }
+
+    /// <summary>포장지 색의 한글 이름(뒤에 "색"을 붙여 말한다: 빨간색, 남색).</summary>
+    public static string ToKoreanName(WrapperColor color)
+    {
+        switch (color)
+        {
+            case WrapperColor.Red: return "빨간";
+            case WrapperColor.Yellow: return "노란";
+            case WrapperColor.Green: return "초록";
+            case WrapperColor.Blue: return "파란";
+            case WrapperColor.Purple: return "보라";
+            case WrapperColor.Pink: return "분홍";
+            case WrapperColor.White: return "흰";
+            default: return "알 수 없는";
         }
     }
 

@@ -152,12 +152,20 @@ public class DayPuzzleController : MonoBehaviour
         if (order != null && order.preset != null)
         {
             activeRings = Mathf.Min(order.wrapper.ringCount, SupportedRings);
+            TintWrapper(order.wrapper);
             return order.preset;
         }
 
         if (wrapper == null || wrapper.presets.Count == 0) return null;
         activeRings = Mathf.Min(wrapper.ringCount, SupportedRings);
+        TintWrapper(wrapper);
         return wrapper.presets[Mathf.Clamp(presetIndex, 0, wrapper.presets.Count - 1)];
+    }
+
+    /// <summary>포장지 이미지를 고른 포장지의 색으로 물들인다. 꾸미기에서 포장지 그림을 바꿔도 이미지의 색은 그대로라서 같은 색으로 보인다.</summary>
+    private void TintWrapper(WrapperData data)
+    {
+        if (wrapperImage != null && wrapperImage.TryGetComponent(out Image image)) image.color = data.color;
     }
 
     /// <summary>꽃 이미지는 FlowerArea 아래에 칸과 같은 이름(= position)으로 둔다.</summary>

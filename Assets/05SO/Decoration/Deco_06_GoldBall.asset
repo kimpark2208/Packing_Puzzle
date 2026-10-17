@@ -17,3 +17,4 @@ MonoBehaviour:
   displayName: "\uAE08\uC18D \uBC18\uC9DD\uC774"
   price: 200
   sprite: {fileID: -8308418470247127078, guid: 6fe5c569fd01c9c45a591f1f18a0b0c1, type: 3}
+  sizeScale: 0.3

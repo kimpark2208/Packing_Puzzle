@@ -14,15 +14,19 @@ public static class DayPuzzleGenerator
     {
         // ---- 손님이 등장하는 순간부터 알 수 있는 것 (포장지 선택 전) ----
         public int day;
-        public CustomerRequirementGenerator.CustomerRequirement requirement;
+        public OrderComposer.CustomerRequirement requirement;
 
         /// <summary>주문을 풀 수 있는 프리셋을 가진 포장지. 손님의 힌트가 이 포장지를 가리킨다. 플레이어가 반드시 이걸 골라야 하는 건 아니다.</summary>
         public int hintWrapperId;
         public int hintPresetIndex;    // hintWrapperId 포장지 안에서 주문을 풀 수 있는 프리셋 번호
         public string hintColorName;   // 명확한 힌트: "핑크"
 
-        /// <summary>색 주문에서 색 이름 대신 말할 비유 문구("동백 같은"). 색 이름을 직접 말하면 null. 손님이 올 때 한 번 정해서, 대사가 다시 나와도 바뀌지 않는다.</summary>
-        public string colorPhrase;
+        /// <summary>손님이 말하는 주문 대사 전체(꽃 부분 + 포장지 부분). 손님이 올 때 한 번 정해서, 대사가 다시 나와도 바뀌지 않는다.</summary>
+        public string orderLine;
+
+        /// <summary>되묻기를 누를 때마다 말하는 대사 전체(1회, 2회). 붙여서 다시 말하기(포장지는 바로 말한다)와 덧붙이는 말까지 들어 있다(OrderComposer가 만든다).</summary>
+        public string[] reaskLines = System.Array.Empty<string>();
+        public int reaskIndex; // 지금까지 보여 준 되묻기 대사 수
 
         // ---- 플레이어가 포장지를 고른 뒤에 확정되는 것 ----
         /// <summary>확정된 포장지 데이터. 확정 전이거나 찾을 수 없으면 null. 퍼즐을 만드는 쪽(보드, 가챠, 꽃 선택)은 번호로 다시 찾지 말고 이것을 쓴다.</summary>
@@ -32,14 +36,14 @@ public static class DayPuzzleGenerator
         public WrapperPresetData preset;
     }
 
-    /// <summary>손님이 막 등장했을 때 호출. 아직 포장지는 정하지 않고 힌트만 준비한다. 색 주문이면 colorMetaphorChance의 확률로 색 이름 대신 비유 문구로 말한다.</summary>
-    public static DayOrder GenerateOrder(int day, float colorMetaphorChance = 0f)
+    /// <summary>손님이 막 등장했을 때 호출. 아직 포장지는 정하지 않고 힌트만 준비한다. 주문을 어떻게 말할지(직설/은유, 템플릿)는 OrderComposer가 templates로 정한다.</summary>
+    public static DayOrder GenerateOrder(int day, OrderTemplateData templates = null)
     {
         // 보유한 포장지의 (보드가 지원하는) 프리셋을 전부 모아서 무작위로 하나 고른다
         var pool = new List<(int wrapperId, int presetIndex)>();
         foreach (int id in CurrencyManager.Instance.OwnedWrappers)
         {
-            WrapperData data = WrapperRegistry.Instance != null ? WrapperRegistry.Instance.GetById(id) : null;
+            WrapperData data = DataRegistry.Instance != null ? DataRegistry.Instance.GetWrapper(id) : null;
             if (data == null) continue;
             for (int i = 0; i < data.presets.Count; i++)
             {
@@ -51,14 +55,16 @@ public static class DayPuzzleGenerator
         int hintPresetIndex = -1;
         WrapperPresetData preset = null;
         string hintColorName;
+        WrapperColor? hintColor = null; // 포장지 SO의 색 종류. 주문은 이 색으로 포장지를 말한다
         if (pool.Count > 0)
         {
             var pick = pool[Random.Range(0, pool.Count)];
             hintWrapperId = pick.wrapperId;
             hintPresetIndex = pick.presetIndex;
-            WrapperData hintData = WrapperRegistry.Instance.GetById(hintWrapperId);
+            WrapperData hintData = DataRegistry.Instance.GetWrapper(hintWrapperId);
             preset = hintData.presets[hintPresetIndex];
-            hintColorName = hintData.colorName; // 포장지 선택 화면에 보이는 색과 같은 이름
+            hintColor = hintData.wrapperColor;
+            hintColorName = hintData.ColorName; // 포장지 선택 화면에 보이는 색과 같은 이름
         }
         else
         {
@@ -66,16 +72,16 @@ public static class DayPuzzleGenerator
             hintColorName = ShopManager.Instance.GetColorHintName(hintWrapperId);
         }
 
-        var requirement = CustomerRequirementGenerator.GenerateRandomRequirement(day, preset);
-        bool useMetaphor = requirement.type == CustomerRequirementGenerator.RequirementType.Color && Random.value < colorMetaphorChance;
+        OrderComposer.Result composed = OrderComposer.Compose(day, preset, hintColor, hintColorName, templates);
         return new DayOrder
         {
             day = day,
-            requirement = requirement,
+            requirement = composed.requirement,
             hintWrapperId = hintWrapperId,
             hintPresetIndex = hintPresetIndex,
             hintColorName = hintColorName,
-            colorPhrase = useMetaphor ? ColorMetaphors.Pick((FlowerData.Color)requirement.targetId) : null,
+            orderLine = composed.line,
+            reaskLines = composed.reaskLines,
         };
     }
 
@@ -84,7 +90,7 @@ public static class DayPuzzleGenerator
     {
         int presetIndex = chosenWrapperId == order.hintWrapperId ? order.hintPresetIndex : RandomPlayablePresetIndex(chosenWrapperId);
 
-        order.wrapper = WrapperRegistry.Instance != null ? WrapperRegistry.Instance.GetById(chosenWrapperId) : null;
+        order.wrapper = DataRegistry.Instance != null ? DataRegistry.Instance.GetWrapper(chosenWrapperId) : null;
         bool validIndex = order.wrapper != null && presetIndex >= 0 && presetIndex < order.wrapper.presets.Count;
         order.preset = validIndex ? order.wrapper.presets[presetIndex] : null;
     }
@@ -92,7 +98,7 @@ public static class DayPuzzleGenerator
     /// <summary>해당 포장지의 보드가 지원하는 프리셋 중 무작위 번호. 없으면 -1.</summary>
     private static int RandomPlayablePresetIndex(int wrapperId)
     {
-        WrapperData data = WrapperRegistry.Instance != null ? WrapperRegistry.Instance.GetById(wrapperId) : null;
+        WrapperData data = DataRegistry.Instance != null ? DataRegistry.Instance.GetWrapper(wrapperId) : null;
         if (data == null) return -1;
 
         var indices = new List<int>();
