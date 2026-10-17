@@ -1,10 +1,10 @@
 fileFormatVersion: 2
-guid: d98d490bf6df3d84294b0b9e71569e68
+guid: fcbe029d0a65b8b469e9ef3e46437233
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: -3162234036410543769
-    second: flower_1f33f_0
+      213: -5322809072925290815
+    second: Furniture_Default_Wallpaper_0
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -24,7 +24,7 @@ TextureImporter:
     heightScale: 0.25
     normalMapFilter: 0
     flipGreenChannel: 0
-  isReadable: 1
+  isReadable: 0
   streamingMipmaps: 0
   streamingMipmapsPriority: 0
   vTOnly: 0
@@ -110,6 +110,19 @@ TextureImporter:
     androidETC2FallbackOverride: 0
     forceMaximumCompressionQuality_BC6H_BC7: 0
   - serializedVersion: 4
+    buildTarget: WebGL
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
     buildTarget: WindowsStoreApps
     maxTextureSize: 2048
     resizeAlgorithm: 0
@@ -126,13 +139,13 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: flower_1f33f_0
+      name: Furniture_Default_Wallpaper_0
       rect:
         serializedVersion: 2
-        x: 1
+        x: 0
         y: 0
-        width: 63
-        height: 64
+        width: 2000
+        height: 900
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -141,8 +154,8 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 761991be5ec7d14d0800000000000000
-      internalID: -3162234036410543769
+      spriteID: 1cecf0189559126b0800000000000000
+      internalID: -5322809072925290815
       vertices: []
       indices: 
       edges: []
@@ -161,7 +174,7 @@ TextureImporter:
     spriteCustomMetadata:
       entries: []
     nameFileIdTable:
-      flower_1f33f_0: -3162234036410543769
+      Furniture_Default_Wallpaper_0: -5322809072925290815
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

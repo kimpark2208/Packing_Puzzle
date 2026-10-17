@@ -74,8 +74,15 @@ public class FlowerData : ScriptableObject
     [Tooltip("꽃 중심.")] public Sprite centerPartSprite;
     [Tooltip("꽃잎 6장. 맨 위 꽃잎이 0번이고 시계 방향으로 놓는다.")] public Sprite[] petalPartSprites = new Sprite[PetalPartCount];
 
-    [Tooltip("꽃잎 결손일 때 바뀌는 꽃잎(위 꽃잎 6장 중 몇 번째인지, 0~5). 꽃마다 정해져 있다.")] [Range(0, PetalPartCount - 1)] public int lossPetalIndex;
-    [Tooltip("결손된 모습의 그 꽃잎 그림. 꽃잎 결손이면 위 번호의 꽃잎 그림 대신 이것을 쓴다.")] public Sprite lossPetalSprite;
+    [Tooltip("꽃잎 결손일 때 바뀔 수 있는 꽃잎들. 칸마다 (위 꽃잎 6장 중 몇 번째인지, 그 자리의 결손 그림)을 적는다. 결손이 나면 이 중 하나가 위 꽃잎 그림 대신 쓰인다. 꽃마다 정해져 있다.")] public LossPetal[] lossPetals;
+
+    /// <summary>꽃잎 결손 하나: 어느 꽃잎이 결손되는지와 그 결손된 모습.</summary>
+    [System.Serializable]
+    public struct LossPetal
+    {
+        [Tooltip("결손되는 꽃잎 번호(위 꽃잎 6장 중, 맨 위가 0번이고 시계 방향). 0~5.")] [Range(0, PetalPartCount - 1)] public int petalIndex;
+        [Tooltip("결손된 모습의 그 꽃잎 그림.")] public Sprite sprite;
+    }
 
     private void OnValidate()
     {

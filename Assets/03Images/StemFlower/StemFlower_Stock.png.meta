@@ -1,10 +1,10 @@
 fileFormatVersion: 2
-guid: 5ff28d1ed5848e94b8d60ea04d84d784
+guid: a673e9155e6ffde4a9649011b29da5d1
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: -4881613672920180085
-    second: flower_1f33a_0
+      213: 2489598522580990324
+    second: StemFlower_Stock_0
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -24,7 +24,7 @@ TextureImporter:
     heightScale: 0.25
     normalMapFilter: 0
     flipGreenChannel: 0
-  isReadable: 1
+  isReadable: 0
   streamingMipmaps: 0
   streamingMipmapsPriority: 0
   vTOnly: 0
@@ -110,6 +110,19 @@ TextureImporter:
     androidETC2FallbackOverride: 0
     forceMaximumCompressionQuality_BC6H_BC7: 0
   - serializedVersion: 4
+    buildTarget: WebGL
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
     buildTarget: WindowsStoreApps
     maxTextureSize: 2048
     resizeAlgorithm: 0
@@ -126,13 +139,13 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: flower_1f33a_0
+      name: StemFlower_Stock_0
       rect:
         serializedVersion: 2
-        x: 0
-        y: 1
-        width: 64
-        height: 62
+        x: 49
+        y: 29
+        width: 617
+        height: 1121
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -141,8 +154,8 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: b8a17e67a36014cb0800000000000000
-      internalID: -4881613672920180085
+      spriteID: 479f6c37aa4dc8220800000000000000
+      internalID: 2489598522580990324
       vertices: []
       indices: 
       edges: []
@@ -161,7 +174,7 @@ TextureImporter:
     spriteCustomMetadata:
       entries: []
     nameFileIdTable:
-      flower_1f33a_0: -4881613672920180085
+      StemFlower_Stock_0: 2489598522580990324
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 
