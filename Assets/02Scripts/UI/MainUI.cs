@@ -21,7 +21,6 @@ public class MainUI : MonoBehaviour
     [SerializeField, Tooltip("주문을 수락한 뒤 꽃 선택으로 저절로 넘어갈 때(스와이프 시작) 나는 소리.")] private AudioClip forcedSwipeSound;
     [SerializeField, Range(0f, 1f)] private float forcedSwipeVolume = 0.8f;
     [SerializeField] private float acceptToSelectDelay = 1f; // 낮 주문을 수락한 뒤 꽃 선택 화면으로 자동으로 넘어가기까지의 시간(초)
-    [SerializeField] private Sprite nightLanternSprite; // 전등을 켜면 바뀌는 밤 전등 모습
 
     [Header("소리")]
     [SerializeField, Tooltip("낮 손님 동안 나오는 배경음악(낮 퍼즐 씬과 같은 곡이면 이어서 나온다).")] private AudioClip dayBgm;
@@ -43,6 +42,7 @@ public class MainUI : MonoBehaviour
     private GameObject[] characterRoots;
     private CharacterGenerator character; // 낮 손님의 모습(주문마다 무작위로 바뀐다)
     private Toggle lantern; // 켜면 밤이 시작된다(낮 종료 손님이 떠난 뒤, 카운터 화면에서만 켤 수 있다)
+    private LanternLight lanternLight; // 전등의 켜짐/꺼짐 모습(켜진 전등 그림 + 불빛)
     private SwipeParallax swipe;     // 카운터 ↔ 옆 페이지 이동(낮 손님: 수락하면 꽃 선택으로 자동으로 한 방향, 낮 종료: 꽃 선반과 스와이프로 왕복)
     private NightRequestUI shelf;    // 꽃 선반: 부적을 붙인 꽃을 들고 있다(낮 종료)
     private GameObject rejectButton;
@@ -144,7 +144,8 @@ public class MainUI : MonoBehaviour
             lantern.gameObject.SetActive(state == MainState.DayEnding || IsNight); // 전등은 낮이 끝난 시점과 밤 동안에만 나타난다(낮 영업 중에는 숨긴다)
             lantern.SetIsOnWithoutNotify(false);
             lantern.interactable = false; // 낮 종료 손님이 떠난 뒤에야 켤 수 있다(HideCustomer). 밤에는 켜진 모습을 보여 주기만 한다
-            if (IsNight && nightLanternSprite != null && lantern.targetGraphic is Image nightImage) nightImage.sprite = nightLanternSprite;
+            lanternLight = lantern.GetComponentInParent<LanternLight>(true);
+            if (IsNight) lanternLight?.SetLit(true); // 밤에는 전등이 켜진 모습이다
             lantern.onValueChanged.AddListener(OnLanternChanged);
         }
     }
@@ -385,7 +386,7 @@ public class MainUI : MonoBehaviour
         nightStarting = true;
         lantern.interactable = false; // 켠 뒤에는 다시 건드리지 못한다
         if (swipe != null) swipe.Enabled = false;
-        if (nightLanternSprite != null && lantern.targetGraphic is Image lanternImage) lanternImage.sprite = nightLanternSprite;
+        lanternLight?.SetLit(true);
         Bgm.Stop();
         Sfx.Play(nightStartJingle, nightStartJingleVolume);
         StartCoroutine(StartNightAfterDelay());
