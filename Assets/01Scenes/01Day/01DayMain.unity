@@ -2583,10 +2583,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6d9e64870873d1b43b8a4e5f90552383, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::MainLook
-  dayOnlyNames:
-  - DayCharacterArea
-  nightOnlyNames:
-  - NightCharacterArea
+  dayOnlyNames: []
+  nightOnlyNames: []
   images:
   - imageName: CounterBackground
     day: {fileID: -4400840224442829227, guid: b28cc34a521040e48b8d172f9a689574, type: 3}
@@ -12434,7 +12432,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!114 &1897135560
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -12854,7 +12852,7 @@ GameObject:
   - component: {fileID: 1918614775}
   - component: {fileID: 1918614774}
   m_Layer: 0
-  m_Name: WrapperBackground
+  m_Name: WrapperFloor
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -13474,6 +13472,8 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 9b355a705d4aab148903a51730d0fcec, type: 2}
   - {fileID: 11400000, guid: 3e705f769cf92c949890dc2e7cb359fb, type: 2}
   - {fileID: 11400000, guid: 2292e0f7bb08d52468264094786f2beb, type: 2}
+  nightSkins:
+  - {fileID: 21300000, guid: 00a235d98c9e1574893d15a0a035e9dd, type: 3}
   sideChance: 0.5
   tieChance: 0.5
   leftTieChance: 0.5

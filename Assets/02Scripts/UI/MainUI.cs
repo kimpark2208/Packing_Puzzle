@@ -230,7 +230,7 @@ public class MainUI : MonoBehaviour
     {
         if (character == null) return;
 
-        character.Randomize();
+        character.Randomize(IsNight); // 밤 손님은 피부가 파란 귀신, 낮 손님은 그 피부를 뺀 사람이다
         if (Game != null) Game.CustomerLook = character.Current;
         if (!arrive) return;
 
@@ -261,8 +261,15 @@ public class MainUI : MonoBehaviour
         yield return new WaitForSecondsRealtime(seconds + 0.1f); // 들어오는 모션은 한 프레임 뒤에 시작한다
 
         SetBubble(true);
-        speech.ShowOrder(order);
-        GameClock.Instance?.ResetMood();
+        if (IsNight)
+        {
+            speech.ShowNightCustomer(Game != null ? Game.NightCustomerFlowerName() : null);
+        }
+        else
+        {
+            speech.ShowOrder(order);
+            GameClock.Instance?.ResetMood();
+        }
         changingCustomer = false;
     }
 
@@ -304,22 +311,22 @@ public class MainUI : MonoBehaviour
         });
     }
 
-    /// <summary>밤 손님: 지금 풀 퍼즐에 나올 꽃을 말하고, 수락하면 밤 퍼즐로 간다. 풀 퍼즐이 더 없으면 밤을 끝낸다.</summary>
+    /// <summary>밤 손님: 새 손님(파란 피부 귀신)이 들어와 자기 꽃 이야기를 하고, 수락하면 꽃을 진단하러 밤 퍼즐 씬으로 간다. 만날 손님이 더 없으면 밤을 끝낸다.</summary>
     private void BeginNightCustomer()
     {
-        string flowers = Game != null ? Game.NightCustomerFlowerNames() : null;
-        if (flowers == null)
+        if (Game == null || Game.NightCustomerFlowerName() == null)
         {
             Game?.EndNight();
             return;
         }
-        SayAfterReveal(() => speech.ShowNightCustomer(flowers));
+        StartCoroutine(NextCustomerRoutine(false));
     }
 
     /// <summary>밤 종료: 밤 시간이 끝났다. 손님이 "해가 뜨면 저는 죽어요!!"라고 외치고, 낮 종료와 같은 방식으로 사라진다. 사라지면 하루 결산으로 간다.</summary>
     private void BeginNightEnd()
     {
         state = MainState.NightEnding;
+        if (character != null) character.Randomize(true); // 밤 종료 손님도 파란 피부 귀신
         SayAfterReveal(() =>
         {
             speech.ShowNightEnd();

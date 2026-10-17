@@ -48,7 +48,7 @@ public class CustomerSpeech
 
     public void ShowNightEnd() => Show(NightEndLine);
 
-    /// <summary>밤 손님이 첫 퍼즐에 나올 꽃을 말한다.</summary>
+    /// <summary>밤 손님이 자기 꽃(flowerNames) 이야기를 한다.</summary>
     public void ShowNightCustomer(string flowerNames)
     {
         Show($"저기요… 제 꽃이 <b>{flowerNames}</b>인데요. 자꾸 시드네요. 이 꽃을 고쳐주시면 똑같이 만들어 드릴게요. 유령에게는 신비한 능력이 있거든요.");
