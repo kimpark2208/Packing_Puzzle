@@ -47,6 +47,7 @@ public class NightDiagnosisUI : MonoBehaviour
 
     private NightDiagnosisCase diagnosis;
     private Image[] flowerParts; // 꽃 그림 이미지 전부(줄기, 중심, 꽃잎)
+    private int[] petalSiblings; // 꽃잎이 흩어지기 전에 꽃송이 안에서 놓였던 자리(꽃잎 흩어짐을 고칠 때 되돌린다)
 
     private void Start()
     {
@@ -105,6 +106,7 @@ public class NightDiagnosisUI : MonoBehaviour
     /// <summary>꽃잎이 전부 떨어져 petalDropArea 안 무작위 자리에 무작위 각도로 놓인다(꽃 중심만 줄기 끝에 남는다).</summary>
     private void DropPetals()
     {
+        petalSiblings = petals.Select(p => p.transform.GetSiblingIndex()).ToArray();
         Rect area = petalDropArea.rect;
         foreach (Image petal in petals)
         {
@@ -214,6 +216,27 @@ public class NightDiagnosisUI : MonoBehaviour
         {
             foreach (Image part in flowerParts) part.color = new Color(part.color.r, part.color.g, part.color.b, 1f); // 다시 또렷해진다
         }
+        else if (ailment == FlowerData.Ailment.PetalScatter)
+        {
+            GatherPetals();
+        }
+    }
+
+    /// <summary>흩어진 꽃잎을 꽃송이 안 제자리로 되돌린다(꽃잎 그림은 꽃송이를 가득 채우게 놓여 있다).</summary>
+    private void GatherPetals()
+    {
+        foreach (Image petal in petals)
+        {
+            var rect = (RectTransform)petal.transform;
+            rect.SetParent(head, false);
+            rect.anchorMin = Vector2.zero;
+            rect.anchorMax = Vector2.one;
+            rect.offsetMin = rect.offsetMax = Vector2.zero;
+            rect.pivot = new Vector2(0.5f, 0.5f);
+            rect.localRotation = Quaternion.identity;
+            rect.localScale = Vector3.one; // 흩어질 때 부모가 바뀌며 꽃 배율이 꽃잎 배율로 옮겨 가 있다
+        }
+        foreach (int i in Enumerable.Range(0, petals.Length).OrderBy(k => petalSiblings[k])) petals[i].transform.SetSiblingIndex(petalSiblings[i]); // 낮은 자리부터 차례로 넣어야 나머지가 밀리지 않는다
     }
 
     public static string AilmentName(FlowerData.Ailment ailment) => ailment switch

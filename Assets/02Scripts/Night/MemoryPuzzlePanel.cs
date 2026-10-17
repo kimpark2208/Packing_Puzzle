@@ -23,10 +23,8 @@ public class MemoryPuzzlePanel : RepairPuzzlePanel
     [SerializeField, Tooltip("꽃잎마다 하나씩 꽃 뒤에 깔아 두는 꽃잎 그림 복사본(FlowerGlow 머티리얼). 꽃잎과 같은 순서로 6개. 평소에는 꺼 둔다. 그림과 크기는 코드가 꽃잎에 맞춘다.")] private Image[] glows = new Image[FlowerData.PetalPartCount];
 
     [Header("표시")]
-    [SerializeField, Tooltip("단계 점(단계 수만큼).")] private Image[] dots;
+    [SerializeField, Tooltip("단계 점마다 안에 들어 있는 채움 이미지(단계 수만큼, 단계 순서대로). 지금 단계까지의 점은 채움이 켜지고, 나머지는 꺼진다.")] private GameObject[] dotFills;
     [SerializeField] private TMP_Text message;
-    [SerializeField] private Color dotDone = new(0.45f, 0.45f, 0.45f, 1f);
-    [SerializeField] private Color dotPending = new(0.85f, 0.85f, 0.85f, 1f);
     [SerializeField, Tooltip("불빛이 가장 밝을 때의 색(알파는 코드가 바꾼다).")] private Color glowColor = Color.white;
     [SerializeField, Tooltip("꽃잎이 빛날 때 그 꽃잎에 입히는 따뜻한 색(곱해지는 색). 흰색이면 색을 바꾸지 않고 앞으로만 올라온다.")] private Color litTint = new(1f, 0.97f, 0.84f, 1f);
 
@@ -70,6 +68,7 @@ public class MemoryPuzzlePanel : RepairPuzzlePanel
         }
 
         stage = 0;
+        RefreshDots();
         inputLocked = true;
         StopAllCoroutines();
         StartCoroutine(PlayRoutine());
@@ -238,9 +237,9 @@ public class MemoryPuzzlePanel : RepairPuzzlePanel
         return list;
     }
 
-    /// <summary>지금 단계까지의 점을 진하게 칠한다.</summary>
+    /// <summary>지금 단계까지의 점은 채움을 켜고, 나머지는 끈다.</summary>
     private void RefreshDots()
     {
-        for (int i = 0; i < dots.Length; i++) dots[i].color = i <= stage ? dotDone : dotPending;
+        for (int i = 0; i < dotFills.Length; i++) dotFills[i].SetActive(i <= stage);
     }
 }
