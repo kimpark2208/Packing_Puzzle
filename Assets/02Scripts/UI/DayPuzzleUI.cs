@@ -40,6 +40,7 @@ public class DayPuzzleUI : MonoBehaviour
     private GachaManager gacha;
     private bool customerLate; // 퍼즐이 끝난 순간 손님 기분이 이미 다 닳아 있었는가
     private bool lastRequirementMet;
+    private int lastScore;
     private PuzzleSettlement settlement;
 
     private GameObject flowerBucket;
@@ -148,6 +149,7 @@ public class DayPuzzleUI : MonoBehaviour
         CurrencyManager.Instance.AddMoney(result.Payout); // 정산은 금액만 계산하고, 지급은 여기서 한다
         CurrencyManager.Instance.RecordRoundScore(result.Score); // 하루 평점은 그날 퍼즐 점수의 평균으로 정한다
         GameManager.Instance?.ConsumeUsedFlowers(board.PlacementHistory); // 퍼즐이 끝났으니 놓은 꽃이 소모된다(붕괴 재시작은 끝이 아니다)
+        GameManager.Instance?.ConsumeUsedWrapper(); // 포장지도 한 장 소모된다
         GameClock.Instance?.StopMood(); // 퍼즐이 끝났으니 기분 시간은 다음 주문까지 멈춘다
         return result;
     }
@@ -155,6 +157,7 @@ public class DayPuzzleUI : MonoBehaviour
     private void ShowResult(SettlementResult result)
     {
         lastRequirementMet = result.RequirementMet;
+        lastScore = result.Score;
         GameClock.Instance?.SetPaused(true); // 결과를 보는 동안 하루 시간도 멈춘다(기분 시간은 정산에서 이미 멈췄다)
 
         if (resultView == null) // 결과 화면이 연결되지 않았으면 알림 없이 바로 넘어간다
@@ -217,10 +220,18 @@ public class DayPuzzleUI : MonoBehaviour
         // 손님 기분이 다 닳은 뒤에 끝났으면 "늦으셨네요.", 아니면 요구사항을 못 채웠으면 손님이 화내고,
         // 채웠으면 만족한다.
         if (customerLate)
-            GameManager.Instance.ReturnToDayMain(LateLine, RequirementNotMetRejectResponse);
+            GameManager.Instance.ReturnToDayMain(LateLine, RequirementNotMetRejectResponse, ReactionTierOfResult());
         else if (!lastRequirementMet)
-            GameManager.Instance.ReturnToDayMain(RequirementNotMetLine, RequirementNotMetRejectResponse);
+            GameManager.Instance.ReturnToDayMain(RequirementNotMetLine, RequirementNotMetRejectResponse, ReactionTierOfResult());
         else
-            GameManager.Instance.ReturnToDayMain(GoodResultLine);
+            GameManager.Instance.ReturnToDayMain(GoodResultLine, tier: ReactionTierOfResult());
+    }
+
+    /// <summary>NPC 손님의 반응 단계: 요구를 못 채웠거나 점수가 -50 이하 = 실패, 늦었거나 점수가 0 미만 = 실수, 점수 50 이상 = 완벽, 나머지 = 성공.</summary>
+    private ReactionTier ReactionTierOfResult()
+    {
+        if (!lastRequirementMet || lastScore <= -50) return ReactionTier.Fail;
+        if (customerLate || lastScore < 0) return ReactionTier.Mistake;
+        return lastScore >= 50 ? ReactionTier.Perfect : ReactionTier.Success;
     }
 }

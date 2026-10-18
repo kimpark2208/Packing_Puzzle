@@ -41,10 +41,6 @@ public class ScatterPuzzlePanel : RepairPuzzlePanel
     [SerializeField, Min(0.01f), Tooltip("붙거나 튕겨 돌아가는 데 걸리는 시간(초).")] private float moveSeconds = 0.18f;
     [SerializeField, Min(0f), Tooltip("다 붙인 뒤 패널이 닫히기까지 잠시 보여 주는 시간(초).")] private float solvedDelay = 0.8f;
 
-    [Header("세로형 꽃(금어초처럼 줄기를 따라 꽃송이가 달린 꽃)")]
-    [SerializeField, Min(0.1f), Tooltip("세로형 꽃을 보여 줄 때 꽃 전체(줄기 포함)의 배율.")] private float tallScale = 0.6f;
-    [SerializeField, Tooltip("세로형 꽃을 줄기째 기울이는 각도(양수 = 왼쪽 위로).")] private float tallTilt = 55f;
-
     private const string VerticalHeadName = "VerticalHead";
     private Transform verticalHead;             // 세로형 꽃송이 상자와 그 안의 중심·꽃잎 자리(이름으로 찾는다)
     private Image verticalCenter;
@@ -52,8 +48,6 @@ public class ScatterPuzzlePanel : RepairPuzzlePanel
     private bool tallLayout;                    // 지금 꽃이 세로형 상자를 쓰는가
     private Image Center => tallLayout ? verticalCenter : center;         // 지금 꽃에 쓰는 중심·꽃잎 자리
     private Image[] Slots => tallLayout ? verticalSlots : slots;
-    private Vector3 roundFlowerScale;          // 둥근형일 때 꽃 전체의 배율과 기울기(처음 켜질 때 에디터에 놓인 값을 담는다)
-    private Quaternion roundFlowerRotation;
     private Vector3[] homePositions;
     private Quaternion[] homeRotations;
     private readonly bool[] attached = new bool[FlowerData.PetalPartCount]; // 처음부터 꽃에 붙어 있는 꽃잎(진단에서 떨어지지 않은 꽃잎)
@@ -108,20 +102,13 @@ public class ScatterPuzzlePanel : RepairPuzzlePanel
         }
     }
 
-    private void Awake()
-    {
-        var flower = center.transform.parent.parent; // 처음 켜질 때(Begin 전) 에디터에 놓인 둥근형 모습을 기억해 둔다
-        roundFlowerScale = flower.localScale;
-        roundFlowerRotation = flower.localRotation;
-    }
-
     private void OnDisable()
     {
         StopAllCoroutines();
     }
 
     /// <summary>꽃의 배치를 맞춘다. 둥근형 꽃송이 상자(RoundHead, 인스펙터에 연결된 중심·꽃잎 자리의 부모)와 세로형 꽃송이 상자(VerticalHead, 이름으로 찾는다)가 Flower 안에 따로 있고,
-    /// 맞는 쪽만 켠다. 세로형(금어초처럼 줄기를 따라 꽃송이가 달린 꽃)은 꽃 전체를 줄기째 기울이고 줄인다.</summary>
+    /// 맞는 쪽만 켠다. 위치·기울기·배율은 에디터에서 정해 둔 그대로 쓴다.</summary>
     private void ApplyPartLayout(FlowerData art)
     {
         var roundHead = center.transform.parent;
@@ -140,8 +127,6 @@ public class ScatterPuzzlePanel : RepairPuzzlePanel
         tallLayout = art != null && art.partLayout == FlowerData.PartLayout.Tall && verticalHead != null;
         roundHead.gameObject.SetActive(!tallLayout);
         if (verticalHead != null) verticalHead.gameObject.SetActive(tallLayout);
-        flower.localScale = tallLayout ? Vector3.one * tallScale : roundFlowerScale;
-        flower.localRotation = tallLayout ? Quaternion.Euler(0f, 0f, tallTilt) : roundFlowerRotation;
     }
 
     /// <summary>패널의 꽃을 진단 꽃의 그림으로 채운다(줄기, 중심, 꽃잎 자리, 떨어진 꽃잎).</summary>

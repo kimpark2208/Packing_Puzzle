@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+using UnityEngine.Serialization;
 using UnityEngine.UI;
 
 /// <summary>
@@ -16,10 +17,7 @@ public class NightDiagnosisUI : MonoBehaviour
     [SerializeField, Tooltip("꽃 체크 화면 묶음(노트, 화병, 꽃). 에디터에서는 꺼 두고 작업해도 되고, 밤 퍼즐 씬에 들어오면 자동으로 켜진다.")] private GameObject flowerCheckArea;
 
     [Header("꽃 그림(부위별)")]
-    [SerializeField] private Image stemLeaf;
-    [SerializeField] private Image center;
-    [SerializeField, Tooltip("꽃잎 6장. 맨 위가 0번이고 시계 방향.")] private Image[] petals = new Image[FlowerData.PetalPartCount];
-    [SerializeField, Tooltip("꽃송이(중심과 꽃잎의 부모). 줄기 꺾임이면 이 오브젝트의 Pivot(줄기 끝에 맞춰 둔다)을 축으로 제자리에서 기울인다.")] private RectTransform head;
+    [SerializeField, FormerlySerializedAs("head"), Tooltip("둥근형 꽃(RoundFlower). 안에 StemLeaf와 꽃송이 상자 RoundHead(Center, Petal_1~6)가 있다. 세로형 꽃(VerticalFlower)은 같은 부모 안에 따로 있고 이름으로 찾는다(안에 StemLeaf와 VerticalHead). 맞는 쪽만 켜진다.")] private RectTransform roundFlower;
     [SerializeField, Tooltip("꽃잎 흩어짐: 떨어진 꽃잎이 놓일 자리(이 영역 안 무작위). 화병 앞(위)에 그려지도록 하이라키에서 화병 앞 그림 뒤에 둔다.")] private RectTransform petalDropArea;
 
     [Header("체크리스트와 확정")]
@@ -42,7 +40,7 @@ public class NightDiagnosisUI : MonoBehaviour
     [SerializeField, Tooltip("메마름: 꽃 그림(줄기, 중심, 꽃잎)에 입히는 머티리얼(UI_WiltEdge).")] private Material wiltMaterial;
     [SerializeField, Range(0f, 1f), Tooltip("기억 흐려짐: 꽃의 투명도.")] private float fadedAlpha = 0.45f;
     [SerializeField, Tooltip("줄기 꺾임(세로형 꽃): 돌아가는 꽃송이 수의 범위(최소, 최대).")] private Vector2Int tallBendCount = new(3, 4);
-    [SerializeField, Tooltip("줄기 꺾임(세로형 꽃): 꽃송이가 돌아가는 각도의 범위(최소, 최대). 방향은 꽃송이마다 무작위.")] private Vector2 tallBendAngle = new(25f, 45f);
+    [SerializeField, Tooltip("줄기 꺾임(세로형 꽃): 꽃송이가 돌아가는 각도의 범위(최소, 최대). 방향은 꽃송이마다 무작위.")] private Vector2 tallBendAngle = new(40f, 90f);
 
     private static GameManager Game => GameManager.Instance;
 
@@ -51,15 +49,34 @@ public class NightDiagnosisUI : MonoBehaviour
     private int[] petalSiblings; // 꽃잎이 흩어지기 전에 꽃송이 안에서 놓였던 자리(꽃잎 흩어짐을 고칠 때 되돌린다)
     private List<int> droppedPetals; // 떨어진 꽃잎 번호들
     private readonly List<int> bentPetals = new(); // 세로형 꽃에서 줄기 꺾임으로 돌아간 꽃송이(꽃잎) 번호들
-    private const string VerticalHeadName = "VerticalHead"; // 세로형 꽃송이 상자(Flower 안에 둥근형 상자와 따로 놓여 있다. 안에 Center와 Petal_1~6)
-    private RectTransform verticalHead;
-    private Image verticalCenter;
-    private Image[] verticalPetals;
-    private bool tallLayout; // 지금 꽃이 세로형 상자를 쓰는가
+    private const string VerticalFlowerName = "VerticalFlower";
 
-    private RectTransform Head => tallLayout ? verticalHead : head;       // 지금 꽃에 쓰는 꽃송이 상자와 그 안의 중심·꽃잎
-    private Image Center => tallLayout ? verticalCenter : center;
-    private Image[] Petals => tallLayout ? verticalPetals : petals;
+    /// <summary>꽃 한 종류의 배치(둥근형·세로형): 루트 안에 StemLeaf와 꽃송이 상자(안에 Center, Petal_1~6)가 있다.</summary>
+    private class FlowerSet
+    {
+        public RectTransform root, head;
+        public Image stem, center;
+        public Image[] petals;
+
+        public FlowerSet(Transform root, string headName)
+        {
+            this.root = (RectTransform)root;
+            head = (RectTransform)root.Find(headName);
+            stem = root.Find("StemLeaf").GetComponent<Image>();
+            center = head.Find("Center").GetComponent<Image>();
+            petals = PartFinder.Children<Image>(head, "Petal");
+        }
+    }
+
+    private FlowerSet round, vertical;
+    private bool tallLayout; // 지금 꽃이 세로형을 쓰는가
+    private FlowerSet Set => tallLayout ? vertical : round;
+
+    private RectTransform Head => Set.head;       // 지금 꽃의 꽃송이 상자와 그 안의 중심·꽃잎, 그리고 줄기
+    private Image Center => Set.center;
+    private Image Stem => Set.stem;
+    private Image[] Petals => Set.petals;
+    private RectTransform[] Moving => flowerObjects.Where(o => o != roundFlower && o != vertical?.root).Append(Set.root).ToArray(); // 화병 뒤·앞과 지금 켜진 꽃(둥근형·세로형 루트는 flowerObjects에 있어도 한 쪽만 옮긴다)
     private Vector2 flowerOffset; // 화병과 꽃이 원래 자리에서 옮겨진 만큼(퍼즐 자리 비우기, 화면 가운데로 보여 주기)
 
     private void Start()
@@ -70,7 +87,8 @@ public class NightDiagnosisUI : MonoBehaviour
 
         foreach (RepairPuzzlePanel panel in repairPanels) panel.gameObject.SetActive(false); // 퍼즐 패널은 에디터에서 켜 두고 작업할 수 있으니, 실행하면 닫아 둔다(확정 뒤에 열린다)
 
-        flowerParts = petals.Append(stemLeaf).Append(center).ToArray();
+        FindFlowerSets();
+        flowerParts = Petals.Append(Stem).Append(Center).ToArray();
         diagnosis = Game != null ? Game.CurrentNightCase : null;
         if (diagnosis != null)
         {
@@ -89,7 +107,7 @@ public class NightDiagnosisUI : MonoBehaviour
         FlowerData art = diagnosis.art;
         ApplyPartLayout(art);
         Head.localRotation = Quaternion.identity; // 에디터에 저장된 꽃송이 회전과 상관없이 똑바로 시작한다(줄기 꺾임일 때만 아래에서 기울인다)
-        stemLeaf.sprite = art.stemLeafPartSprite;
+        Stem.sprite = art.stemLeafPartSprite;
         Center.sprite = art.centerPartSprite;
         Center.enabled = art.centerPartSprite != null; // 중심 그림이 없는 꽃은 빈 Image(흰 사각형)가 보이지 않게 끈다
         for (int i = 0; i < Petals.Length; i++) Petals[i].sprite = art.petalPartSprites[i];
@@ -115,31 +133,31 @@ public class NightDiagnosisUI : MonoBehaviour
     /// <summary>에디터 창(Tools/Night/Flower Preview)용: Play 없이, 막 불러온 씬의 꽃 그림에 문제의 꽃과 아픔을 그려 본다. 그림이 비어 있는 부위는 숨긴다.</summary>
     public void EditorPreview(NightDiagnosisCase previewCase)
     {
-        flowerParts = Petals.Append(stemLeaf).Append(Center).ToArray();
+        FindFlowerSets();
+        flowerParts = Petals.Append(Stem).Append(Center).ToArray();
         ShowFlower(previewCase);
         foreach (Image part in flowerParts) part.enabled = part.sprite != null;
     }
 #endif
 
-    /// <summary>꽃의 배치 종류에 맞는 꽃송이 상자를 고른다. 꽃 그림(Flower) 안에 둥근형 상자(RoundHead, 인스펙터에 연결된 것)와 세로형 상자(VerticalHead, 이름으로 찾는다)가 따로 놓여 있고,
-    /// 맞는 쪽만 켜고 다른 쪽은 끈다. 세로형 상자가 씬에 없으면 세로형 꽃도 둥근형 상자로 그린다. 씬에 놓인 오브젝트의 값은 바꾸지 않는다.</summary>
+    /// <summary>둥근형 꽃(RoundFlower, 인스펙터에 연결된 것)과 같은 부모 안의 세로형 꽃(VerticalFlower)을 이름으로 찾아 둔다. 세로형 꽃이 씬에 없으면 null.</summary>
+    private void FindFlowerSets()
+    {
+        if (round != null) return;
+
+        round = new FlowerSet(roundFlower, "RoundHead");
+        Transform tall = roundFlower.parent.Find(VerticalFlowerName);
+        if (tall != null) vertical = new FlowerSet(tall, "VerticalHead");
+    }
+
+    /// <summary>꽃의 배치 종류에 맞는 꽃(둥근형 RoundFlower, 세로형 VerticalFlower)을 고르고, 맞는 쪽만 켜고 다른 쪽은 끈다. 세로형 꽃이 씬에 없으면 세로형 꽃도 둥근형으로 그린다. 씬에 놓인 오브젝트의 값은 바꾸지 않는다.</summary>
     private void ApplyPartLayout(FlowerData art)
     {
-        if (verticalHead == null)
-        {
-            Transform found = stemLeaf.transform.parent.Find(VerticalHeadName);
-            if (found != null)
-            {
-                verticalHead = (RectTransform)found;
-                verticalCenter = found.Find("Center").GetComponent<Image>();
-                verticalPetals = PartFinder.Children<Image>(found, "Petal");
-            }
-        }
-
-        tallLayout = art.partLayout == FlowerData.PartLayout.Tall && verticalHead != null;
-        head.gameObject.SetActive(!tallLayout);
-        if (verticalHead != null) verticalHead.gameObject.SetActive(tallLayout);
-        flowerParts = Petals.Append(stemLeaf).Append(Center).ToArray();
+        FindFlowerSets();
+        tallLayout = art.partLayout == FlowerData.PartLayout.Tall && vertical != null;
+        round.root.gameObject.SetActive(!tallLayout);
+        if (vertical != null) vertical.root.gameObject.SetActive(tallLayout);
+        flowerParts = Petals.Append(Stem).Append(Center).ToArray();
     }
 
     /// <summary>줄기가 꺾인다. 둥근형은 꽃송이를 줄기 끝에서 옆으로 기울이고(에디터에 놓인 꽃송이의 Pivot을 축으로 제자리에서 돌린다. 인스펙터에서 Rotation을 주는 것과 같다),
@@ -273,13 +291,13 @@ public class NightDiagnosisUI : MonoBehaviour
     private IEnumerator ShowFlowerCentered()
     {
         Vector2 center = flowerOffset + new Vector2(-FlowerScreenX(), 0f);
-        if (flowerObjects[0].gameObject.activeSelf)
+        if (Moving[0].gameObject.activeSelf)
         {
             yield return MoveFlowerTo(center);
         }
         else
         {
-            foreach (RectTransform flowerObject in flowerObjects) flowerObject.anchoredPosition += center - flowerOffset;
+            foreach (RectTransform flowerObject in Moving) flowerObject.anchoredPosition += center - flowerOffset;
             flowerOffset = center;
             SetFlowerVisible(true);
         }
@@ -289,7 +307,7 @@ public class NightDiagnosisUI : MonoBehaviour
     /// <summary>화병(flowerObjects의 첫 번째)의 가운데가 화면 가운데에서 얼마나 떨어져 있는지(캔버스 x, 오른쪽이 양수).</summary>
     private float FlowerScreenX()
     {
-        RectTransform pot = flowerObjects[0];
+        RectTransform pot = Moving[0];
         var canvas = (RectTransform)pot.GetComponentInParent<Canvas>().rootCanvas.transform;
         return canvas.InverseTransformPoint(pot.TransformPoint(pot.rect.center)).x;
     }
@@ -301,7 +319,7 @@ public class NightDiagnosisUI : MonoBehaviour
         if (delta == Vector2.zero) yield break;
 
         flowerOffset = offset;
-        yield return Slide(flowerObjects, delta);
+        yield return Slide(Moving, delta);
     }
 
     /// <summary>오브젝트들을 delta만큼 부드럽게 옮긴다(slideSeconds 동안).</summary>
@@ -320,7 +338,7 @@ public class NightDiagnosisUI : MonoBehaviour
     /// <summary>화병과 꽃(옮길 수 있는 꽃 관련 오브젝트들)을 보이거나 숨긴다.</summary>
     private void SetFlowerVisible(bool visible)
     {
-        foreach (RectTransform flowerObject in flowerObjects) flowerObject.gameObject.SetActive(visible);
+        foreach (RectTransform flowerObject in Moving) flowerObject.gameObject.SetActive(visible);
     }
 
     /// <summary>수리 퍼즐을 푼 아픔의 모습을 꽃 그림에서 없앤다(아직 퍼즐이 없는 아픔은 다루지 않는다).</summary>

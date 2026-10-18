@@ -6,11 +6,11 @@ public static class KoreanParticle
     // 조사 짝(받침 있음, 받침 없음). 긴 것을 먼저 둔다(이랑/이요가 이보다 먼저 잡혀야 한다).
     private static readonly string[][] Pairs =
     {
-        new[] { "이랑", "랑" }, new[] { "이고요", "고요" }, new[] { "이요", "요" }, new[] { "으로", "로" },
+        new[] { "이에요", "예요" }, new[] { "이랑", "랑" }, new[] { "이고요", "고요" }, new[] { "이요", "요" }, new[] { "으로", "로" },
         new[] { "이", "가" }, new[] { "을", "를" }, new[] { "은", "는" }, new[] { "과", "와" },
     };
 
-    private static readonly Regex ParticleRegex = new("^(이랑|랑|이고요|고요|이요|요|으로|로|이|가|을|를|은|는|과|와)", RegexOptions.Compiled);
+    private static readonly Regex ParticleRegex = new("^(이에요|예요|이랑|랑|이고요|고요|이요|요|으로|로|이|가|을|를|은|는|과|와)", RegexOptions.Compiled);
 
     /// <summary>받침이 있으면 "이", 없으면 "가". 한글이 아닌 글자로 끝나면 "이".</summary>
     public static string IGa(string word) => EndsWithoutBatchim(word) ? "가" : "이";

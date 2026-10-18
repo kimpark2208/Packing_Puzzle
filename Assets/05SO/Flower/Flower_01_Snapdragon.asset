@@ -35,18 +35,12 @@ MonoBehaviour:
   - {fileID: 21300000, guid: dd893176cafc3f14e828a1ac944c6589, type: 3}
   partLayout: 1
   lossPetals:
-  - petalIndex: 0
-    sprite: {fileID: 21300000, guid: 0ad613d0efca5014e9b6662aeddf2f50, type: 3}
-  - petalIndex: 1
-    sprite: {fileID: 21300000, guid: d84c5790dfbed854d95b4740e3047a31, type: 3}
-  - petalIndex: 2
-    sprite: {fileID: 21300000, guid: 45861593426458e46af07b78d3cc32e2, type: 3}
-  - petalIndex: 3
-    sprite: {fileID: 21300000, guid: 24a01f492c00c014ea1853846605aef3, type: 3}
-  - petalIndex: 4
-    sprite: {fileID: 21300000, guid: 99fa89af526b7ca40bb27e6efaf0d79c, type: 3}
   - petalIndex: 5
-    sprite: {fileID: 21300000, guid: 8f92d3bfab32577449c60e998e90d81d, type: 3}
+    sprite: {fileID: 21300000, guid: 0ad613d0efca5014e9b6662aeddf2f50, type: 3}
+  - petalIndex: 2
+    sprite: {fileID: 21300000, guid: d84c5790dfbed854d95b4740e3047a31, type: 3}
+  - petalIndex: 0
+    sprite: {fileID: 21300000, guid: 45861593426458e46af07b78d3cc32e2, type: 3}
   petalGrid: '..###...
 
     .#####..

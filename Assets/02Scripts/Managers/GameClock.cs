@@ -68,6 +68,7 @@ public class GameClock : Singleton<GameClock>
     private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
     {
         paused = false; // 씬이 바뀌면 설정 창은 닫힌 상태로 시작한다
+        MorningFill = -1f; // 밤 → 낮 연출은 메인 화면이 열릴 때 다시 시작한다
         // 메인 화면은 하나(낮 메인)라서, 낮 시간이 흐르는지 밤 시간이 흐르는지는 메인 화면의 상황(MainState)으로 정한다.
         MainState main = GameManager.Instance != null ? GameManager.Instance.MainState : MainState.DayCustomer;
         bool mainScene = scene.name == GameManager.SceneDayMain;
@@ -98,8 +99,22 @@ public class GameClock : Singleton<GameClock>
         if (DayRemaining <= 0f) TimeUp();
     }
 
+    /// <summary>밤 남은 시간을 비율(0~1)로 정한다(밤 시간이 없는 날 시계를 손님마다 줄일 때).</summary>
+    public void SetNightRatio(float ratio)
+    {
+        NightRemaining = nightDurationSeconds * Mathf.Clamp01(ratio);
+    }
+
+    /// <summary>새 날 밤 → 낮 연출 중이면 낮 시계가 채워진 정도(0~1), 아니면 -1. 시계 게이지는 이 동안 비워진 밤 시계에서 낮 시계를 채워 보인다.</summary>
+    public float MorningFill { get; set; } = -1f;
+
+    /// <summary>true면 밤 시간이 줄지 않는다(밤 시간이 없는 날. 1일차).</summary>
+    public bool NightFrozen { get; set; }
+
     private void TickNight(float seconds)
     {
+        if (NightFrozen) return;
+
         NightRemaining = Mathf.Max(0f, NightRemaining - seconds);
         if (NightRemaining > 0f) return;
 
@@ -149,6 +164,26 @@ public class GameClock : Singleton<GameClock>
     public void SetPaused(bool value)
     {
         paused = value;
+    }
+
+    /// <summary>시나리오에서 낮을 건너뛸 때: 하루 남은 시간을 seconds 동안 시계가 빠르게 감기듯이 0까지 줄인다(시계 게이지와 낮 → 노을 모습이 따라 움직인다).
+    /// 낮이 끝났다는 이벤트(OnDayTimeUp)는 내지 않는다. 이 뒤의 흐름(전등, 밤 시작)은 부른 쪽이 직접 이어 간다.</summary>
+    public System.Collections.IEnumerator FastForwardDay(float seconds)
+    {
+        dayTimeUpRaised = true;
+        float start = DayRemaining;
+        for (float t = 0f; t < seconds; t += Time.unscaledDeltaTime)
+        {
+            DayRemaining = Mathf.Lerp(start, 0f, Mathf.SmoothStep(0f, 1f, t / seconds));
+            yield return null;
+        }
+        DayRemaining = 0f;
+    }
+
+    /// <summary>시계(와 시계 옆 전등 영역)를 밤 모습으로 보이게 한다. 낮 건너뛰기에서 낮이 다 감긴 뒤, 전등이 나타나 켜지기 전에 부른다(평소에는 낮 종료 화면이 이 모습을 정한다).</summary>
+    public void ShowNightLook()
+    {
+        nightLook = true;
     }
 
     /// <summary>디버그용: 하루 남은 시간만 앞당긴다(손님 기분은 그대로).</summary>

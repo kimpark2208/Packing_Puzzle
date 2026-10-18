@@ -28,19 +28,21 @@ public static class OrderComposer
         public FlowerData.Color color;   // 색상 기반: 요구한 꽃 색
         public int flowerId;             // 꽃 기반: 요구한 첫 번째 꽃
         public int flowerId2;            // 꽃 기반: 요구한 두 번째 꽃(한 종이면 -1)
-        public int minCount;             // 색상 기반: 최소 개수. 꽃 기반: 말한 꽃의 종류 수(종류마다 한 송이 이상)
+        public int flowerCount;          // 꽃 기반: 첫 번째 꽃의 요구 송이 수(0이면 한 송이)
+        public int flowerCount2;         // 꽃 기반: 두 번째 꽃의 요구 송이 수(0이면 한 송이)
+        public int minCount;             // 색상 기반: 최소 개수. 꽃 기반: 말한 꽃들의 요구 송이 수 합(고정 주문이 아니면 종류마다 한 송이)
         public int baseAmount;           // 이 퍼즐의 기본 금액(정산 점수 구간의 배율이 곱해진다)
 
-        /// <summary>꽃 기반에서 요구한 꽃 ID들(한 종이면 하나, 두 종이면 둘).</summary>
-        public IEnumerable<int> FlowerTargets()
+        /// <summary>꽃 기반에서 요구한 꽃과 송이 수(한 종이면 하나, 두 종이면 둘).</summary>
+        public IEnumerable<(int flowerId, int count)> FlowerTargets()
         {
-            yield return flowerId;
-            if (flowerId2 >= 0) yield return flowerId2;
+            yield return (flowerId, Mathf.Max(1, flowerCount));
+            if (flowerId2 >= 0) yield return (flowerId2, Mathf.Max(1, flowerCount2));
         }
     }
 
     /// <summary>퍼즐 기본 금액(임시: 모든 주문이 같다). 100 = 초반에 0~25점 꽃다발 1개를 판매한 정도.</summary>
-    private const int BaseAmount = 100;
+    public const int BaseAmount = 100;
 
     private const string FlowerSlot = "[꽃템플릿]";     // 주문 전체 템플릿에서 꽃 부분이 들어갈 자리
     private const string WrapperSlot = "[포장지템플릿]"; // 포장지 부분이 들어갈 자리

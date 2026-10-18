@@ -105,12 +105,12 @@ public class FlowerSelectUI : MonoBehaviour
         RefreshWrapperBoxes();
     }
 
-    /// <summary>보유한 포장지이고, 퍼즐이 지원하는 링 수의 프리셋이 있어야 쓸 수 있다.</summary>
+    /// <summary>재고가 있는 포장지이고(재고가 있는 게 하나도 없으면 보유한 포장지), 퍼즐이 지원하는 링 수의 프리셋이 있어야 쓸 수 있다.</summary>
     private static bool IsWrapperUsable(int wrapperId)
     {
         if (CurrencyManager.Instance == null || DataRegistry.Instance == null) return false;
         WrapperData data = DataRegistry.Instance.GetWrapper(wrapperId);
-        return data != null && CurrencyManager.Instance.OwnedWrappers.Contains(wrapperId)
+        return data != null && CurrencyManager.Instance.UsableWrappers.Contains(wrapperId)
             && data.presets.Count > 0 && data.ringCount <= DayPuzzleController.SupportedRings;
     }
 

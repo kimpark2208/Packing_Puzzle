@@ -1,0 +1,29 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 70548d3b9000ded4c8b3cf6e2d82ca29, type: 3}
+  m_Name: Furniture_13_MoonLandingFloor
+  m_EditorClassIdentifier: Assembly-CSharp::FurnitureData
+  id: 13
+  category: 3
+  displayName: "\uB2EC \uCC29\uB959 \uBC14\uB2E5\uC7AC"
+  description: "\uB2EC\uC758 \uD45C\uBA74\uC774 \uB2F4\uAE34 \uBC14\uB2E5\uC7AC.
+    \uB354\uC6B1 \uB192\uC774 \uC810\uD504\uD560 \uC218 \uC788\uC744 \uAC83 \uAC19\uC740
+    \uAE30\uBD84\uC744 \uC900\uB2E4."
+  price: 3500
+  set: "\uBCC4\uC790\uB9AC"
+  availableFromDay: 9
+  inCatalog: 1
+  sprite: {fileID: 21300000, guid: 2d9305abfe45f134ea7c2cacbac8e741, type: 3}
+  morningSprite: {fileID: 0}
+  sunsetSprite: {fileID: 0}
+  eveningSprite: {fileID: 0}
+  extraSprites: []

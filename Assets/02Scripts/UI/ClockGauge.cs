@@ -23,8 +23,9 @@ public class ClockGauge : MonoBehaviour
         bool night = clock != null && clock.IsNightMode;
         if (lanternArea != null) lanternArea.SetActive(night);
 
-        Sprite sprite = night ? nightFillSprite : dayFillSprite;
+        bool morning = clock != null && clock.MorningFill >= 0f; // 밤 → 낮 연출: 비워진 밤 시계에서 낮 시계가 채워진다
+        Sprite sprite = morning ? (clock.MorningFill > 0f ? dayFillSprite : nightFillSprite) : night ? nightFillSprite : dayFillSprite;
         if (fillImage != null && sprite != null && fillImage.sprite != sprite) fillImage.sprite = sprite;
-        if (fillImage != null) fillImage.fillAmount = clock == null ? 1f : night ? clock.NightRatio : clock.DayRatio;
+        if (fillImage != null) fillImage.fillAmount = clock == null ? 1f : morning ? clock.MorningFill : night ? clock.NightRatio : clock.DayRatio;
     }
 }

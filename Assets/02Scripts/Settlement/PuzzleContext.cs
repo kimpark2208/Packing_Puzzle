@@ -60,9 +60,9 @@ public readonly struct PuzzleContext
         }
         else
         {
-            foreach (int flowerId in requirement.FlowerTargets()) // 말한 꽃마다 한 송이 이상: 쓴 꽃 종류 수가 요구(minCount)를 채워야 한다
+            foreach (var target in requirement.FlowerTargets()) // 말한 꽃마다 요구 송이 수까지만 센다(그 합이 요구(minCount)를 채워야 한다)
             {
-                if (flowerCounts.GetValueOrDefault(flowerId) > 0) used++;
+                used += System.Math.Min(flowerCounts.GetValueOrDefault(target.flowerId), target.count);
             }
         }
 

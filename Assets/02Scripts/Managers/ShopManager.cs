@@ -107,33 +107,7 @@ public class ShopManager : Singleton<ShopManager>
             colorHintName = "금빛"
         });
 
-        // ========== 가구 (Furniture) ==========
-        allItems.Add(new ShopItem
-        {
-            itemId = 101,
-            itemName = "테이블",
-            price = 200,
-            category = ShopCategory.Furniture,
-            description = "목재 테이블"
-        });
-
-        allItems.Add(new ShopItem
-        {
-            itemId = 102,
-            itemName = "의자",
-            price = 150,
-            category = ShopCategory.Furniture,
-            description = "편안한 의자"
-        });
-
-        allItems.Add(new ShopItem
-        {
-            itemId = 103,
-            itemName = "선반",
-            price = 300,
-            category = ShopCategory.Furniture,
-            description = "물건을 정리할 선반"
-        });
+        // 가구(Furniture)는 FurnitureData(DataRegistry)에서 읽는다 — 카탈로그가 직접 보여 준다
 
         // ========== 장식 (Deco) ==========
         allItems.Add(new ShopItem

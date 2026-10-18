@@ -9,10 +9,15 @@ public static class SceneObjectNames
     public const string RejectButton = "RejectBTN";
     public const string AcceptButton = "AcceptBTN";
     public const string Telephone = "CounterTelephone";      // 낮/밤 모습이 같은 오브젝트 하나를 쓴다(MainLook이 그림만 바꾼다)
+    public const string TelephoneBar = "TelephoneBar";       // 전화기를 누르면 뜨는 메뉴 바(가구배치/상품주문/예약확인)
+    public const string CatalogButton = "CatalogBTN";        // 전화기 바의 상품주문 버튼
+    public const string BookingButton = "BookingBTN";        // 전화기 바의 예약확인 버튼(달력이 해금돼야 누를 수 있다)
     public const string CatalogPopup = "CatalogPopup";
     public const string BubbleContainer = "BubbleContainer";
     public const string DayCharacter = "DayCharacterArea";   // 낮 손님을 무작위로 만드는 CharacterGenerator가 붙은 오브젝트
     public const string NightCharacter = "NightCharacterArea";
+    public const string NormalChar = "NomalChar";            // DayCharacterArea 안의 두 모습: 체구가 작은 캐릭터(부위 조합)와
+    public const string BigChar = "BigChar";                 // 체구가 큰 캐릭터(한 장짜리 큰 그림)
     public const string LanternToggle = "LanternToggle";
     public const string ShelfRoot = "ShelfRoot";             // 메인 옆 페이지: 낮 손님이면 꽃 선택, 낮 종료면 꽃 선반(부적)
     public const string CharmPill = "CharmUse";              // 부적 화면에만 나오는 "부적 n / 6" 표시

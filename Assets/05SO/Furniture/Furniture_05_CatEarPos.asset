@@ -1,0 +1,28 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 70548d3b9000ded4c8b3cf6e2d82ca29, type: 3}
+  m_Name: Furniture_05_CatEarPos
+  m_EditorClassIdentifier: Assembly-CSharp::FurnitureData
+  id: 5
+  category: 0
+  displayName: "\uACE0\uC591\uC774 \uADC0 POS"
+  description: "\uACE0\uC591\uC774 \uADC0\uAC00 \uB2EC\uB9B0 \uB9C8\uB2C8\uC545\uD55C
+    POS. \uC870\uAE08 \uB354 \uADC0\uC5FD\uAC8C \uACC4\uC0B0\uD560 \uC218 \uC788\uB2E4."
+  price: 12000
+  set: "\uB9C8\uB2C8\uC545"
+  availableFromDay: 3
+  inCatalog: 1
+  sprite: {fileID: 0}
+  morningSprite: {fileID: 21300000, guid: 72ec3b912d857de46917ae508cb67ea2, type: 3}
+  sunsetSprite: {fileID: 21300000, guid: f3b7e87845cf9c94e9613432ae96ad99, type: 3}
+  eveningSprite: {fileID: 21300000, guid: 54c969f49e5b4e247ad2c0d289dd3299, type: 3}
+  extraSprites: []

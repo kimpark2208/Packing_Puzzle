@@ -4,7 +4,7 @@ using UnityEngine;
 using UnityEngine.Serialization;
 
 /// <summary>
-/// 게임에 존재하는 모든 데이터(SO)의 카탈로그: 꽃(FlowerData), 퍼즐용 블록(BlockData), 포장지(WrapperData).
+/// 게임에 존재하는 모든 데이터(SO)의 카탈로그: 꽃(FlowerData), 퍼즐용 블록(BlockData), 포장지(WrapperData), 가구(FurnitureData).
 /// 낮/밤 퍼즐 생성기가 공통으로 참조하는 단일 소스(Single Source of Truth)다. 부트스트랩 씬의 매니저 오브젝트에 배치한다.
 /// 꽃과 블록은 일대일로 이어지지 않는다(블록이 필요한 퍼즐은 블록 목록에서 골라 조합한다). 포장지는 상점 시스템과는 별개로 번호만 맞춘다.
 /// </summary>
@@ -13,8 +13,10 @@ public class DataRegistry : Singleton<DataRegistry>
     [SerializeField, FormerlySerializedAs("allFlowers")] private List<FlowerData> flowers = new();
     [SerializeField] private List<BlockData> blocks = new();
     [SerializeField] private List<WrapperData> wrappers = new();
+    [SerializeField, Tooltip("카탈로그(가구 탭)에 나오는 가구들.")] private List<FurnitureData> furniture = new();
 
     public IReadOnlyList<FlowerData> Flowers => flowers;
+    public IReadOnlyList<FurnitureData> Furniture => furniture;
     public IReadOnlyList<BlockData> Blocks => blocks;
 
     public FlowerData GetFlower(int flowerId) => flowers.FirstOrDefault(f => f != null && f.flowerID == flowerId);

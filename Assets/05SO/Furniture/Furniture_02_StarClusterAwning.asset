@@ -1,0 +1,28 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 70548d3b9000ded4c8b3cf6e2d82ca29, type: 3}
+  m_Name: Furniture_02_StarClusterAwning
+  m_EditorClassIdentifier: Assembly-CSharp::FurnitureData
+  id: 2
+  category: 0
+  displayName: "\uC131\uB2E8 \uBB34\uB9AC \uCC9C\uB9C9"
+  description: "\uBC24\uD558\uB298\uC744 \uC218\uB193\uC740 \uACE0\uAE09 \uCC9C\uB9C9.
+    \uADF8 \uB0A0 \uC6B4\uC138\uAC00 \uC88B\uC740 \uBCC4\uC790\uB9AC\uB3C4 \uBCF4\uC5EC\uC900\uB2E4."
+  price: 7000
+  set: "\uBCC4\uC790\uB9AC"
+  availableFromDay: 9
+  inCatalog: 1
+  sprite: {fileID: 0}
+  morningSprite: {fileID: 21300000, guid: 54cfe181f0b72754b9262e830bb136be, type: 3}
+  sunsetSprite: {fileID: 21300000, guid: 54cfe181f0b72754b9262e830bb136be, type: 3}
+  eveningSprite: {fileID: 21300000, guid: 54cfe181f0b72754b9262e830bb136be, type: 3}
+  extraSprites: []

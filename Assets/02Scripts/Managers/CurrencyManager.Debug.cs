@@ -1,3 +1,4 @@
+using System.Linq;
 using UnityEngine;
 
 /// <summary>CurrencyManager의 에디터 전용 디버그 메뉴(OnGUI). 빌드에는 들어가지 않는다. 새 디버그 기능은 여기에 한 줄씩 더한다.</summary>
@@ -13,6 +14,9 @@ public partial class CurrencyManager
 
         if (GUILayout.Button("Debug: +1000 금액"))
             AddMoney(1000);
+
+        if (GUILayout.Button("Debug: 일수 +1(하루 정산 없이 다음 날 낮으로, 그날 밤 새 꽃 지급)") && GameManager.Instance != null)
+            GameManager.Instance.DebugAdvanceDay();
 
         if (GUILayout.Button("Debug: 하루 시간 -1분") && GameClock.Instance != null)
             GameClock.Instance.SkipDayTime(60f);
@@ -39,7 +43,7 @@ public partial class CurrencyManager
         if (GUILayout.Button($"Debug: 배속 x{Time.timeScale:0.#} (x1 → x2 → x4 → x8)"))
             Time.timeScale = Time.timeScale >= 8f ? 1f : Time.timeScale * 2f;
 
-        GUILayout.Label($"현재 금액: {CurrentMoney}\n현재 일수: {CurrentDay}\n보유 포장지: {ownedWrappers.Count}개");
+        GUILayout.Label($"현재 금액: {CurrentMoney}\n현재 일수: {CurrentDay}\n포장지 재고: {string.Join(", ", ownedWrappers.OrderBy(id => id).Select(id => $"{id}번 {GetWrapperStock(id)}"))}");
     }
 #endif
 }

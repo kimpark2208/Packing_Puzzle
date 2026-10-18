@@ -18,6 +18,12 @@ public class PressSound : MonoBehaviour, IPointerDownHandler
     {
         if (TryGetComponent(out Selectable selectable) && !selectable.IsInteractable()) return;
 
+        Play();
+    }
+
+    /// <summary>눌렀을 때의 소리를 코드에서 직접 낸다(버튼이 눌릴 수 없는 상태여도 낸다. 예: 전등이 저절로 켜질 때의 딸깍 소리).</summary>
+    public void Play()
+    {
         bool watching = watch != null && watch.activeInHierarchy;
         Sfx.PlayRandom(watching ? whenWatchedActive : clips, volume);
     }

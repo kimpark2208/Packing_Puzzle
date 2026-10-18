@@ -1,0 +1,28 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 70548d3b9000ded4c8b3cf6e2d82ca29, type: 3}
+  m_Name: Furniture_11_VineIronShelf
+  m_EditorClassIdentifier: Assembly-CSharp::FurnitureData
+  id: 11
+  category: 2
+  displayName: "\uB11D\uCFE8 \uCCA0\uC81C \uC120\uBC18"
+  description: "\uB369\uAD74\uC774 \uAC10\uAE34 \uC740\uBE5B \uCCA0\uC81C \uC120\uBC18.
+    \uC138\uC0C1\uC774 \uBA78\uB9DD\uD55C \uB290\uB08C\uC744 \uC900\uB2E4."
+  price: 9999
+  set: "\uC544\uD3EC\uCE7C\uB9BD\uC2A4"
+  availableFromDay: 3
+  inCatalog: 1
+  sprite: {fileID: 21300000, guid: e5fe5b84ba7a019488309006d57121eb, type: 3}
+  morningSprite: {fileID: 0}
+  sunsetSprite: {fileID: 0}
+  eveningSprite: {fileID: 0}
+  extraSprites: []

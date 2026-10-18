@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 
 /// <summary>
@@ -41,7 +42,7 @@ public static class DayPuzzleGenerator
     {
         // 보유한 포장지의 (보드가 지원하는) 프리셋을 전부 모아서 무작위로 하나 고른다
         var pool = new List<(int wrapperId, int presetIndex)>();
-        foreach (int id in CurrencyManager.Instance.OwnedWrappers)
+        foreach (int id in CurrencyManager.Instance.UsableWrappers)
         {
             WrapperData data = DataRegistry.Instance != null ? DataRegistry.Instance.GetWrapper(id) : null;
             if (data == null) continue;
@@ -82,6 +83,75 @@ public static class DayPuzzleGenerator
             hintColorName = hintColorName,
             orderLine = composed.line,
             reaskLines = composed.reaskLines,
+        };
+    }
+
+    /// <summary>
+    /// 시나리오에 정해진 주문(꽃과 송이 수, 포장지 번호)으로 낮 주문을 만든다. 손님의 힌트는 그 포장지를 가리키고, 프리셋은 그 포장지의 프리셋 중 요구한 꽃이 다 들어가는 것을 무작위로 고른다.
+    /// wrapperId가 0이면 포장지는 말하지 않은 것이라 보유한 포장지 중에서 고른다. 꽃은 두 종까지만 쓴다(요구사항의 형태).
+    /// </summary>
+    public static DayOrder GenerateFixedOrder(int day, List<(FlowerData flower, int count)> flowers, int wrapperId, string orderLine)
+    {
+        if (flowers.Count > 2) Debug.LogWarning($"[DayPuzzleGenerator] 고정 주문의 꽃이 {flowers.Count}종이라 앞의 두 종만 씁니다.");
+
+        var requirement = new OrderComposer.CustomerRequirement
+        {
+            requirementId = day,
+            baseAmount = OrderComposer.BaseAmount,
+            type = OrderComposer.RequirementType.Flower,
+            flowerId = flowers[0].flower.flowerID,
+            flowerCount = flowers[0].count,
+            flowerId2 = -1,
+        };
+        requirement.minCount = requirement.flowerCount;
+        if (flowers.Count > 1)
+        {
+            requirement.flowerId2 = flowers[1].flower.flowerID;
+            requirement.flowerCount2 = flowers[1].count;
+            requirement.minCount += requirement.flowerCount2;
+        }
+
+        var used = flowers.Take(2).ToList();
+        bool Fits(WrapperPresetData p) => used.GroupBy(f => f.flower.flowerRole).All(g => g.Sum(f => f.count) <= p.CountByTag(g.Key));
+
+        var pool = new List<(int wrapperId, int presetIndex)>();
+        var fallback = new List<(int wrapperId, int presetIndex)>(); // 꽃이 다 들어가는 프리셋이 없을 때의 대비
+        foreach (int id in wrapperId > 0 ? new[] { wrapperId } : CurrencyManager.Instance.UsableWrappers.ToArray())
+        {
+            WrapperData data = DataRegistry.Instance != null ? DataRegistry.Instance.GetWrapper(id) : null;
+            if (data == null) continue;
+            for (int i = 0; i < data.presets.Count; i++)
+            {
+                if (!IsPlayable(data.presets[i])) continue;
+                fallback.Add((id, i));
+                if (Fits(data.presets[i])) pool.Add((id, i));
+            }
+        }
+        if (pool.Count == 0)
+        {
+            Debug.LogWarning($"[DayPuzzleGenerator] 고정 주문의 꽃이 다 들어가는 프리셋이 없어 아무 프리셋으로 진행합니다 (포장지 {wrapperId}).");
+            pool = fallback;
+        }
+
+        int hintWrapperId = wrapperId > 0 ? wrapperId : CurrencyManager.Instance.GetRandomOwnedWrapperID();
+        int hintPresetIndex = -1;
+        if (pool.Count > 0)
+        {
+            var pick = pool[Random.Range(0, pool.Count)];
+            hintWrapperId = pick.wrapperId;
+            hintPresetIndex = pick.presetIndex;
+        }
+
+        WrapperData hint = DataRegistry.Instance != null ? DataRegistry.Instance.GetWrapper(hintWrapperId) : null;
+        return new DayOrder
+        {
+            day = day,
+            requirement = requirement,
+            hintWrapperId = hintWrapperId,
+            hintPresetIndex = hintPresetIndex,
+            hintColorName = hint != null ? hint.ColorName : "",
+            orderLine = orderLine,
+            reaskLines = new[] { orderLine, orderLine }, // 되묻기는 같은 대사를 다시 말한다
         };
     }
 
