@@ -69,10 +69,19 @@ public class FlowerData : ScriptableObject
     /// <summary>밤 퍼즐의 진단용 꽃 그림은 꽃잎 6장으로 나뉜다.</summary>
     public const int PetalPartCount = 6;
 
+    /// <summary>진단 그림 부위의 배치 종류.</summary>
+    public enum PartLayout
+    {
+        Round,  // 둥근형: 중심과 꽃잎 6장이 500x500 꽃송이 상자 안에 둘러 있다
+        Tall    // 세로형: 중심과 꽃잎 6장이 줄기와 같은 700x1200 캔버스에 겹쳐 제자리에 놓인다(금어초처럼 줄기를 따라 꽃송이가 달린 꽃)
+    }
+
     [Header("밤 퍼즐 - 진단용 꽃 그림(부위별). 같은 캔버스 크기·같은 위치로 뽑은 투명 PNG를 겹치면 온전한 꽃이 되게 만든다. 아픔(결손/흩어짐/꺾임 …)은 이 부위들을 숨기고 옮기고 꺾어서 보여 준다. 색상은 런타임에 ColorPalette로 틴트됨")]
     [Tooltip("줄기와 이파리(한 장).")] public Sprite stemLeafPartSprite;
     [Tooltip("꽃 중심. 비워 두면 중심을 그리지 않는다(꽃잎 그림에 중심이 들어 있는 꽃).")] public Sprite centerPartSprite;
     [Tooltip("꽃잎 6장. 맨 위 꽃잎이 0번이고 시계 방향으로 놓는다.")] public Sprite[] petalPartSprites = new Sprite[PetalPartCount];
+
+    [Tooltip("부위 그림의 배치. 둥근형 = 중심·꽃잎이 500x500 꽃송이 상자 안에 둘러 있다. 세로형 = 중심·꽃잎이 줄기와 같은 700x1200 캔버스에 겹쳐 있다(위에서 아래로 번호를 매긴다).")] public PartLayout partLayout;
 
     /// <summary>밤 진단에 쓸 부위 그림(줄기, 꽃잎 6장)이 채워져 있는가. 중심 그림은 없어도 된다(비어 있으면 중심을 그리지 않는다).</summary>
     public bool HasDiagnosisArt => stemLeafPartSprite != null && petalPartSprites != null && petalPartSprites.Length == PetalPartCount && System.Array.TrueForAll(petalPartSprites, s => s != null);

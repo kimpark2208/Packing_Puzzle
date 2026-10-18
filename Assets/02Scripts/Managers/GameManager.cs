@@ -20,6 +20,13 @@ public class GameManager : Singleton<GameManager>
     [Header("손님 주문 대사의 템플릿과 확률(직설형/은유형 비율, 특수주문 확률 포함)")]
     [SerializeField] private OrderTemplateData orderTemplates;
 
+    [Header("밤 손님의 반응 대사(퍼즐 후 메인 화면에서 말한다). {flower}는 꽃 이름, {count}는 받는 복제품 수")]
+    [SerializeField, TextArea, Tooltip("아픔을 모두 고쳤을 때.")] private string nightReactionAll = "와!! 몰라보게 좋아졌네요. 여기 {flower} {count}개 드릴게요!";
+    [SerializeField, TextArea, Tooltip("아픔이 둘 중 하나만 고쳐졌을 때.")] private string nightReactionPartial = "애매하네요... 그래도 전보다는 상태가 좋아진 것 같아요. 여기 약속했던 {flower} {count}개 드릴게요";
+    [SerializeField, TextArea, Tooltip("아픔을 하나도 고치지 못했을 때.")] private string nightReactionNone = "엥? 수리 맡기기 전과 다를 바가 없는데요? 보수는 없던일로 합시다.";
+    [SerializeField, TextArea, Tooltip("반응 대사에서 거절 버튼을 눌렀을 때: 보상이 있는 경우.")] private string nightRejectWithReward = "보상을 안 받으시겠다는건가요? 그래도 드릴게요 선물은 원래 주는놈 마음입니다.";
+    [SerializeField, TextArea, Tooltip("반응 대사에서 거절 버튼을 눌렀을 때: 보상이 없는 경우.")] private string nightRejectNoReward = "보상 못 드리겠다구요. 주고싶어도 제 꽃이 고쳐져야 꽃을 만들 수 있어요.";
+
     public DayPuzzleGenerator.DayOrder CurrentDayOrder { get; private set; }
     public List<FlowerData> ChosenGachaPool { get; private set; } = new();
 
@@ -215,17 +222,30 @@ public class GameManager : Singleton<GameManager>
         ChosenGachaPool = new List<FlowerData>();
     }
 
-    /// <summary>밤 진단을 확정했다: 체크한 아픔을 정답과 비교해 결과를 콘솔에 남기고, 새 밤 손님을 만나러 메인 화면으로 간다(수리 퍼즐과 보상은 아직 없다).
-    /// 만날 손님이 더 없으면 밤을 끝낸다.</summary>
+    /// <summary>밤 진단을 확정했다: 체크한 아픔을 정답과 비교해 결과를 콘솔에 남기고 복제품을 지급한 뒤, 메인 화면으로 돌아간다.
+    /// 돌아가면 방금 그 손님이 고쳐진 정도에 맞는 반응 대사를 말하고(낮 손님의 화난 대사와 같은 방식), 그 뒤에 다음 손님이 온다. 다음 손님이 없으면 반응 대사 뒤에 밤이 끝난다.</summary>
     public void FinishNightDiagnosis(IReadOnlyCollection<FlowerData.Ailment> picked)
     {
-        if (CurrentNightCase != null)
+        if (CurrentNightCase == null)
         {
-            CurrentNightCase.Compare(picked, out int missed, out int wrong);
-            Debug.Log($"[GameManager] 밤 진단 결과: {CurrentNightCase.flower.DisplayName} / 정답 {string.Join(", ", CurrentNightCase.ailments.Select(NightDiagnosisUI.AilmentName))} / 체크 {string.Join(", ", picked.Select(NightDiagnosisUI.AilmentName))} → 놓친 {missed}, 틀린 {wrong}");
+            NextNightCustomer();
+            return;
         }
 
-        NextNightCustomer();
+        NightDiagnosisCase finished = CurrentNightCase;
+        finished.Compare(picked, out int missed, out int wrong);
+        int fixedCount = finished.CorrectCount(picked);
+        int replicas = finished.ReplicaCount(picked);
+        Debug.Log($"[GameManager] 밤 진단 결과: {finished.flower.DisplayName} / 정답 {string.Join(", ", finished.ailments.Select(NightDiagnosisUI.AilmentName))} / 체크 {string.Join(", ", picked.Select(NightDiagnosisUI.AilmentName))} → 놓친 {missed}, 틀린 {wrong}, 복제품 {replicas}개");
+        if (replicas > 0 && CurrencyManager.Instance != null) CurrencyManager.Instance.AddFlowerStock(finished.flower.flowerID, replicas);
+
+        string reaction = fixedCount == 0 ? nightReactionNone : fixedCount == finished.ailments.Count ? nightReactionAll : nightReactionPartial;
+        pendingCustomerLine = reaction.Replace("{flower}", finished.flower.DisplayName).Replace("{count}", replicas.ToString());
+        pendingRejectResponseLine = replicas > 0 ? nightRejectWithReward : nightRejectNoReward;
+
+        PrepareNextNightCase(); // 반응 대사 뒤에 올 손님(없으면 CurrentNightCase가 null이 되어 반응 대사 뒤에 밤이 끝난다)
+        MainState = MainState.NightCustomer;
+        SceneTransition.Go(SceneDayMain);
     }
 
     /// <summary>다음 밤 손님을 만나러 메인 화면으로 간다. 만날 손님이 더 없으면 밤을 끝낸다.</summary>

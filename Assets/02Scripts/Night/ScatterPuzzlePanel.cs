@@ -41,6 +41,19 @@ public class ScatterPuzzlePanel : RepairPuzzlePanel
     [SerializeField, Min(0.01f), Tooltip("붙거나 튕겨 돌아가는 데 걸리는 시간(초).")] private float moveSeconds = 0.18f;
     [SerializeField, Min(0f), Tooltip("다 붙인 뒤 패널이 닫히기까지 잠시 보여 주는 시간(초).")] private float solvedDelay = 0.8f;
 
+    [Header("세로형 꽃(금어초처럼 줄기를 따라 꽃송이가 달린 꽃)")]
+    [SerializeField, Min(0.1f), Tooltip("세로형 꽃을 보여 줄 때 꽃 전체(줄기 포함)의 배율.")] private float tallScale = 0.6f;
+    [SerializeField, Tooltip("세로형 꽃을 줄기째 기울이는 각도(양수 = 왼쪽 위로).")] private float tallTilt = 55f;
+
+    private const string VerticalHeadName = "VerticalHead";
+    private Transform verticalHead;             // 세로형 꽃송이 상자와 그 안의 중심·꽃잎 자리(이름으로 찾는다)
+    private Image verticalCenter;
+    private Image[] verticalSlots;
+    private bool tallLayout;                    // 지금 꽃이 세로형 상자를 쓰는가
+    private Image Center => tallLayout ? verticalCenter : center;         // 지금 꽃에 쓰는 중심·꽃잎 자리
+    private Image[] Slots => tallLayout ? verticalSlots : slots;
+    private Vector3? roundFlowerScale;          // 둥근형일 때 꽃 전체의 배율과 기울기
+    private Quaternion? roundFlowerRotation;
     private Vector3[] homePositions;
     private Quaternion[] homeRotations;
     private readonly bool[] attached = new bool[FlowerData.PetalPartCount]; // 처음부터 꽃에 붙어 있는 꽃잎(진단에서 떨어지지 않은 꽃잎)
@@ -52,9 +65,10 @@ public class ScatterPuzzlePanel : RepairPuzzlePanel
     protected override void Begin()
     {
         StopAllCoroutines();
+        ApplyPartLayout(Case != null ? Case.art : null);
         if (Case != null) ApplyFlowerArt(Case.art);
         message.text = startMessage;
-        silhouetteMaterial ??= slots[0].material;
+        silhouetteMaterial ??= Slots[0].material;
         Array.Clear(attached, 0, attached.Length);
         if (Case != null) foreach (int kept in Case.keptPetals) attached[kept] = true;
         placed = attached.Count(a => a);
@@ -62,9 +76,9 @@ public class ScatterPuzzlePanel : RepairPuzzlePanel
         for (int i = 0; i < loosePetals.Length; i++)
         {
             PetalDrag petal = loosePetals[i];
-            slots[i].color = attached[i] ? Color.white : slotColor;
-            slots[i].material = attached[i] ? null : silhouetteMaterial;
-            slots[i].gameObject.SetActive(true);
+            Slots[i].color = attached[i] ? Color.white : slotColor;
+            Slots[i].material = attached[i] ? null : silhouetteMaterial;
+            Slots[i].gameObject.SetActive(true);
             petal.gameObject.SetActive(!attached[i]);
             LayoutOutline(i);
             ShowOutline(i, false);
@@ -99,20 +113,46 @@ public class ScatterPuzzlePanel : RepairPuzzlePanel
         StopAllCoroutines();
     }
 
+    /// <summary>꽃의 배치를 맞춘다. 둥근형 꽃송이 상자(RoundHead, 인스펙터에 연결된 중심·꽃잎 자리의 부모)와 세로형 꽃송이 상자(VerticalHead, 이름으로 찾는다)가 Flower 안에 따로 있고,
+    /// 맞는 쪽만 켠다. 세로형(금어초처럼 줄기를 따라 꽃송이가 달린 꽃)은 꽃 전체를 줄기째 기울이고 줄인다.</summary>
+    private void ApplyPartLayout(FlowerData art)
+    {
+        var roundHead = center.transform.parent;
+        var flower = (RectTransform)roundHead.parent;
+        if (verticalHead == null)
+        {
+            Transform found = flower.Find(VerticalHeadName); // 안에 Center와 Slot_1~6이 둥근형과 같은 순서로 있다
+            if (found != null)
+            {
+                verticalHead = found;
+                verticalCenter = found.Find("Center").GetComponent<Image>();
+                verticalSlots = Enumerable.Range(1, FlowerData.PetalPartCount).Select(i => found.Find($"Slot_{i}").GetComponent<Image>()).ToArray();
+            }
+        }
+        roundFlowerScale ??= flower.localScale;
+        roundFlowerRotation ??= flower.localRotation;
+
+        tallLayout = art != null && art.partLayout == FlowerData.PartLayout.Tall && verticalHead != null;
+        roundHead.gameObject.SetActive(!tallLayout);
+        if (verticalHead != null) verticalHead.gameObject.SetActive(tallLayout);
+        flower.localScale = tallLayout ? Vector3.one * tallScale : roundFlowerScale.Value;
+        flower.localRotation = tallLayout ? Quaternion.Euler(0f, 0f, tallTilt) : roundFlowerRotation.Value;
+    }
+
     /// <summary>패널의 꽃을 진단 꽃의 그림으로 채운다(줄기, 중심, 꽃잎 자리, 떨어진 꽃잎).</summary>
     private void ApplyFlowerArt(FlowerData art)
     {
         stemLeaf.sprite = art.stemLeafPartSprite;
-        center.sprite = art.centerPartSprite;
-        center.enabled = art.centerPartSprite != null; // 중심 그림이 없는 꽃은 중심을 그리지 않는다
-        for (int i = 0; i < slots.Length; i++) slots[i].sprite = loosePetals[i].Image.sprite = art.petalPartSprites[i];
+        Center.sprite = art.centerPartSprite;
+        Center.enabled = art.centerPartSprite != null; // 중심 그림이 없는 꽃은 중심을 그리지 않는다
+        for (int i = 0; i < Slots.Length; i++) Slots[i].sprite = loosePetals[i].Image.sprite = art.petalPartSprites[i];
     }
 
     /// <summary>인스펙터에서 영역이나 기울기를 바꾼 뒤, 이 항목(컴포넌트 우클릭 메뉴)을 누르면 플레이하지 않고도 떨어진 꽃잎의 모습을 미리 볼 수 있다.</summary>
     [ContextMenu("떨어진 꽃잎 배치(미리 보기)")]
     private void PreviewScatter()
     {
-        for (int i = 0; i < slots.Length; i++) slots[i].color = slotColor;
+        for (int i = 0; i < Slots.Length; i++) Slots[i].color = slotColor;
         ScatterPetals();
     }
 
@@ -127,7 +167,7 @@ public class ScatterPuzzlePanel : RepairPuzzlePanel
         {
             int i = order[k];
             RectTransform rect = loosePetals[i].Rect;
-            RectTransform slot = slots[i].rectTransform;
+            RectTransform slot = Slots[i].rectTransform;
             RectTransform area = looseAreas[k % looseAreas.Length];
 
             rect.anchorMin = rect.anchorMax = new Vector2(0.5f, 0.5f);
@@ -149,13 +189,13 @@ public class ScatterPuzzlePanel : RepairPuzzlePanel
     private void OnMoved(PetalDrag drag)
     {
         int nearest = NearestSlot(drag);
-        for (int j = 0; j < slots.Length; j++) ShowOutline(j, j == nearest);
+        for (int j = 0; j < Slots.Length; j++) ShowOutline(j, j == nearest);
     }
 
     /// <summary>꽃잎을 놓았다: 가장 가까운 자리가 맞는 자리면 붙고, 다른 자리면 처음 자리로 튕겨 돌아간다.</summary>
     private void OnReleased(PetalDrag drag)
     {
-        for (int j = 0; j < slots.Length; j++) ShowOutline(j, false);
+        for (int j = 0; j < Slots.Length; j++) ShowOutline(j, false);
 
         int index = Array.IndexOf(loosePetals, drag);
         int nearest = NearestSlot(drag);
@@ -171,11 +211,11 @@ public class ScatterPuzzlePanel : RepairPuzzlePanel
         Vector2 here = PanelPoint(drag.Rect, ArtCenter(drag.Image));
         int nearest = -1;
         float best = snapDistance;
-        for (int j = 0; j < slots.Length; j++)
+        for (int j = 0; j < Slots.Length; j++)
         {
-            if (!slots[j].gameObject.activeSelf || attached[j]) continue;
+            if (!Slots[j].gameObject.activeSelf || attached[j]) continue;
 
-            float distance = Vector2.Distance(here, PanelPoint(slots[j].rectTransform, ArtCenter(slots[j])));
+            float distance = Vector2.Distance(here, PanelPoint(Slots[j].rectTransform, ArtCenter(Slots[j])));
             if (distance >= best) continue;
 
             best = distance;
@@ -192,7 +232,7 @@ public class ScatterPuzzlePanel : RepairPuzzlePanel
     /// <summary>자리의 테두리 이미지를 자리와 같은 그림으로, 자리보다 OutlinePadScale배 크게 자리 위에 겹쳐 놓는다. 테두리 층(outlineLayer)이 꽃잎들보다 위에 그려지므로, 붙은 꽃잎이나 끌고 있는 꽃잎에 가려지지 않는다.</summary>
     private void LayoutOutline(int index)
     {
-        RectTransform slot = slots[index].rectTransform;
+        RectTransform slot = Slots[index].rectTransform;
         RectTransform rect = outlines[index].rectTransform;
         rect.SetParent(outlineLayer, false);
         rect.anchorMin = rect.anchorMax = new Vector2(0.5f, 0.5f);
@@ -200,14 +240,14 @@ public class ScatterPuzzlePanel : RepairPuzzlePanel
         rect.sizeDelta = slot.rect.size * OutlinePadScale;
         rect.localScale = Vector3.one * (slot.lossyScale.x / outlineLayer.lossyScale.x);
         rect.SetPositionAndRotation(slot.position, slot.rotation);
-        outlines[index].sprite = slots[index].sprite;
+        outlines[index].sprite = Slots[index].sprite;
     }
 
     private IEnumerator Attach(PetalDrag drag, int index)
     {
-        RectTransform slot = slots[index].rectTransform;
+        RectTransform slot = Slots[index].rectTransform;
         yield return MoveTo(drag.Rect, slot.position, slot.rotation);
-        slots[index].gameObject.SetActive(false);
+        Slots[index].gameObject.SetActive(false);
         drag.Image.raycastTarget = false;
 
         placed++;

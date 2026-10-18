@@ -36,6 +36,15 @@ public class NightDiagnosisCase
         return result;
     }
 
+    /// <summary>맞게 체크한 아픔 하나당 받는 복제품 수.</summary>
+    public const int ReplicasPerCorrect = 3;
+
+    /// <summary>맞게 체크한 아픔 수(고쳐진 아픔 수).</summary>
+    public int CorrectCount(IEnumerable<FlowerData.Ailment> picked) => picked.Distinct().Count(ailments.Contains);
+
+    /// <summary>받는 복제품 수: 맞게 체크한 아픔 수 × ReplicasPerCorrect. 잘못 체크한 아픔과 놓친 아픔은 복제품을 주지 않는다.</summary>
+    public int ReplicaCount(IEnumerable<FlowerData.Ailment> picked) => CorrectCount(picked) * ReplicasPerCorrect;
+
     /// <summary>플레이어가 체크한 아픔을 정답과 비교한다: 놓친 아픔 수(missed)와 잘못 체크한 아픔 수(wrong).</summary>
     public void Compare(IEnumerable<FlowerData.Ailment> picked, out int missed, out int wrong)
     {

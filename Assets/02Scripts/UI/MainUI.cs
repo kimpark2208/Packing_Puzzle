@@ -32,7 +32,7 @@ public class MainUI : MonoBehaviour
 
     private MainState state;
     private DayPuzzleGenerator.DayOrder order;
-    private bool showingAngryLine; // 낮 손님: 이전 손님의 반응 대사 중
+    private bool showingReaction; // 이전 손님의 반응 대사 중(낮 손님의 화난 대사, 밤 손님의 수리 반응). 거절은 거절 대사, 수락은 손님이 나가고 다음 손님이 온다
     private string forceAcceptLine = CustomerSpeech.DefaultForceAcceptLine;
     private CustomerSpeech speech; // 대사 출력은 이쪽에 맡기고, 여기서는 어떤 상황인지만 알린다
     private bool leaving; // 마무리 대사를 하고 퇴장하는 중(낮 종료/밤 종료)
@@ -211,8 +211,8 @@ public class MainUI : MonoBehaviour
     private void BeginDayCustomer()
     {
         string angryLine = Game != null ? Game.ConsumePendingCustomerLine() : null;
-        showingAngryLine = !string.IsNullOrEmpty(angryLine);
-        if (showingAngryLine)
+        showingReaction = !string.IsNullOrEmpty(angryLine);
+        if (showingReaction)
         {
             ShowPreviousCustomer(); // 반응 대사는 방금 주문을 한 그 손님이 한다
             SayAfterReveal(() => speech.Show(angryLine));
@@ -316,6 +316,16 @@ public class MainUI : MonoBehaviour
     /// <summary>밤 손님: 새 손님(파란 피부 귀신)이 들어와 자기 꽃 이야기를 하고, 수락하면 꽃을 진단하러 밤 퍼즐 씬으로 간다. 만날 손님이 더 없으면 밤을 끝낸다.</summary>
     private void BeginNightCustomer()
     {
+        string reaction = Game != null ? Game.ConsumePendingCustomerLine() : null;
+        if (!string.IsNullOrEmpty(reaction)) // 방금 꽃을 고친 손님이 고쳐진 정도에 맞는 반응 대사를 말한다
+        {
+            showingReaction = true;
+            ShowPreviousCustomer();
+            SayAfterReveal(() => speech.Show(reaction));
+            forceAcceptLine = Game.ConsumePendingRejectResponseLine();
+            return;
+        }
+
         if (Game == null || Game.NightCustomerFlowerName() == null)
         {
             Game?.EndNight();
@@ -328,6 +338,12 @@ public class MainUI : MonoBehaviour
     private void BeginNightEnd()
     {
         state = MainState.NightEnding;
+        showingReaction = false;
+        if (Game != null) // 이전 손님의 반응 대사가 남아 있으면 지운다
+        {
+            Game.ConsumePendingCustomerLine();
+            Game.ConsumePendingRejectResponseLine();
+        }
         if (character != null) character.Randomize(true); // 밤 종료 손님도 파란 피부 귀신
         SayAfterReveal(() =>
         {
@@ -346,7 +362,7 @@ public class MainUI : MonoBehaviour
     {
         if (changingCustomer) return;
         if (leaving) { HideCustomer(); return; }
-        if (showingAngryLine) speech.Show(forceAcceptLine);
+        if (showingReaction) speech.Show(forceAcceptLine);
         else speech.ShowReask(order);
     }
 
@@ -356,12 +372,27 @@ public class MainUI : MonoBehaviour
         if (leaving) { HideCustomer(); return; }
         if (state == MainState.NightCustomer)
         {
-            Game?.StartNightPuzzle();
+            if (!showingReaction)
+            {
+                Game?.StartNightPuzzle();
+                return;
+            }
+
+            showingReaction = false; // 반응 대사가 끝났다: 다음 손님이 있으면 이 손님이 나가고 다음 손님이 오고, 없으면 이 손님이 나가며 밤이 끝난다
+            if (Game != null && Game.NightCustomerFlowerName() != null)
+            {
+                StartCoroutine(NextCustomerRoutine(true));
+            }
+            else
+            {
+                state = MainState.NightEnding;
+                HideCustomer();
+            }
             return;
         }
-        if (showingAngryLine)
+        if (showingReaction)
         {
-            showingAngryLine = false;
+            showingReaction = false;
             StartCoroutine(NextCustomerRoutine(true)); // 반응 대사가 끝났으니 이 손님이 나가고 다음 손님이 온다(기분 시간은 말풍선이 뜰 때 가득 찬다)
             return;
         }
