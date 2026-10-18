@@ -23,19 +23,26 @@ MonoBehaviour:
     \uBCC4\uB85C \uC548 \uC88B\uC544\uD574\uC694."
   specialReask1: "\uB124, \uC5FC\uC0C9 \uC548 \uD55C \uADF8 \uC7A5\uBBF8\uAC00 \uC88B\uACA0\uC5B4\uC694."
   specialReask2: "\uC7A5\uBBF8\uC694 \uC7A5\uBBF8! \uD770\uC7A5\uBBF8\uB9CC \uD314\uC796\uC544\uC694?"
-  iconSprite: {fileID: 5791527228225854534, guid: e81146cc06c5ac546903aeed60801079, type: 3}
-  stemSprite: {fileID: 5856240631183992178, guid: b9f97a0c03bea8c49ac2b17ce37cf466, type: 3}
+  iconSprite: {fileID: 21300000, guid: b0e8004ee340aad478822bfb52f0cf32, type: 3}
+  stemSprite: {fileID: 21300000, guid: f7f1b740b2e3ac34ebe3ff3a67cbee7d, type: 3}
   dayFillSprite: {fileID: -8763125123694568423, guid: 560daf14085f39544941438f5a5c72ae, type: 3}
   stemLeafPartSprite: {fileID: 0}
   centerPartSprite: {fileID: 0}
   petalPartSprites:
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  lossPetals: []
+  - {fileID: 21300000, guid: 0fe03152b785b504b9c8a5f52734e96a, type: 3}
+  - {fileID: 21300000, guid: 16e4c9dc265879c4db51974c9fb30476, type: 3}
+  - {fileID: 21300000, guid: f542fe934e9e56f4f92829909407510d, type: 3}
+  - {fileID: 21300000, guid: 7314b3951f436b24aaab6f96b4bb6c34, type: 3}
+  - {fileID: 21300000, guid: 85e38ad2ac64e354b826cb03c1e72740, type: 3}
+  - {fileID: 21300000, guid: 24c056200c7e23e41ad1234bff0afadf, type: 3}
+  partLayout: 0
+  lossPetals:
+  - petalIndex: 3
+    sprite: {fileID: 21300000, guid: 54763610893a898438fdc2740f8a7a46, type: 3}
+  - petalIndex: 1
+    sprite: {fileID: 21300000, guid: 3a3227e6aeaf879498628e87c1a1452c, type: 3}
+  - petalIndex: 5
+    sprite: {fileID: 21300000, guid: aba4cb4b73e003b459d6c804b049a6bb, type: 3}
   petalGrid: '#..##..#
 
     ##.##.##

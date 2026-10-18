@@ -41,16 +41,7 @@ public static class DayPuzzleGenerator
     public static DayOrder GenerateOrder(int day, OrderTemplateData templates = null)
     {
         // 보유한 포장지의 (보드가 지원하는) 프리셋을 전부 모아서 무작위로 하나 고른다
-        var pool = new List<(int wrapperId, int presetIndex)>();
-        foreach (int id in CurrencyManager.Instance.UsableWrappers)
-        {
-            WrapperData data = DataRegistry.Instance != null ? DataRegistry.Instance.GetWrapper(id) : null;
-            if (data == null) continue;
-            for (int i = 0; i < data.presets.Count; i++)
-            {
-                if (IsPlayable(data.presets[i])) pool.Add((id, i));
-            }
-        }
+        var pool = PlayablePresets(CurrencyManager.Instance.UsableWrappers).ToList();
 
         int hintWrapperId;
         int hintPresetIndex = -1;
@@ -114,23 +105,12 @@ public static class DayPuzzleGenerator
         var used = flowers.Take(2).ToList();
         bool Fits(WrapperPresetData p) => used.GroupBy(f => f.flower.flowerRole).All(g => g.Sum(f => f.count) <= p.CountByTag(g.Key));
 
-        var pool = new List<(int wrapperId, int presetIndex)>();
-        var fallback = new List<(int wrapperId, int presetIndex)>(); // 꽃이 다 들어가는 프리셋이 없을 때의 대비
-        foreach (int id in wrapperId > 0 ? new[] { wrapperId } : CurrencyManager.Instance.UsableWrappers.ToArray())
-        {
-            WrapperData data = DataRegistry.Instance != null ? DataRegistry.Instance.GetWrapper(id) : null;
-            if (data == null) continue;
-            for (int i = 0; i < data.presets.Count; i++)
-            {
-                if (!IsPlayable(data.presets[i])) continue;
-                fallback.Add((id, i));
-                if (Fits(data.presets[i])) pool.Add((id, i));
-            }
-        }
-        if (pool.Count == 0)
+        var all = PlayablePresets(wrapperId > 0 ? new[] { wrapperId } : CurrencyManager.Instance.UsableWrappers).ToList();
+        var pool = all.Where(p => Fits(DataRegistry.Instance.GetWrapper(p.wrapperId).presets[p.presetIndex])).ToList();
+        if (pool.Count == 0) // 꽃이 다 들어가는 프리셋이 없을 때의 대비
         {
             Debug.LogWarning($"[DayPuzzleGenerator] 고정 주문의 꽃이 다 들어가는 프리셋이 없어 아무 프리셋으로 진행합니다 (포장지 {wrapperId}).");
-            pool = fallback;
+            pool = all;
         }
 
         int hintWrapperId = wrapperId > 0 ? wrapperId : CurrencyManager.Instance.GetRandomOwnedWrapperID();
@@ -168,15 +148,22 @@ public static class DayPuzzleGenerator
     /// <summary>해당 포장지의 보드가 지원하는 프리셋 중 무작위 번호. 없으면 -1.</summary>
     private static int RandomPlayablePresetIndex(int wrapperId)
     {
-        WrapperData data = DataRegistry.Instance != null ? DataRegistry.Instance.GetWrapper(wrapperId) : null;
-        if (data == null) return -1;
-
-        var indices = new List<int>();
-        for (int i = 0; i < data.presets.Count; i++)
-        {
-            if (IsPlayable(data.presets[i])) indices.Add(i);
-        }
+        var indices = PlayablePresets(new[] { wrapperId }).Select(p => p.presetIndex).ToList();
         return indices.Count > 0 ? indices[Random.Range(0, indices.Count)] : -1;
+    }
+
+    /// <summary>포장지들의 (보드가 지원하는) 프리셋을 (포장지 번호, 프리셋 번호)로 전부.</summary>
+    private static IEnumerable<(int wrapperId, int presetIndex)> PlayablePresets(IEnumerable<int> wrapperIds)
+    {
+        foreach (int id in wrapperIds)
+        {
+            WrapperData data = DataRegistry.Instance != null ? DataRegistry.Instance.GetWrapper(id) : null;
+            if (data == null) continue;
+            for (int i = 0; i < data.presets.Count; i++)
+            {
+                if (IsPlayable(data.presets[i])) yield return (id, i);
+            }
+        }
     }
 
     private static bool IsPlayable(WrapperPresetData preset)

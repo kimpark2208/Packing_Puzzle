@@ -14,8 +14,6 @@ public class ScenarioManager : Singleton<ScenarioManager>
 
     private DialogueDatabase dialogue;
 
-    public IReadOnlyList<DayScenarioData> Days => days;
-
     /// <summary>대사 데이터베이스(처음 쓸 때 CSV를 읽는다). CSV를 고쳤으면 에디터에서 Play를 다시 시작해야 반영된다.</summary>
     public DialogueDatabase Dialogue
     {

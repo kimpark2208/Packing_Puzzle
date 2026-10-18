@@ -20,19 +20,26 @@ MonoBehaviour:
   specialOrder: 
   specialReask1: 
   specialReask2: 
-  iconSprite: {fileID: 7063445062853087527, guid: 133ed902eb78116429f4e19cbf0d67d6, type: 3}
-  stemSprite: {fileID: 5856240631183992178, guid: b9f97a0c03bea8c49ac2b17ce37cf466, type: 3}
+  iconSprite: {fileID: 21300000, guid: 1da7a4dea9dbcec4ab378699088dc49a, type: 3}
+  stemSprite: {fileID: 21300000, guid: c03d1c0726017bd4f9da8f42b24ffc7d, type: 3}
   dayFillSprite: {fileID: -2764537206855289646, guid: ff27b819afb375b499366b7b05aa9148, type: 3}
-  stemLeafPartSprite: {fileID: 0}
-  centerPartSprite: {fileID: 0}
+  stemLeafPartSprite: {fileID: 21300000, guid: f2a1a3229370889408538698b62d8e1c, type: 3}
+  centerPartSprite: {fileID: 21300000, guid: 16464dcacf6eda148a99b400d20d0c09, type: 3}
   petalPartSprites:
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  lossPetals: []
+  - {fileID: 21300000, guid: 4009bd9541958064893ce94ccbaa7f3b, type: 3}
+  - {fileID: 21300000, guid: 34b552b5e6cecf24e8cbe61d53eb3d7f, type: 3}
+  - {fileID: 21300000, guid: e00fcc52afa5d2444a83bd8629a47759, type: 3}
+  - {fileID: 21300000, guid: 08e8c896dd7284f438869874848e147a, type: 3}
+  - {fileID: 21300000, guid: b00e272575965a24f921de7a19c0a12a, type: 3}
+  - {fileID: 21300000, guid: d57a451bcb2e02645b00449b02e171b3, type: 3}
+  partLayout: 1
+  lossPetals:
+  - petalIndex: 0
+    sprite: {fileID: 21300000, guid: 339a1a90227f2a5419b388dd51638ce2, type: 3}
+  - petalIndex: 2
+    sprite: {fileID: 21300000, guid: 4590a1d3ec1789f4eb15c07f10185527, type: 3}
+  - petalIndex: 5
+    sprite: {fileID: 21300000, guid: 100c14dc9dd1618438f1644ce7a85290, type: 3}
   petalGrid: '..#..#..
 
     .######.

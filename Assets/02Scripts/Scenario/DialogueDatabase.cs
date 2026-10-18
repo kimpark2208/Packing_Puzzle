@@ -51,11 +51,9 @@ public readonly struct DialogueEffect
 /// <summary>말풍선 한 번에 나오는 대사. answers가 비어 있으면 말풍선의 아무 곳이나 눌러 넘기고, 있으면 그 버튼 문구(1~2개)로 답한다.</summary>
 public class DialogueLine
 {
-    public string speaker;
     public string text;
     public string[] answers = Array.Empty<string>();
     public DialogueEffect[] effects = Array.Empty<DialogueEffect>();
-    public string memo;
 }
 
 /// <summary>같은 대화ID의 줄들(순번 순서).</summary>
@@ -89,8 +87,8 @@ public class DialogueDatabase
 
         string[] header = rows[0].Select(h => h.Trim()).ToArray();
         int Column(string name) => Array.IndexOf(header, name);
-        int idCol = Column("대화ID"), orderCol = Column("순번"), speakerCol = Column("화자"), textCol = Column("대사");
-        int answer1Col = Column("응답1"), answer2Col = Column("응답2"), effectCol = Column("효과"), memoCol = Column("메모");
+        int idCol = Column("대화ID"), orderCol = Column("순번"), textCol = Column("대사");
+        int answer1Col = Column("응답1"), answer2Col = Column("응답2"), effectCol = Column("효과");
         if (idCol < 0 || orderCol < 0 || textCol < 0)
         {
             errors?.Add("머리줄에 대화ID, 순번, 대사 열이 없습니다.");
@@ -114,11 +112,9 @@ public class DialogueDatabase
 
             var line = new DialogueLine
             {
-                speaker = Cell(row, speakerCol),
                 text = Cell(row, textCol),
                 answers = new[] { Cell(row, answer1Col), Cell(row, answer2Col) }.Where(a => a.Length > 0).ToArray(),
                 effects = Cell(row, effectCol).Split(new[] { ';' }, StringSplitOptions.RemoveEmptyEntries).Select(DialogueEffect.Parse).ToArray(),
-                memo = Cell(row, memoCol),
             };
             if (!ordered.TryGetValue(id, out var list)) ordered[id] = list = new List<(int, DialogueLine)>();
             list.Add((order, line));

@@ -66,7 +66,7 @@ public class GameManager : Singleton<GameManager>
     private readonly List<NightVisit> carriedNightVisits = new(); // 밤 시간이 끝나 못 만난 정해진 방문(다음 밤 맨 앞으로 넘어간다)
     private bool currentNightVisitDone;  // 지금 정해진 방문을 마쳤는가(퍼즐을 마치거나 대화를 마침)
     private bool nightFree;              // 오늘 밤은 밤 시간이 없고 정해진 손님을 모두 마쳐야 끝난다(1일차)
-    private int freeNightTotal, freeNightDone; // 밤 시간이 없는 날의 수리 손님 수와 마친 수(시계 표시용)
+    private int freeNightTotal; // 밤 시간이 없는 날의 수리 손님 수(시계 표시용)
     private bool nightPuzzleInProgress;  // 밤 퍼즐을 하는 중
     private bool nightTimeUpPending;     // 밤 퍼즐을 하는 중에 밤 시간이 끝나, 그 손님을 마무리한 뒤 밤을 끝내야 한다
 
@@ -183,7 +183,6 @@ public class GameManager : Singleton<GameManager>
         if (scenario != null) foreach (NightVisit visit in scenario.nightVisits) scriptedNightVisits.Enqueue(visit);
 
         nightFree = scenario != null && scenario.freeNight;
-        freeNightDone = 0;
         freeNightTotal = scriptedNightVisits.Count(v => !v.dialogueOnly); // 밤 시간이 없는 날은 손님 한 명을 마칠 때마다 시계가 1/total씩 줄어든다
         if (GameClock.Instance != null) GameClock.Instance.NightFrozen = nightFree;
         nightTimeUpPending = false;
@@ -343,8 +342,7 @@ public class GameManager : Singleton<GameManager>
         currentNightVisitDone = true;
         if (nightFree && CurrentNightCase != null && freeNightTotal > 0)
         {
-            freeNightDone++;
-            GameClock.Instance?.SetNightRatio(1f - (float)freeNightDone / freeNightTotal);
+            GameClock.Instance?.SetNightRatio((float)scriptedNightVisits.Count(v => !v.dialogueOnly) / freeNightTotal); // 남은 수리 손님 비율
         }
         if (CurrentNightCase == null)
         {
@@ -466,7 +464,7 @@ public class GameManager : Singleton<GameManager>
         CurrentNightVisit = null;
     }
 
-    /// <summary>디버그용: 하루를 건너뛴다. 그날 밤에 새로 얻었을 정해진 꽃(아직 못 얻은 것만)은 복제품을, 그날 낮 대사의 포장지 선물(아직 못 받았으면)은 재고를 지급하고, 다음 날 낮을 첫 방문자부터 연출과 함께 시작한다.</summary>
+    /// <summary>디버그용: 하루를 건너뛴다. 그날 밤에 새로 얻었을 정해진 꽃(아직 못 얻은 것만)은 복제품을, 그날 낮 대사의 포장지 선물은 재고를 지급하고, 다음 날 낮을 첫 방문자부터 연출과 함께 시작한다.</summary>
     public void DebugAdvanceDay()
     {
         DayScenarioData scenario = ScenarioManager.Instance != null ? ScenarioManager.Instance.ForDay(CurrencyManager.Instance.CurrentDay) : null;
@@ -477,9 +475,8 @@ public class GameManager : Singleton<GameManager>
             CurrencyManager.Instance.AddFlowerStock(visit.flower.flowerID, visit.fixedReplicas);
         }
 
-        // 건너뛴 낮 대사에서 받았을 포장지 선물(그날 선물을 아직 안 받았을 때만): 다음 날부터 쓸 수 있게 지급된다
-        int day = CurrencyManager.Instance.CurrentDay;
-        if (scenario != null && !CurrencyManager.Instance.HasReceivedGiftOn(day))
+        // 건너뛴 낮 대사에서 받았을 포장지 선물: 다음 날부터 쓸 수 있게 지급된다(이미 받았어도 한 번 더 지급되는 것은 디버그라 그냥 둔다)
+        if (scenario != null)
         {
             foreach (DayVisit visit in scenario.dayVisits)
             {

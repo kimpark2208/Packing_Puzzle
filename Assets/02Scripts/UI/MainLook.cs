@@ -105,24 +105,15 @@ public class MainLook : MonoBehaviour
         }
         foreach ((PhaseBlend phase, LookSprite look) in blends) phase.Show(look.sunset, look.night, 1f);
 
-        // 섞지 않는 이미지(전화기, 계산대, 말풍선 …)는 섞기가 끝날 때 밤 모습으로 바뀐다
-        foreach (LookSprite entry in images)
-        {
-            if (entry.night == null) continue;
-            foreach (Image image in SceneFind.All<Image>(gameObject.scene, entry.imageName))
-            {
-                if (!image.TryGetComponent(out PhaseBlend _)) image.sprite = entry.night;
-            }
-        }
+        SetSprites(entry => entry.night); // 섞지 않는 이미지(전화기, 계산대, 말풍선 …)는 섞기가 끝날 때 밤 모습으로 바뀐다
     }
 
     /// <summary>
     /// 밤이 지나 새 날 낮이 열렸다(Apply(DayCustomer) 뒤에 부른다): 밤 모습으로 시작해, 씬 전환의 페이드가 걷히면 낮 → 노을 섞기와 같은 방식으로 밤 → 낮으로 섞는다.
-    /// 섞는 시간(초)을 돌려준다(섞는 이미지가 없으면 0).
     /// </summary>
-    public float PlayMorningBlend()
+    public void PlayMorningBlend()
     {
-        if (blends.Count == 0) return 0f;
+        if (blends.Count == 0) return;
 
         nightBlending = true; // 섞는 동안 Update가 낮 모습으로 덮어쓰지 않게
         IsMorningBlending = true;
@@ -134,7 +125,6 @@ public class MainLook : MonoBehaviour
             GameClock.Instance.SetPaused(true);  // 연출이 끝나야 하루 시간이 흐른다
         }
         StartCoroutine(MorningBlend());
-        return morningBlendSeconds;
     }
 
     /// <summary>밤 → 낮 연출 중인가(이 동안 낮 손님은 나타나지 않는다).</summary>

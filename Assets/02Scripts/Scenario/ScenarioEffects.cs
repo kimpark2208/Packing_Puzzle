@@ -14,7 +14,7 @@ public static class ScenarioEffects
                 GiveWrapper(effect);
                 break;
             case DialogueEffect.Catalog:
-                NoticeToast.Show($"{(effect.target == "용품" ? "꽃다발 용품" : "가구")} 카탈로그 {Count("NEW")}");
+                NoticeToast.Show($"{(effect.target == "용품" ? "꽃다발 용품" : "가구")} 카탈로그 {NoticeToast.Highlight("NEW")}");
                 break;
             case DialogueEffect.Leave:
             case DialogueEffect.TimeSkip:
@@ -37,8 +37,6 @@ public static class ScenarioEffects
 
         CurrencyManager.Instance.AddWrapperStockNextDay(wrapper, effect.amount); // 받은 포장지는 다음 날부터 쓸 수 있다
         WrapperData data = DataRegistry.Instance != null ? DataRegistry.Instance.GetWrapper(wrapper) : null;
-        NoticeToast.Show($"{(data != null ? data.ColorName + "색 " : "")}포장지 {Count($"X{effect.amount}")}");
+        NoticeToast.Show($"{(data != null ? data.ColorName + "색 " : "")}포장지 {NoticeToast.Highlight($"X{effect.amount}")}");
     }
-
-    private static string Count(string text) => NoticeToast.Highlight(text);
 }
