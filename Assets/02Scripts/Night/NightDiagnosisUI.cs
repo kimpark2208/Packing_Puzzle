@@ -132,7 +132,7 @@ public class NightDiagnosisUI : MonoBehaviour
             {
                 verticalHead = (RectTransform)found;
                 verticalCenter = found.Find("Center").GetComponent<Image>();
-                verticalPetals = Enumerable.Range(1, FlowerData.PetalPartCount).Select(i => found.Find($"Petal_{i}").GetComponent<Image>()).ToArray();
+                verticalPetals = PartFinder.Children<Image>(found, "Petal");
             }
         }
 

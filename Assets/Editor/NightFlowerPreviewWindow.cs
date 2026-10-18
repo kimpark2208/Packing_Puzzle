@@ -42,7 +42,7 @@ public class NightFlowerPreviewWindow : EditorWindow
 
         flowerIndex = EditorGUILayout.Popup("꽃", flowerIndex, flowers.Select(Label).ToArray());
         FlowerData flower = flowers[flowerIndex];
-        string problem = ProblemOf(flower);
+        string problem = flower.petalPartSprites == null || flower.petalPartSprites.Length != FlowerData.PetalPartCount ? "꽃잎 그림 배열이 6칸이 아니라서 미리보기를 할 수 없습니다." : null;
         if (problem != null) EditorGUILayout.HelpBox(problem, MessageType.Warning);
         else if (!flower.HasDiagnosisArt) EditorGUILayout.HelpBox("진단 그림이 일부 비어 있습니다(비어 있는 부위는 숨겨서 보여 줍니다). 게임에서는 그림이 다 있어야 이 꽃이 진단 꽃으로 나옵니다.", MessageType.Info);
 
@@ -72,13 +72,6 @@ public class NightFlowerPreviewWindow : EditorWindow
 
     private static string Label(FlowerData flower) => $"{flower.flowerID:00} {flower.DisplayName}{(flower.HasDiagnosisArt ? "" : " (그림 일부 없음)")}";
 
-    /// <summary>미리보기를 할 수 없는 이유(꽃잎 그림 배열이 6장이 아니면 진단 그림을 그릴 수 없다). 없으면 null.</summary>
-    private static string ProblemOf(FlowerData flower)
-    {
-        if (flower.petalPartSprites == null || flower.petalPartSprites.Length != FlowerData.PetalPartCount) return "꽃잎 그림 배열이 6칸이 아니라서 미리보기를 할 수 없습니다.";
-        return null;
-    }
-
     private void Apply(FlowerData flower)
     {
         if (!OpenCleanScene()) return;
@@ -100,7 +93,7 @@ public class NightFlowerPreviewWindow : EditorWindow
 
         ui.EditorPreview(previewCase);
         previewing = true;
-        InternalRepaint();
+        UnityEditorInternal.InternalEditorUtility.RepaintAllViews();
     }
 
     // 이름을 Reset으로 하면 유니티가 창을 만들 때 저절로 불러 버린다(씬이 다시 열리며 에디터가 멈춘다)
@@ -121,9 +114,4 @@ public class NightFlowerPreviewWindow : EditorWindow
         return true;
     }
 
-    private static void InternalRepaint()
-    {
-        SceneView.RepaintAll();
-        UnityEditorInternal.InternalEditorUtility.RepaintAllViews();
-    }
 }

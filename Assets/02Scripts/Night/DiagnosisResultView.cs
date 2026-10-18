@@ -32,7 +32,6 @@ public class DiagnosisResultView : MonoBehaviour
     [SerializeField, Min(0.01f), Tooltip("놓친 정답이 깜빡이는 시간(초).")] private float blinkSeconds = 1.2f;
     [SerializeField, Min(1), Tooltip("놓친 정답이 깜빡이는 횟수.")] private int blinkCount = 3;
     [SerializeField, Min(0f), Tooltip("연출이 끝난 뒤 결과를 보여 주는 시간(초).")] private float holdSeconds = 1.2f;
-    [SerializeField, Min(0f), Tooltip("빨리감기를 눌렀을 때 끝난 모습을 보여 주는 시간(초).")] private float skippedHoldSeconds = 0.5f;
 
     [Header("소리")]
     [SerializeField, Tooltip("체크 표시나 가위표가 나타날 때 나는 소리(진단에서 체크할 때, 채점 연출에서 체크·가위표가 나타날 때).")] private AudioClip checkSound;
@@ -51,11 +50,11 @@ public class DiagnosisResultView : MonoBehaviour
     /// <summary>진단에서 항목을 체크하거나 해제할 때: 체크박스의 체크 표시를 켜고 끈다(켤 때 체크 소리가 난다).</summary>
     public void SetChecked(int index, bool on)
     {
-        SetMark(rows[index].check, on, 1f);
+        SetMark(rows[index].check, on);
         if (on) Sfx.Play(checkSound, checkVolume);
     }
 
-    /// <summary>결과 연출을 처음부터 끝까지 보여 준다(끝난 뒤 holdSeconds까지).</summary>
+    /// <summary>결과 연출을 처음부터 끝까지 보여 준다(끝난 뒤 holdSeconds까지, 빨리감기를 눌러도 끝난 모습을 holdSeconds 동안 보여 준다).</summary>
     /// <param name="answer">꽃의 정답 아픔.</param>
     /// <param name="picked">내가 체크한 아픔.</param>
     public IEnumerator Play(ICollection<FlowerData.Ailment> answer, ICollection<FlowerData.Ailment> picked)
@@ -100,12 +99,8 @@ public class DiagnosisResultView : MonoBehaviour
         {
             ShowFinal(answer, picked);
             skip = false;
-            yield return new WaitForSecondsRealtime(skippedHoldSeconds);
         }
-        else
-        {
-            yield return Wait(holdSeconds);
-        }
+        yield return Wait(holdSeconds);
         playing = false;
     }
 
@@ -120,8 +115,8 @@ public class DiagnosisResultView : MonoBehaviour
 
             row.glow.gameObject.SetActive(false);
             row.label.alpha = isPicked || isAnswer ? 1f : dimAlpha;
-            SetMark(row.check, isPicked && isAnswer, 1f);
-            SetMark(row.cross, isPicked && !isAnswer, 1f);
+            SetMark(row.check, isPicked && isAnswer);
+            SetMark(row.cross, isPicked && !isAnswer);
             SetStrikeWidth(row, isPicked && !isAnswer ? row.label.preferredWidth : 0f);
         }
     }
@@ -172,22 +167,15 @@ public class DiagnosisResultView : MonoBehaviour
     private IEnumerator Pop(Image mark)
     {
         Sfx.Play(checkSound, checkVolume);
-        SetMark(mark, true, 1f);
+        SetMark(mark, true);
         yield return Tween(markSeconds, t => mark.transform.localScale = Vector3.one * EaseOutBack(t));
         mark.transform.localScale = Vector3.one;
     }
 
-    private static void SetMark(Image mark, bool on, float alpha)
+    private static void SetMark(Image mark, bool on)
     {
         mark.gameObject.SetActive(on);
         mark.transform.localScale = Vector3.one;
-        SetAlpha(mark, alpha);
-    }
-
-    private static void SetAlpha(Image image, float alpha)
-    {
-        Color color = image.color;
-        image.color = new Color(color.r, color.g, color.b, alpha);
     }
 
     private static void SetStrikeWidth(Row row, float width)

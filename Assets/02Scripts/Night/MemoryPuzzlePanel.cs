@@ -37,9 +37,6 @@ public class MemoryPuzzlePanel : RepairPuzzlePanel
     [SerializeField, Tooltip("세로형 꽃에서만 보이는 줄기 그림. 세로형 꽃송이 상자(VerticalHead) 안 맨 뒤에 둔다(상자와 함께 켜지고 꺼진다).")] private Image stemLeaf;
     [SerializeField, Min(0.1f), Tooltip("세로형 꽃을 보여 줄 때 꽃 전체(줄기 포함)의 배율.")] private float tallScale = 0.6f;
     [SerializeField, Tooltip("세로형 꽃을 줄기째 기울이는 각도(양수 = 왼쪽 위로).")] private float tallTilt = 55f;
-    [SerializeField, Range(0f, 0.8f), Tooltip("세로형 꽃에서 꽃송이를 바깥으로 미는 정도(꽃송이가 이미 줄기를 따라 떨어져 있어 보통 0).")] private float tallPetalSpread = 0f;
-    [SerializeField, Range(0.5f, 1f), Tooltip("세로형 꽃에서 꽃송이를 줄이는 배율.")] private float tallPetalScale = 1f;
-    [SerializeField, Range(1f, 3f), Tooltip("세로형 꽃에서 꽃 중심(꽃 대가리)을 키우는 배율.")] private float tallCenterScale = 1f;
 
     [Header("조절")]
     [SerializeField, Tooltip("단계별로 빛나는 꽃잎 수.")] private int[] stageLengths = { 3, 4, 5 };
@@ -57,9 +54,8 @@ public class MemoryPuzzlePanel : RepairPuzzlePanel
     private Image Center => tallLayout ? verticalCenter : center;          // 지금 꽃에 쓰는 중심·꽃잎·불빛
     private Button[] Petals => tallLayout ? verticalPetals : petals;
     private Image[] Glows => tallLayout ? verticalGlows : glows;
-    private Vector3? roundFlowerScale;          // 둥근형일 때 꽃 전체의 배율과 기울기
-    private Quaternion? roundFlowerRotation;
-    private float spread, petalSize, centerSize; // 지금 꽃의 배치 종류에 맞는 꽃잎 벌리기·꽃잎 배율·중심 배율
+    private Vector3 roundFlowerScale;          // 둥근형일 때 꽃 전체의 배율과 기울기(처음 켜질 때 에디터에 놓인 값을 담는다)
+    private Quaternion roundFlowerRotation;
     private List<int> sequence;
     private int stage;
     private int inputIndex;
@@ -95,6 +91,13 @@ public class MemoryPuzzlePanel : RepairPuzzlePanel
         StartCoroutine(PlayRoutine());
     }
 
+    private void Awake()
+    {
+        var flower = center.transform.parent.parent; // 처음 켜질 때(Begin 전) 에디터에 놓인 둥근형 모습을 기억해 둔다
+        roundFlowerScale = flower.localScale;
+        roundFlowerRotation = flower.localRotation;
+    }
+
     private void OnDisable()
     {
         StopAllCoroutines();
@@ -113,23 +116,17 @@ public class MemoryPuzzlePanel : RepairPuzzlePanel
             {
                 verticalHead = found;
                 verticalCenter = found.Find("Center").GetComponent<Image>();
-                verticalPetals = Enumerable.Range(1, FlowerData.PetalPartCount).Select(i => found.Find($"Petal_{i}").GetComponent<Button>()).ToArray();
-                verticalGlows = Enumerable.Range(1, FlowerData.PetalPartCount).Select(i => found.Find($"Glow_{i}").GetComponent<Image>()).ToArray();
+                verticalPetals = PartFinder.Children<Button>(found, "Petal");
+                verticalGlows = PartFinder.Children<Image>(found, "Glow");
             }
         }
-        roundFlowerScale ??= flower.localScale;
-        roundFlowerRotation ??= flower.localRotation;
-
         bool tall = art != null && art.partLayout == FlowerData.PartLayout.Tall && verticalHead != null;
         tallLayout = tall;
         roundHead.gameObject.SetActive(!tall);
         if (verticalHead != null) verticalHead.gameObject.SetActive(tall);
-        flower.localScale = tall ? Vector3.one * tallScale : roundFlowerScale.Value;
-        flower.localRotation = tall ? Quaternion.Euler(0f, 0f, tallTilt) : roundFlowerRotation.Value;
+        flower.localScale = tall ? Vector3.one * tallScale : roundFlowerScale;
+        flower.localRotation = tall ? Quaternion.Euler(0f, 0f, tallTilt) : roundFlowerRotation;
 
-        spread = tall ? tallPetalSpread : petalSpread;
-        petalSize = tall ? tallPetalScale : petalScale;
-        centerSize = tall ? tallCenterScale : centerScale;
         if (stemLeaf != null && tall) // 줄기는 세로형 꽃송이 상자 안에 있다(상자와 함께 켜진다)
         {
             stemLeaf.gameObject.SetActive(true);
@@ -147,23 +144,19 @@ public class MemoryPuzzlePanel : RepairPuzzlePanel
 
     /// <summary>인스펙터에서 위의 꽃잎 벌리기 값을 바꾼 뒤, 이 항목(컴포넌트 우클릭 메뉴)을 누르면 플레이하지 않고도 꽃 모습을 미리 볼 수 있다.</summary>
     [ContextMenu("꽃 배치 적용(미리 보기)")]
-    private void PreviewLayout()
-    {
-        ApplyPartLayout(null);
-        LayoutFlower();
-    }
+    private void PreviewLayout() => LayoutFlower();
 
     /// <summary>꽃잎을 서로 겹치지 않게 벌려 놓고(꽃 중심에서 바깥으로 밀고 조금 줄인다), 꽃 중심의 원은 키우고, 꽃잎마다 복사본(불빛)을 같은 모습으로 맞춘다.
     /// 불빛은 꽃잎과 같은 그림이고 꽃잎 이미지보다 GlowPadScale배 큰 사각형이다(FlowerGlow 셰이더가 번지는 빛이 들어갈 자리를 그렇게 정해 둔다. 꽃잎 스프라이트는 잘라 내지 않는 FullRect로 임포트한다).</summary>
     private void LayoutFlower()
     {
-        Center.rectTransform.localScale = Vector3.one * centerSize;
+        Center.rectTransform.localScale = Vector3.one * (tallLayout ? 1f : centerScale);
 
         for (int i = 0; i < Petals.Length; i++)
         {
             Sprite sprite = Petals[i].targetGraphic.GetComponent<Image>().sprite;
             Vector2 artCenter = SpriteBounds.ArtCenter(sprite);   // 꽃잎 그림의 중심(꽃 중심 기준)
-            Vector2 push = artCenter * spread;                    // 바깥으로 밀어내는 만큼
+            Vector2 push = artCenter * (tallLayout ? 0f : petalSpread);                    // 바깥으로 밀어내는 만큼
 
             // 꽃잎: 그림의 중심을 기준으로 줄이고, 바깥으로 민다(늘어난 사각형 그대로 옮긴다)
             var petal = (RectTransform)Petals[i].transform;
@@ -171,7 +164,7 @@ public class MemoryPuzzlePanel : RepairPuzzlePanel
             petal.anchorMax = Vector2.one;
             Vector2 canvas = petal.rect.size;
             petal.pivot = new Vector2(0.5f + artCenter.x / canvas.x, 0.5f + artCenter.y / canvas.y);
-            petal.localScale = Vector3.one * petalSize;
+            petal.localScale = Vector3.one * (tallLayout ? 1f : petalScale);
             petal.offsetMin = push;
             petal.offsetMax = push;
 
@@ -180,7 +173,7 @@ public class MemoryPuzzlePanel : RepairPuzzlePanel
             glow.anchorMin = glow.anchorMax = new Vector2(0.5f, 0.5f);
             glow.sizeDelta = canvas * GlowPadScale;
             glow.pivot = new Vector2(0.5f + artCenter.x / glow.sizeDelta.x, 0.5f + artCenter.y / glow.sizeDelta.y);
-            glow.localScale = Vector3.one * petalSize;
+            glow.localScale = Vector3.one * (tallLayout ? 1f : petalScale);
             glow.anchoredPosition = push + artCenter; // 피벗이 옮겨진 만큼 보정해, 사각형의 가운데가 밀려난 꽃잎 그림의 가운데에 오게 한다
             Glows[i].sprite = sprite;
         }

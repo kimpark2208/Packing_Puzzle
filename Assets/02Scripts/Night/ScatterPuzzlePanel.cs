@@ -52,8 +52,8 @@ public class ScatterPuzzlePanel : RepairPuzzlePanel
     private bool tallLayout;                    // 지금 꽃이 세로형 상자를 쓰는가
     private Image Center => tallLayout ? verticalCenter : center;         // 지금 꽃에 쓰는 중심·꽃잎 자리
     private Image[] Slots => tallLayout ? verticalSlots : slots;
-    private Vector3? roundFlowerScale;          // 둥근형일 때 꽃 전체의 배율과 기울기
-    private Quaternion? roundFlowerRotation;
+    private Vector3 roundFlowerScale;          // 둥근형일 때 꽃 전체의 배율과 기울기(처음 켜질 때 에디터에 놓인 값을 담는다)
+    private Quaternion roundFlowerRotation;
     private Vector3[] homePositions;
     private Quaternion[] homeRotations;
     private readonly bool[] attached = new bool[FlowerData.PetalPartCount]; // 처음부터 꽃에 붙어 있는 꽃잎(진단에서 떨어지지 않은 꽃잎)
@@ -108,6 +108,13 @@ public class ScatterPuzzlePanel : RepairPuzzlePanel
         }
     }
 
+    private void Awake()
+    {
+        var flower = center.transform.parent.parent; // 처음 켜질 때(Begin 전) 에디터에 놓인 둥근형 모습을 기억해 둔다
+        roundFlowerScale = flower.localScale;
+        roundFlowerRotation = flower.localRotation;
+    }
+
     private void OnDisable()
     {
         StopAllCoroutines();
@@ -126,17 +133,15 @@ public class ScatterPuzzlePanel : RepairPuzzlePanel
             {
                 verticalHead = found;
                 verticalCenter = found.Find("Center").GetComponent<Image>();
-                verticalSlots = Enumerable.Range(1, FlowerData.PetalPartCount).Select(i => found.Find($"Slot_{i}").GetComponent<Image>()).ToArray();
+                verticalSlots = PartFinder.Children<Image>(found, "Slot");
             }
         }
-        roundFlowerScale ??= flower.localScale;
-        roundFlowerRotation ??= flower.localRotation;
 
         tallLayout = art != null && art.partLayout == FlowerData.PartLayout.Tall && verticalHead != null;
         roundHead.gameObject.SetActive(!tallLayout);
         if (verticalHead != null) verticalHead.gameObject.SetActive(tallLayout);
-        flower.localScale = tallLayout ? Vector3.one * tallScale : roundFlowerScale.Value;
-        flower.localRotation = tallLayout ? Quaternion.Euler(0f, 0f, tallTilt) : roundFlowerRotation.Value;
+        flower.localScale = tallLayout ? Vector3.one * tallScale : roundFlowerScale;
+        flower.localRotation = tallLayout ? Quaternion.Euler(0f, 0f, tallTilt) : roundFlowerRotation;
     }
 
     /// <summary>패널의 꽃을 진단 꽃의 그림으로 채운다(줄기, 중심, 꽃잎 자리, 떨어진 꽃잎).</summary>
