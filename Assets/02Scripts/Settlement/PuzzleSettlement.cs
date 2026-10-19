@@ -60,8 +60,8 @@ public class PuzzleSettlement
     /// <summary>점수 가감 규칙. 상황(context)을 보고 해당되는 항목을 장부에 더한다.</summary>
     private void Score(PuzzleContext context, ScoreLedger ledger)
     {
-        // 가산/감산: 꽃의 빛(꽃마다 이웃 칸과의 색 관계로 정해진 상태 점수의 평균 × 10, -20~+30)
-        ledger.Add(ScoreReason.FlowerLight, FlowerLight.Score(context.PlacedCells, context.SpecialCells));
+        // 가산/감산: 꽃의 빛(꽃마다 이웃 칸과의 색 관계로 정해진 상태 점수의 평균 × 배율, 기본 -20~+30. 수치는 ScoreRuleSettings)
+        ledger.Add(ScoreReason.FlowerLight, FlowerLight.Score(context.PlacedCells, context.SpecialCells, settings));
 
         // 주문 요구조건: 채웠으면 가산(더 쓴 만큼 보너스), 못 채웠으면 크게 감산(다른 항목을 모두 잘해도 기본 보상 정도에 그치게)
         if (context.RequirementMet)

@@ -88,6 +88,7 @@ public class GameManager : Singleton<GameManager>
     /// <summary>시작 화면(00Start)에서 터치했다: 로딩이 기니 로딩 씬을 거쳐 낮 메인으로 간다. 첫 손님은 로딩 씬에서 정한다.</summary>
     public void StartGame()
     {
+        dayIntroPending = true;
         SceneLoader.Load(SceneDayMain, StartGameWork());
     }
 
@@ -434,6 +435,16 @@ public class GameManager : Singleton<GameManager>
 
     private bool morningArrival; // 밤이 지나 새 날 낮이 열리는 중(메인 화면이 밤 → 낮으로 섞는다)
 
+    private bool dayIntroPending; // 하루가 막 시작돼 시계에 "N년차 계절"을 보여야 한다
+
+    /// <summary>하루가 막 시작됐으면 한 번 true(시계의 DayLabel이 "N년차 계절"을 잠깐 보인다). 꺼내 쓰면 지운다.</summary>
+    public bool ConsumeDayIntro()
+    {
+        bool pending = dayIntroPending;
+        dayIntroPending = false;
+        return pending;
+    }
+
     /// <summary>새 날 낮 첫 메인 화면이 열릴 때 한 번 true(밤 → 낮 연출을 하라는 뜻). 꺼내 쓰면 지운다.</summary>
     public bool ConsumeMorningArrival()
     {
@@ -497,6 +508,7 @@ public class GameManager : Singleton<GameManager>
         CurrencyManager.Instance.AdvanceDay();
         DayVisitIndex = 0; // 새 날은 방문자를 처음부터 센다
         morningArrival = true;
+        dayIntroPending = true;
         BeginNewDay();
     }
 }

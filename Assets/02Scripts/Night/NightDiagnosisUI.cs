@@ -41,6 +41,8 @@ public class NightDiagnosisUI : MonoBehaviour
     [SerializeField, Range(0f, 1f), Tooltip("기억 흐려짐: 꽃의 투명도.")] private float fadedAlpha = 0.45f;
     [SerializeField, Tooltip("줄기 꺾임(세로형 꽃): 돌아가는 꽃송이 수의 범위(최소, 최대).")] private Vector2Int tallBendCount = new(3, 4);
     [SerializeField, Tooltip("줄기 꺾임(세로형 꽃): 꽃송이가 돌아가는 각도의 범위(최소, 최대). 방향은 꽃송이마다 무작위.")] private Vector2 tallBendAngle = new(40f, 90f);
+    [SerializeField, Min(0f), Tooltip("줄기 꺾임: 꺾인 꽃송이가 지금 회전축을 중심으로 흔들리는 각도(±도). 0이면 흔들리지 않는다.")] private float swayDegrees = 3f;
+    [SerializeField, Min(0.1f), Tooltip("줄기 꺾임: 한 번 왕복하는 데 걸리는 시간(초).")] private float swayPeriodSeconds = 2.5f;
 
     private static GameManager Game => GameManager.Instance;
 
@@ -49,6 +51,8 @@ public class NightDiagnosisUI : MonoBehaviour
     private int[] petalSiblings; // 꽃잎이 흩어지기 전에 꽃송이 안에서 놓였던 자리(꽃잎 흩어짐을 고칠 때 되돌린다)
     private List<int> droppedPetals; // 떨어진 꽃잎 번호들
     private readonly List<int> bentPetals = new(); // 세로형 꽃에서 줄기 꺾임으로 돌아간 꽃송이(꽃잎) 번호들
+    private bool headBent; // 둥근형 꽃송이가 꺾여 있는가(흔들린다)
+    private readonly List<(RectTransform rect, float angle, Vector2 basePosition, Vector2 artCenter, float phase)> swaying = new(); // 세로형 꽃에서 흔들리는 꺾인 꽃송이들
     private const string VerticalFlowerName = "VerticalFlower";
 
     /// <summary>꽃 한 종류의 배치(둥근형·세로형): 루트 안에 StemLeaf와 꽃송이 상자(안에 Center, Petal_1~6)가 있다.</summary>
@@ -106,6 +110,8 @@ public class NightDiagnosisUI : MonoBehaviour
     {
         FlowerData art = diagnosis.art;
         ApplyPartLayout(art);
+        headBent = false;
+        swaying.Clear();
         Head.localRotation = Quaternion.identity; // 에디터에 저장된 꽃송이 회전과 상관없이 똑바로 시작한다(줄기 꺾임일 때만 아래에서 기울인다)
         Stem.sprite = art.stemLeafPartSprite;
         Center.sprite = art.centerPartSprite;
@@ -167,6 +173,7 @@ public class NightDiagnosisUI : MonoBehaviour
         if (!tallLayout)
         {
             Head.localRotation = Quaternion.Euler(0f, 0f, bendAngle);
+            headBent = true;
             return;
         }
 
@@ -179,9 +186,26 @@ public class NightDiagnosisUI : MonoBehaviour
             float angle = Random.Range(Mathf.Min(tallBendAngle.x, tallBendAngle.y), Mathf.Max(tallBendAngle.x, tallBendAngle.y)) * (Random.value < 0.5f ? -1f : 1f);
             Quaternion rotation = Quaternion.Euler(0f, 0f, angle);
 
+            Vector2 basePosition = rect.anchoredPosition;
             rect.localRotation = rotation;
             rect.anchoredPosition += artCenter - (Vector2)(rotation * artCenter); // 상자 중심이 아니라 그림 가운데가 제자리에 있도록 돌린 만큼 되밀어 준다
             bentPetals.Add(index);
+            swaying.Add((rect, angle, basePosition, artCenter, Random.value * Mathf.PI * 2f)); // 꽃송이마다 흔들리는 박자가 다르다
+        }
+    }
+
+    /// <summary>꺾인 꽃송이가 꺾인 각도를 중심으로 ±swayDegrees 만큼 흔들린다(세로형은 꽃송이마다 자기 그림 가운데를 축으로).</summary>
+    private void Update()
+    {
+        if (swayDegrees <= 0f || (!headBent && swaying.Count == 0)) return;
+
+        float wave = Time.unscaledTime * Mathf.PI * 2f / swayPeriodSeconds;
+        if (headBent) Head.localRotation = Quaternion.Euler(0f, 0f, bendAngle + Mathf.Sin(wave) * swayDegrees);
+        foreach (var part in swaying)
+        {
+            Quaternion rotation = Quaternion.Euler(0f, 0f, part.angle + Mathf.Sin(wave + part.phase) * swayDegrees);
+            part.rect.localRotation = rotation;
+            part.rect.anchoredPosition = part.basePosition + part.artCenter - (Vector2)(rotation * part.artCenter);
         }
     }
 
@@ -190,6 +214,8 @@ public class NightDiagnosisUI : MonoBehaviour
     {
         petalSiblings = Petals.Select(p => p.transform.GetSiblingIndex()).ToArray();
         droppedPetals = Enumerable.Range(0, Petals.Length).Where(i => !kept.Contains(i)).ToList();
+        bentPetals.RemoveAll(droppedPetals.Contains); // 떨어진 꽃잎은 더는 꺾인 꽃송이가 아니다: 흔들리지 않고, 꺾임이 풀릴 때 되돌려지지도 않는다
+        swaying.RemoveAll(s => droppedPetals.Any(i => Petals[i].rectTransform == s.rect));
         Rect area = petalDropArea.rect;
         foreach (int index in droppedPetals)
         {
@@ -369,6 +395,8 @@ public class NightDiagnosisUI : MonoBehaviour
     /// <summary>꺾였던 꽃송이를 다시 똑바로 돌려 꽃이 펴진다(세로형은 돌렸던 꽃송이들을 제자리로).</summary>
     private void StraightenHead()
     {
+        headBent = false; // 더는 흔들리지 않는다
+        swaying.Clear();
         Head.localRotation = Quaternion.identity;
         foreach (int index in bentPetals)
         {

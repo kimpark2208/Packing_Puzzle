@@ -4,6 +4,16 @@ using UnityEngine;
 [CreateAssetMenu(fileName = "ScoreRuleSettings", menuName = "Puzzle/ScoreRuleSettings", order = 3)]
 public class ScoreRuleSettings : ScriptableObject
 {
+    [Header("꽃의 빛 (꽃 상태별 점수. 상태는 이웃 꽃과의 색 관계로 정해진다)")]
+    [Tooltip("흐림(관계 합계 0 이하) 꽃 한 송이의 점수")]
+    public int flowerLightDimScore = -2;
+    [Tooltip("선명(관계 합계 1~2) 꽃 한 송이의 점수")]
+    public int flowerLightClearScore = 1;
+    [Tooltip("빛남(관계 합계 3 이상) 꽃 한 송이의 점수")]
+    public int flowerLightBrightScore = 3;
+    [Tooltip("꽃의 빛 점수 = 꽃 한 송이당 평균 상태 점수 × 이 값(기본 10이면 전부 흐림 -20 ~ 전부 빛남 +30, 포장지 크기와 상관없다)")]
+    public int flowerLightScale = 10;
+
     [Header("주문 요구조건")]
     [Tooltip("요구조건을 채웠을 때 가산 점수")]
     public int requirementMetScore = 15;

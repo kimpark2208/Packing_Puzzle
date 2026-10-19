@@ -30,6 +30,7 @@ public class FlowerSelectUI : MonoBehaviour
         public Button button;
         public Image box;   // 박스 그림(눌렀을 때 밝아진다)
         public Image rolls; // 박스 안 포장지 롤(포장지 색으로 물든다, 쓸 수 없는 포장지면 숨긴다)
+        public TMP_Text stock; // 박스 오른쪽 위 재고 배지의 글씨(꽃 화병의 재고 배지와 같은 모양)
         [NonSerialized] public Vector2 rollsBasePosition; // 씬에 놓인 롤의 자리(고르면 여기서 위로 올라온다)
     }
 
@@ -91,7 +92,12 @@ public class FlowerSelectUI : MonoBehaviour
 
         foreach (WrapperBox box in wrapperBoxes)
         {
+            bool owned = CurrencyManager.Instance == null || CurrencyManager.Instance.HasWrapper(box.wrapperId);
+            box.button.gameObject.SetActive(owned); // 아직 받지 못한 포장지는 박스를 끈다(자리는 그대로 비워 둔다)
+            if (!owned) continue;
+
             box.rollsBasePosition = box.rolls.rectTransform.anchoredPosition;
+            if (box.stock != null) box.stock.text = $"x{(CurrencyManager.Instance != null ? CurrencyManager.Instance.GetWrapperStock(box.wrapperId) : 0)}"; // 재고(0이어도 그대로 보여 준다)
             bool usable = IsWrapperUsable(box.wrapperId);
             box.button.interactable = usable;
             box.rolls.gameObject.SetActive(usable);
@@ -201,11 +207,13 @@ public class FlowerSelectUI : MonoBehaviour
                     break;
                 }
 
-                RectTransform slot = shelfSpots[i];
-                slot.gameObject.SetActive(true);
+                RectTransform slot = shelfSpots[i++];
+                bool obtained = CurrencyManager.Instance == null || CurrencyManager.Instance.HasObtainedFlower(flower.flowerID);
+                slot.gameObject.SetActive(obtained); // 아직 얻지 못한 꽃은 화병을 끈다(자리는 그대로 비워 둔다). 얻었지만 재고가 없는 꽃은 아래 RefreshSlot이 어둡게 한다
+                if (!obtained) continue;
+
                 slot.name = $"Slot_{flower.flowerID}";
                 BindFlowerSlot(slot, flower);
-                i++;
             }
             for (; i < shelfSpots.Count; i++) shelfSpots[i].gameObject.SetActive(false); // 꽃이 모자라는 자리는 비워 둔다
         }

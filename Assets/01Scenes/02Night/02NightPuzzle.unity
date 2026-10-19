@@ -606,7 +606,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!224 &51133408
 RectTransform:
   m_ObjectHideFlags: 0
@@ -10833,6 +10833,8 @@ MonoBehaviour:
   fadedAlpha: 0.7
   tallBendCount: {x: 3, y: 4}
   tallBendAngle: {x: 50, y: 120}
+  swayDegrees: 10
+  swayPeriodSeconds: 2.5
 --- !u!4 &632092912
 Transform:
   m_ObjectHideFlags: 0
@@ -14059,7 +14061,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &792657744
 RectTransform:
   m_ObjectHideFlags: 0

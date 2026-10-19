@@ -51,10 +51,11 @@ public class NightRequestUI : MonoBehaviour
             var flowers = DataRegistry.Instance.Flowers.Where(b => b.flowerRole == shelf.role).ToList();
             for (int i = 0; i < spots.Count; i++)
             {
-                bool used = i < flowers.Count;
+                bool hasFlower = i < flowers.Count;
+                bool used = hasFlower && (CurrencyManager.Instance == null || CurrencyManager.Instance.HasObtainedFlower(flowers[i].flowerID)); // 아직 얻지 못한 꽃은 화병을 끈다(자리는 그대로 비워 둔다)
                 spots[i].gameObject.SetActive(used);
                 if (used) BindSlot(spots[i], flowers[i]);
-                else Debug.LogWarning($"[NightRequestUI] {shelf.role} 선반의 자리가 꽃보다 많습니다: {spots[i].name}");
+                else if (!hasFlower) Debug.LogWarning($"[NightRequestUI] {shelf.role} 선반의 자리가 꽃보다 많습니다: {spots[i].name}");
             }
             if (flowers.Count > spots.Count) Debug.LogWarning($"[NightRequestUI] {shelf.role} 선반의 슬롯 자리({spots.Count}개)보다 꽃이 많습니다.");
         }
