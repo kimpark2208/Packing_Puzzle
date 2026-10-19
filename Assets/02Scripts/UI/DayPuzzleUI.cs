@@ -25,12 +25,6 @@ public class DayPuzzleUI : MonoBehaviour
     [Header("퍼즐 점수 정산 규칙 수치")]
     [SerializeField] private ScoreRuleSettings scoreSettings;
 
-    // 씬에서 찾을 오브젝트 이름. 이름을 바꾸면 여기도 같이 바꾼다.
-    private const string FlowerBucketName = "FlowerBucket";
-    private const string DecoratePanelName = "DecoratePanel";
-    private const string UndoButtonName = "UndoBTN";
-    private const string RetryButtonName = "RetryBTN";
-    private const string FinishButtonName = "ConfirmBTN"; // 작업 완료 버튼
     private const string FinishLabel = "작업 완료";
 
     private const float CollapseAutoProceedDelay = 1.2f;
@@ -46,6 +40,7 @@ public class DayPuzzleUI : MonoBehaviour
     private GachaManager gacha;
     private bool customerLate; // 퍼즐이 끝난 순간 손님 기분이 이미 다 닳아 있었는가
     private bool lastRequirementMet;
+    private int lastScore;
     private PuzzleSettlement settlement;
 
     private GameObject flowerBucket;
@@ -56,6 +51,7 @@ public class DayPuzzleUI : MonoBehaviour
     {
         board = DayPuzzleController.Instance;
         gacha = FindFirstObjectByType<GachaManager>();
+        ColorWheelHud.ActivatePin(); // 퍼즐에 들어가면 컬러휠 핀이 활성화된다
 
         settlement = new PuzzleSettlement(scoreSettings); // 규칙 수치는 설정 에셋
         SetUpDecorateStage();
@@ -80,9 +76,9 @@ public class DayPuzzleUI : MonoBehaviour
     private void SetUpDecorateStage()
     {
         Scene scene = gameObject.scene;
-        flowerBucket = SceneFind.One<Transform>(scene, FlowerBucketName)?.gameObject;
+        flowerBucket = SceneFind.One<Transform>(scene, SceneObjectNames.FlowerBucket)?.gameObject;
 
-        finishButton = SceneFind.One<Button>(scene, FinishButtonName);
+        finishButton = SceneFind.One<Button>(scene, SceneObjectNames.FinishButton);
         if (finishButton != null)
         {
             finishButton.onClick.AddListener(OnFinishClicked);
@@ -92,9 +88,9 @@ public class DayPuzzleUI : MonoBehaviour
 
         decorateObjects = new[]
         {
-            SceneFind.One<Transform>(scene, DecoratePanelName)?.gameObject,
-            SceneFind.One<Transform>(scene, UndoButtonName)?.gameObject,
-            SceneFind.One<Transform>(scene, RetryButtonName)?.gameObject,
+            SceneFind.One<Transform>(scene, SceneObjectNames.DecoratePanel)?.gameObject,
+            SceneFind.One<Transform>(scene, SceneObjectNames.UndoButton)?.gameObject,
+            SceneFind.One<Transform>(scene, SceneObjectNames.RetryButton)?.gameObject,
             finishButton != null ? finishButton.gameObject : null,
         };
         SetDecorating(false);
@@ -110,6 +106,7 @@ public class DayPuzzleUI : MonoBehaviour
     private void OnFinishClicked()
     {
         if (finishButton != null) finishButton.interactable = false; // 결과 화면이 뜨는 동안 다시 누르지 못하게
+        PanelMotion.Close(decorateObjects[0]); // 꾸미기 창은 왼쪽으로 사라진다
         ShowResult(Settle(PuzzleEndKind.Completed));
     }
 
@@ -152,6 +149,7 @@ public class DayPuzzleUI : MonoBehaviour
         CurrencyManager.Instance.AddMoney(result.Payout); // 정산은 금액만 계산하고, 지급은 여기서 한다
         CurrencyManager.Instance.RecordRoundScore(result.Score); // 하루 평점은 그날 퍼즐 점수의 평균으로 정한다
         GameManager.Instance?.ConsumeUsedFlowers(board.PlacementHistory); // 퍼즐이 끝났으니 놓은 꽃이 소모된다(붕괴 재시작은 끝이 아니다)
+        GameManager.Instance?.ConsumeUsedWrapper(); // 포장지도 한 장 소모된다
         GameClock.Instance?.StopMood(); // 퍼즐이 끝났으니 기분 시간은 다음 주문까지 멈춘다
         return result;
     }
@@ -159,6 +157,7 @@ public class DayPuzzleUI : MonoBehaviour
     private void ShowResult(SettlementResult result)
     {
         lastRequirementMet = result.RequirementMet;
+        lastScore = result.Score;
         GameClock.Instance?.SetPaused(true); // 결과를 보는 동안 하루 시간도 멈춘다(기분 시간은 정산에서 이미 멈췄다)
 
         if (resultView == null) // 결과 화면이 연결되지 않았으면 알림 없이 바로 넘어간다
@@ -221,10 +220,18 @@ public class DayPuzzleUI : MonoBehaviour
         // 손님 기분이 다 닳은 뒤에 끝났으면 "늦으셨네요.", 아니면 요구사항을 못 채웠으면 손님이 화내고,
         // 채웠으면 만족한다.
         if (customerLate)
-            GameManager.Instance.ReturnToDayMain(LateLine, RequirementNotMetRejectResponse);
+            GameManager.Instance.ReturnToDayMain(LateLine, RequirementNotMetRejectResponse, ReactionTierOfResult());
         else if (!lastRequirementMet)
-            GameManager.Instance.ReturnToDayMain(RequirementNotMetLine, RequirementNotMetRejectResponse);
+            GameManager.Instance.ReturnToDayMain(RequirementNotMetLine, RequirementNotMetRejectResponse, ReactionTierOfResult());
         else
-            GameManager.Instance.ReturnToDayMain(GoodResultLine);
+            GameManager.Instance.ReturnToDayMain(GoodResultLine, tier: ReactionTierOfResult());
+    }
+
+    /// <summary>NPC 손님의 반응 단계: 요구를 못 채웠거나 점수가 -50 이하 = 실패, 늦었거나 점수가 0 미만 = 실수, 점수 50 이상 = 완벽, 나머지 = 성공.</summary>
+    private ReactionTier ReactionTierOfResult()
+    {
+        if (!lastRequirementMet || lastScore <= -50) return ReactionTier.Fail;
+        if (customerLate || lastScore < 0) return ReactionTier.Mistake;
+        return lastScore >= 50 ? ReactionTier.Perfect : ReactionTier.Success;
     }
 }

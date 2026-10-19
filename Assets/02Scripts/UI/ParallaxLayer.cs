@@ -20,5 +20,11 @@ public class ParallaxLayer : MonoBehaviour
 {
     [SerializeField] private ParallaxDepth depth = ParallaxDepth.Mid;
 
+    [Header("스와이프 중 가장자리 섞기: 이 레이어의 그림(Image) 끝을 이 폭(캔버스 단위)만큼 서서히 투명하게 풀어 아래/옆 배경과 섞는다. 0이면 또렷하다. 배경 그림에만 쓰고, 그림이 텍스처 전체를 쓰는 스프라이트일 때 정확하다.")]
+    [SerializeField, Min(0f)] private float blendLeft;
+    [SerializeField, Min(0f)] private float blendRight;
+
     public ParallaxDepth Depth => depth;
+    public float BlendLeft => blendLeft;
+    public float BlendRight => blendRight;
 }

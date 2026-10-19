@@ -1,5 +1,5 @@
 /// <summary>
-/// 메인 화면(손님을 만나는 화면)이 보여 주는 상황. GameManager가 씬을 열기 전에 정해 두고, DayMainUI/GameClock이 읽는다.
+/// 메인 화면(손님을 만나는 화면)이 보여 주는 상황. GameManager가 씬을 열기 전에 정해 두고, MainUI/GameClock이 읽는다.
 /// 낮 손님과 낮 종료는 낮 모습, 밤 손님과 밤 종료는 밤 모습이다.
 /// </summary>
 public enum MainState

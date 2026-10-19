@@ -12,13 +12,11 @@ public enum FlowerGlow
 /// <summary>
 /// 꽃의 빛 계산(순수 계산, 보드·UI를 모른다).
 /// 칸이 이웃한 꽃과 색 관계를 맺고(ColorRelation), 꽃마다 관계 합계로 상태가 정해지며,
-/// 정산에는 꽃 한 송이당 평균 상태 점수 × 10이 들어간다(-20 전부 흐림 ~ +30 전부 빛남, 포장지 크기와 상관없다).
+/// 정산에는 꽃 한 송이당 평균 상태 점수 × 배율이 들어간다(기본값은 -20 전부 흐림 ~ +30 전부 빛남, 포장지 크기와 상관없다. 점수 값은 ScoreRuleSettings).
 /// </summary>
 public static class FlowerLight
 {
-    private const int DimScore = -2, ClearScore = 1, BrightScore = 3;
     private const int BrightFrom = 3, ClearFrom = 1;
-    private const int ScoreScale = 10;
     private const int ShadeClearBrightNeighbors = 2; // 그늘 칸 둘레에 빛남 꽃이 이만큼 있으면 그늘이 사라진다
 
     /// <summary>
@@ -59,9 +57,9 @@ public static class FlowerLight
         return relationSum >= BrightFrom ? FlowerGlow.Bright : relationSum >= ClearFrom ? FlowerGlow.Clear : FlowerGlow.Dim;
     }
 
-    private static int GlowScore(FlowerGlow glow)
+    private static int GlowScore(FlowerGlow glow, ScoreRuleSettings settings)
     {
-        return glow == FlowerGlow.Bright ? BrightScore : glow == FlowerGlow.Clear ? ClearScore : DimScore;
+        return glow == FlowerGlow.Bright ? settings.flowerLightBrightScore : glow == FlowerGlow.Clear ? settings.flowerLightClearScore : settings.flowerLightDimScore;
     }
 
     /// <summary>
@@ -119,13 +117,13 @@ public static class FlowerLight
 
     private static FlowerGlow Raised(FlowerGlow glow) => glow == FlowerGlow.Dim ? FlowerGlow.Clear : FlowerGlow.Bright;
 
-    /// <summary>정산에 넣는 '꽃의 빛' 점수: (꽃 상태 점수 합계 ÷ 꽃 수) × 10을 반올림. 꽃이 없으면 0.</summary>
+    /// <summary>정산에 넣는 '꽃의 빛' 점수: (꽃 상태 점수 합계 ÷ 꽃 수) × 배율을 반올림. 상태별 점수와 배율은 ScoreRuleSettings 에셋 값이다. 꽃이 없으면 0.</summary>
     public static int Score(IReadOnlyDictionary<WrapperRegionPosition, FlowerData.Color> cells,
-        IReadOnlyDictionary<WrapperRegionPosition, SpecialCell> specials = null)
+        IReadOnlyDictionary<WrapperRegionPosition, SpecialCell> specials, ScoreRuleSettings settings)
     {
         if (cells.Count == 0) return 0;
         int total = 0;
-        foreach (FlowerGlow glow in Resolve(cells, specials).glows.Values) total += GlowScore(glow);
-        return (int)Math.Round(total * (double)ScoreScale / cells.Count, MidpointRounding.AwayFromZero);
+        foreach (FlowerGlow glow in Resolve(cells, specials).glows.Values) total += GlowScore(glow, settings);
+        return (int)Math.Round(total * (double)settings.flowerLightScale / cells.Count, MidpointRounding.AwayFromZero);
     }
 }

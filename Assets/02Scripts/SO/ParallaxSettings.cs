@@ -21,6 +21,14 @@ public class ParallaxSettings : ScriptableObject
     [Min(1f)] public float awayNear = 1.25f;
     [Min(1f)] public float awayFront = 1.5f;
 
+    [Header("스와이프 모션 블러")]
+    [Tooltip("UI_MotionBlur(Shader Graph) 머티리얼. 비우면 블러를 쓰지 않는다.")]
+    public Material blurMaterial;
+    [Tooltip("셔터가 열려 있는 시간(초). 클수록 길게 번진다.")]
+    [Min(0f)] public float blurExposure = 0.012f;
+    [Tooltip("번짐 길이의 상한(화면 픽셀).")]
+    [Min(0f)] public float maxBlurPixels = 50f;
+
     /// <summary>깊이와 페이지(0이면 첫 화면)에 해당하는 값.</summary>
     public float Factor(ParallaxDepth depth, int page)
     {

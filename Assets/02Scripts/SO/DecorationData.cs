@@ -18,5 +18,9 @@ public class DecorationData : ScriptableObject
     public DecorationCategory category;
     public string displayName;
     [Min(0)] public int price;
+    [Tooltip("카탈로그(꾸미기 용품 탭) 카드에 보이는 설명.")] public string description;
+    [Tooltip("카탈로그에 나오는가(꾸미기 용품 탭).")] public bool inCatalog = true;
+    [Min(1), Tooltip("카탈로그에 나오기 시작하는 일차(꽃다발 용품 카탈로그가 열리는 5일차부터).")] public int availableFromDay = 5;
     public Sprite sprite;
+    [Min(0.1f)] public float sizeScale = 1f; // 꽃다발에 놓였을 때의 크기 배율(항목별 상자에 맞춘 크기에 곱한다). 용품마다 따로 키우고 줄인다
 }

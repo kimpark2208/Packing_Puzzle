@@ -1,0 +1,56 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: db17dfb6569e04a4e891a39599362713, type: 3}
+  m_Name: Day_02
+  m_EditorClassIdentifier: Assembly-CSharp::DayScenarioData
+  day: 2
+  skipDayBusiness: 0
+  dayVisits:
+  - orderIndex: 1
+    npc: {fileID: 11400000, guid: 394bdd7e9c8bbd74899054078853d1d8, type: 2}
+    dialogueId: merchant_d2_catalog
+    bondDialogueId: 
+    reactionPrefix: 
+  - orderIndex: 2
+    npc: {fileID: 11400000, guid: 09a6c8a80a44ee84780de94d006b69cf, type: 2}
+    dialogueId: jaemin_d2_intro
+    bondDialogueId: 
+    reactionPrefix: jaemin_react
+  freeNight: 0
+  nightVisits:
+  - npc: {fileID: 0}
+    dialogueId: 
+    dialogueOnly: 0
+    flower: {fileID: 11400000, guid: 2cee97a2a4448bd77c8c6e5b0b02d02a, type: 2}
+    fixedReplicas: 20
+    reactionPrefix: 
+  - npc: {fileID: 0}
+    dialogueId: 
+    dialogueOnly: 0
+    flower: {fileID: 11400000, guid: fd58ca5521476c37a0849379e5974903, type: 2}
+    fixedReplicas: 20
+    reactionPrefix: 
+  - npc: {fileID: 0}
+    dialogueId: 
+    dialogueOnly: 0
+    flower: {fileID: 11400000, guid: 54be2c2f4f04102a72cff051f9762d00, type: 2}
+    fixedReplicas: 20
+    reactionPrefix: 
+  - npc: {fileID: 0}
+    dialogueId: 
+    dialogueOnly: 0
+    flower: {fileID: 11400000, guid: a073a0c6e0d556d17e0414d9b6148fb0, type: 2}
+    fixedReplicas: 20
+    reactionPrefix: 
+  unlocksPhone: 0
+  unlocksCalendar: 0
+  dayToNightSound: {fileID: 0}

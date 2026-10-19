@@ -23,6 +23,9 @@ public class CharacterGenerator : MonoBehaviour
     [SerializeField] private CharacterPartData[] partAssets;
     [SerializeField] private CharacterHairData[] hairAssets;
 
+    [Header("피부")]
+    [SerializeField, Tooltip("밤 손님(귀신)의 피부. 밤 손님은 이 피부 중에서만, 낮 손님은 이 피부를 뺀 나머지에서 고른다.")] private Sprite[] nightSkins;
+
     [Header("확률")]
     [SerializeField, Range(0f, 1f)] private float sideChance = 0.5f; // 사이드 헤어가 있을 확률
     [SerializeField, Range(0f, 1f)] private float tieChance = 0.5f; // Tie가 있을 확률
@@ -43,13 +46,12 @@ public class CharacterGenerator : MonoBehaviour
     public CharacterAppearance Current { get; private set; }
 
     [ContextMenu("Randomize")]
-    public void Randomize()
-    {
-        Current = Generate();
-        Apply(Current);
-    }
+    public void Randomize() => Apply(Generate());
 
-    public CharacterAppearance Generate()
+    /// <summary>night가 true면 밤 손님(피부가 nightSkins 중 하나), false면 낮 손님(피부가 nightSkins 밖)을 만든다.</summary>
+    public void Randomize(bool night) => Apply(Generate(night));
+
+    public CharacterAppearance Generate(bool night = false)
     {
         var result = new CharacterAppearance();
 
@@ -65,7 +67,7 @@ public class CharacterGenerator : MonoBehaviour
         result.cloth = PickPart(result.bodyType, CharacterPartData.PartType.Cloth);
         result.eyes = PickPart(result.bodyType, CharacterPartData.PartType.Eyes);
         result.mouth = PickPart(result.bodyType, CharacterPartData.PartType.Mouth);
-        result.skin = PickPart(result.bodyType, CharacterPartData.PartType.Skin);
+        result.skin = PickSkin(result.bodyType, night);
 
         var hairs = new List<CharacterHairData>();
         foreach (CharacterHairData asset in hairAssets)
@@ -92,6 +94,7 @@ public class CharacterGenerator : MonoBehaviour
 
     public void Apply(CharacterAppearance appearance)
     {
+        Current = appearance;
         Show(brow, appearance.brow);
         Show(cloth, appearance.cloth);
         Show(eyes, appearance.eyes);
@@ -109,6 +112,19 @@ public class CharacterGenerator : MonoBehaviour
         foreach (CharacterPartData asset in partAssets)
         {
             if (asset.bodyType == bodyType && asset.part == part) return Pick(asset.sprites);
+        }
+        return null;
+    }
+
+    /// <summary>피부를 고른다. 밤 손님은 nightSkins 중에서만, 낮 손님은 nightSkins를 뺀 것 중에서만(해당하는 피부가 없으면 전체에서).</summary>
+    private Sprite PickSkin(int bodyType, bool night)
+    {
+        foreach (CharacterPartData asset in partAssets)
+        {
+            if (asset.bodyType != bodyType || asset.part != CharacterPartData.PartType.Skin) continue;
+
+            var allowed = asset.sprites.FindAll(s => nightSkins != null && System.Array.IndexOf(nightSkins, s) >= 0 == night);
+            return Pick(allowed.Count > 0 ? allowed : asset.sprites);
         }
         return null;
     }

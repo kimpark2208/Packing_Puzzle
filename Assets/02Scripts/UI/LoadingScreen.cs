@@ -67,7 +67,10 @@ public class LoadingScreen : MonoBehaviour
             yield return null;
         }
 
+        IEnumerator cover = SceneTransition.Cover(); // 화면을 덮은 뒤에 씬을 열고, 열리면 걷는다
+        if (cover != null) yield return cover;
         load.allowSceneActivation = true;
+        SceneTransition.Reveal();
     }
 
     /// <summary>한 프레임 분량을 갱신한다: 문구를 바꿀 때가 되면 바꾸고, 막대는 실제 진행률(actual)을 천천히 따라간다.</summary>

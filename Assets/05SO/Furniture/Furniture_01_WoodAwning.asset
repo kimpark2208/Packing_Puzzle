@@ -1,0 +1,28 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 70548d3b9000ded4c8b3cf6e2d82ca29, type: 3}
+  m_Name: Furniture_01_WoodAwning
+  m_EditorClassIdentifier: Assembly-CSharp::FurnitureData
+  id: 1
+  category: 0
+  displayName: "\uBAA9\uC7AC \uCC9C\uB9C9"
+  description: "\uBAA9\uC7AC\uB85C \uB41C \uD0C4\uD0C4\uD55C \uCC9C\uB9C9. \uD3ED\uC6B0\uAC00
+    \uB0B4\uB824\uB3C4 \uB044\uB5A1 \uC5C6\uB2E4."
+  price: 2500
+  set: 
+  availableFromDay: 3
+  inCatalog: 1
+  sprite: {fileID: 0}
+  morningSprite: {fileID: 21300000, guid: 974ff4d98521d2746b88f5613fe3812d, type: 3}
+  sunsetSprite: {fileID: 21300000, guid: 51a0db831ce459c4cbadc2907f831fa4, type: 3}
+  eveningSprite: {fileID: 21300000, guid: f04196b1c3e4dcf4492de9365c204e2f, type: 3}
+  extraSprites: []

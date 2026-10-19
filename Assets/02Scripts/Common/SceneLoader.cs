@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using UnityEngine.SceneManagement;
 
 /// <summary>
 /// 로딩이 긴 씬으로 갈 때 로딩 씬을 거쳐 간다. Load로 목적지와(있다면) 먼저 해 둘 작업을 정해 두고 로딩 씬(LoadingScreen)을 열면,
@@ -20,7 +19,7 @@ public static class SceneLoader
     {
         Target = target;
         work = loadingWork;
-        SceneManager.LoadScene(LoadingScene);
+        SceneTransition.Go(LoadingScene);
     }
 
     /// <summary>로딩 씬이 먼저 돌릴 작업을 한 번 가져간다(없으면 null).</summary>

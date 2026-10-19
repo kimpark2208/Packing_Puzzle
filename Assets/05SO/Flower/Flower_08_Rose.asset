@@ -1,0 +1,60 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 74a634c29bfedc144ae03bdc4755ce48, type: 3}
+  m_Name: Flower_08_Rose
+  m_EditorClassIdentifier: Assembly-CSharp::FlowerData
+  flowerID: 8
+  flowerName: "\uC7A5\uBBF8"
+  color: 6
+  flowerRole: 1
+  acquireDay: 17
+  specialOrder: "\uADF8\uAC70 \uC544\uC138\uC694? \uD30C\uB780 \uC7A5\uBBF8\uB294
+    \uD770 \uC7A5\uBBF8\uB97C \uC5FC\uC0C9\uD574\uC11C \uB9CC\uB4DC\uB294 \uAC70\uB798\uC694.
+    \uC804 \uC5FC\uC0C9\uC744 \uD558\uBA74 \uB450\uD53C\uAC00 \uC544\uD30C\uC11C
+    \uBCC4\uB85C \uC548 \uC88B\uC544\uD574\uC694."
+  specialReask1: "\uB124, \uC5FC\uC0C9 \uC548 \uD55C \uADF8 \uC7A5\uBBF8\uAC00 \uC88B\uACA0\uC5B4\uC694."
+  specialReask2: "\uC7A5\uBBF8\uC694 \uC7A5\uBBF8! \uD770\uC7A5\uBBF8\uB9CC \uD314\uC796\uC544\uC694?"
+  iconSprite: {fileID: 21300000, guid: b0e8004ee340aad478822bfb52f0cf32, type: 3}
+  stemSprite: {fileID: 21300000, guid: f7f1b740b2e3ac34ebe3ff3a67cbee7d, type: 3}
+  dayFillSprite: {fileID: -8763125123694568423, guid: 560daf14085f39544941438f5a5c72ae, type: 3}
+  stemLeafPartSprite: {fileID: 21300000, guid: 605804fbba5c8f24088d996c24062e5f, type: 3}
+  centerPartSprite: {fileID: 0}
+  petalPartSprites:
+  - {fileID: 21300000, guid: 24c056200c7e23e41ad1234bff0afadf, type: 3}
+  - {fileID: 21300000, guid: 85e38ad2ac64e354b826cb03c1e72740, type: 3}
+  - {fileID: 21300000, guid: 7314b3951f436b24aaab6f96b4bb6c34, type: 3}
+  - {fileID: 21300000, guid: f542fe934e9e56f4f92829909407510d, type: 3}
+  - {fileID: 21300000, guid: 16e4c9dc265879c4db51974c9fb30476, type: 3}
+  - {fileID: 21300000, guid: 0fe03152b785b504b9c8a5f52734e96a, type: 3}
+  partLayout: 0
+  lossPetals:
+  - petalIndex: 2
+    sprite: {fileID: 21300000, guid: 54763610893a898438fdc2740f8a7a46, type: 3}
+  - petalIndex: 4
+    sprite: {fileID: 21300000, guid: 3a3227e6aeaf879498628e87c1a1452c, type: 3}
+  - petalIndex: 0
+    sprite: {fileID: 21300000, guid: aba4cb4b73e003b459d6c804b049a6bb, type: 3}
+  petalGrid: '#..##..#
+
+    ##.##.##
+
+    .######.
+
+    ########
+
+    ########
+
+    .######.
+
+    ##.##.##
+
+    #..##..#'

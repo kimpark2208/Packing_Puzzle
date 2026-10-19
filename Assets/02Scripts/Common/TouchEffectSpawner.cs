@@ -56,5 +56,6 @@ public class TouchEffectSpawner : MonoBehaviour
         effect.transform.position = targetCamera.ScreenToWorldPoint(new Vector3(screenPos.x, screenPos.y, distanceFromCamera));
         effect.Clear(true);
         effect.Play(true);
+        if (effect.TryGetComponent(out TouchSound sound)) sound.Play(); // 터치할 때 나는 소리(이펙트 프리팹에 붙어 있다)
     }
 }

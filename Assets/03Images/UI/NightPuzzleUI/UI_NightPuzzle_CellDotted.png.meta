@@ -1,0 +1,572 @@
+fileFormatVersion: 2
+guid: 4cd2e18b2bb5e91418788e2ee7ac5a7b
+TextureImporter:
+  internalIDToNameTable:
+  - first:
+      213: -2221230121659149603
+    second: UI_NightPuzzle_CellDotted_0
+  - first:
+      213: -6501822869558683922
+    second: UI_NightPuzzle_CellDotted_1
+  - first:
+      213: 9080373889267618811
+    second: UI_NightPuzzle_CellDotted_2
+  - first:
+      213: 2306792718096783967
+    second: UI_NightPuzzle_CellDotted_3
+  - first:
+      213: -4816543878431510879
+    second: UI_NightPuzzle_CellDotted_4
+  - first:
+      213: 3966114541901327699
+    second: UI_NightPuzzle_CellDotted_5
+  - first:
+      213: -7148204283857686228
+    second: UI_NightPuzzle_CellDotted_6
+  - first:
+      213: -1562262770300747466
+    second: UI_NightPuzzle_CellDotted_7
+  - first:
+      213: 4162221537126529120
+    second: UI_NightPuzzle_CellDotted_8
+  - first:
+      213: -1062701666634576083
+    second: UI_NightPuzzle_CellDotted_9
+  - first:
+      213: 5787728695737672496
+    second: UI_NightPuzzle_CellDotted_10
+  - first:
+      213: 2156131038438315547
+    second: UI_NightPuzzle_CellDotted_11
+  - first:
+      213: -758058875177531274
+    second: UI_NightPuzzle_CellDotted_12
+  - first:
+      213: -3846638566239778514
+    second: UI_NightPuzzle_CellDotted_13
+  - first:
+      213: 1131798719992407042
+    second: UI_NightPuzzle_CellDotted_14
+  - first:
+      213: -8851651406452562249
+    second: UI_NightPuzzle_CellDotted_15
+  externalObjects: {}
+  serializedVersion: 13
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 0
+    sRGBTexture: 1
+    linearTexture: 0
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapsPreserveCoverage: 0
+    alphaTestReferenceValue: 0.5
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+  bumpmap:
+    convertToNormalMap: 0
+    externalNormalMap: 0
+    heightScale: 0.25
+    normalMapFilter: 0
+    flipGreenChannel: 0
+  isReadable: 0
+  streamingMipmaps: 0
+  streamingMipmapsPriority: 0
+  vTOnly: 0
+  ignoreMipmapLimit: 0
+  grayScaleToAlpha: 0
+  generateCubemap: 6
+  cubemapConvolution: 0
+  seamlessCubemap: 0
+  textureFormat: 1
+  maxTextureSize: 2048
+  textureSettings:
+    serializedVersion: 2
+    filterMode: 1
+    aniso: 1
+    mipBias: 0
+    wrapU: 1
+    wrapV: 1
+    wrapW: 1
+  nPOTScale: 0
+  lightmap: 0
+  compressionQuality: 50
+  spriteMode: 1
+  spriteExtrude: 1
+  spriteMeshType: 1
+  alignment: 0
+  spritePivot: {x: 0.5, y: 0.5}
+  spritePixelsToUnits: 100
+  spriteBorder: {x: 22, y: 22, z: 22, w: 22}
+  spriteGenerateFallbackPhysicsShape: 1
+  alphaUsage: 1
+  alphaIsTransparency: 1
+  spriteTessellationDetail: -1
+  textureType: 8
+  textureShape: 1
+  singleChannelComponent: 0
+  flipbookRows: 1
+  flipbookColumns: 1
+  maxTextureSizeSet: 0
+  compressionQualitySet: 0
+  textureFormatSet: 0
+  ignorePngGamma: 0
+  applyGammaDecoding: 0
+  swizzle: 50462976
+  cookieLightType: 0
+  platformSettings:
+  - serializedVersion: 4
+    buildTarget: DefaultTexturePlatform
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Standalone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Android
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: WebGL
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: WindowsStoreApps
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  spriteSheet:
+    serializedVersion: 2
+    sprites:
+    - serializedVersion: 2
+      name: UI_NightPuzzle_CellDotted_0
+      rect:
+        serializedVersion: 2
+        x: 5
+        y: 57
+        width: 13
+        height: 18
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: dd2db1219fa9c21e0800000000000000
+      internalID: -2221230121659149603
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: UI_NightPuzzle_CellDotted_1
+      rect:
+        serializedVersion: 2
+        x: 18
+        y: 67
+        width: 15
+        height: 8
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: ee6917b5c82e4c5a0800000000000000
+      internalID: -6501822869558683922
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: UI_NightPuzzle_CellDotted_2
+      rect:
+        serializedVersion: 2
+        x: 33
+        y: 67
+        width: 14
+        height: 8
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: bf3578141f7f30e70800000000000000
+      internalID: 9080373889267618811
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: UI_NightPuzzle_CellDotted_3
+      rect:
+        serializedVersion: 2
+        x: 47
+        y: 68
+        width: 13
+        height: 7
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f5add9451cf530020800000000000000
+      internalID: 2306792718096783967
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: UI_NightPuzzle_CellDotted_4
+      rect:
+        serializedVersion: 2
+        x: 60
+        y: 61
+        width: 15
+        height: 14
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 1aee1099cd2382db0800000000000000
+      internalID: -4816543878431510879
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: UI_NightPuzzle_CellDotted_5
+      rect:
+        serializedVersion: 2
+        x: 5
+        y: 42
+        width: 7
+        height: 15
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 35d2a8899287a0730800000000000000
+      internalID: 3966114541901327699
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: UI_NightPuzzle_CellDotted_6
+      rect:
+        serializedVersion: 2
+        x: 68
+        y: 48
+        width: 7
+        height: 12
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: c21bcbe931a7ccc90800000000000000
+      internalID: -7148204283857686228
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: UI_NightPuzzle_CellDotted_7
+      rect:
+        serializedVersion: 2
+        x: 5
+        y: 28
+        width: 7
+        height: 14
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 6310862a94ab15ae0800000000000000
+      internalID: -1562262770300747466
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: UI_NightPuzzle_CellDotted_8
+      rect:
+        serializedVersion: 2
+        x: 68
+        y: 35
+        width: 7
+        height: 12
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 06838e48f6e23c930800000000000000
+      internalID: 4162221537126529120
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: UI_NightPuzzle_CellDotted_9
+      rect:
+        serializedVersion: 2
+        x: 68
+        y: 22
+        width: 7
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: d2fc702f6768041f0800000000000000
+      internalID: -1062701666634576083
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: UI_NightPuzzle_CellDotted_10
+      rect:
+        serializedVersion: 2
+        x: 5
+        y: 13
+        width: 8
+        height: 14
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 03367c58594225050800000000000000
+      internalID: 5787728695737672496
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: UI_NightPuzzle_CellDotted_11
+      rect:
+        serializedVersion: 2
+        x: 5
+        y: 5
+        width: 18
+        height: 9
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: b165f4b71cd1ced10800000000000000
+      internalID: 2156131038438315547
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: UI_NightPuzzle_CellDotted_12
+      rect:
+        serializedVersion: 2
+        x: 64
+        y: 5
+        width: 11
+        height: 18
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 678063a2875da75f0800000000000000
+      internalID: -758058875177531274
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: UI_NightPuzzle_CellDotted_13
+      rect:
+        serializedVersion: 2
+        x: 22
+        y: 5
+        width: 15
+        height: 7
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e29c5f7ba9efd9ac0800000000000000
+      internalID: -3846638566239778514
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: UI_NightPuzzle_CellDotted_14
+      rect:
+        serializedVersion: 2
+        x: 37
+        y: 5
+        width: 13
+        height: 7
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 204a36670f4f4bf00800000000000000
+      internalID: 1131798719992407042
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: UI_NightPuzzle_CellDotted_15
+      rect:
+        serializedVersion: 2
+        x: 50
+        y: 5
+        width: 13
+        height: 7
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 7b6eec2a1fd982580800000000000000
+      internalID: -8851651406452562249
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    outline: []
+    customData: 
+    physicsShape: []
+    bones: []
+    spriteID: 5e97eb03825dee720800000000000000
+    internalID: 0
+    vertices: []
+    indices: 
+    edges: []
+    weights: []
+    secondaryTextures: []
+    spriteCustomMetadata:
+      entries: []
+    nameFileIdTable:
+      UI_NightPuzzle_CellDotted_0: -2221230121659149603
+      UI_NightPuzzle_CellDotted_1: -6501822869558683922
+      UI_NightPuzzle_CellDotted_10: 5787728695737672496
+      UI_NightPuzzle_CellDotted_11: 2156131038438315547
+      UI_NightPuzzle_CellDotted_12: -758058875177531274
+      UI_NightPuzzle_CellDotted_13: -3846638566239778514
+      UI_NightPuzzle_CellDotted_14: 1131798719992407042
+      UI_NightPuzzle_CellDotted_15: -8851651406452562249
+      UI_NightPuzzle_CellDotted_2: 9080373889267618811
+      UI_NightPuzzle_CellDotted_3: 2306792718096783967
+      UI_NightPuzzle_CellDotted_4: -4816543878431510879
+      UI_NightPuzzle_CellDotted_5: 3966114541901327699
+      UI_NightPuzzle_CellDotted_6: -7148204283857686228
+      UI_NightPuzzle_CellDotted_7: -1562262770300747466
+      UI_NightPuzzle_CellDotted_8: 4162221537126529120
+      UI_NightPuzzle_CellDotted_9: -1062701666634576083
+  mipmapLimitGroupName: 
+  pSDRemoveMatte: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

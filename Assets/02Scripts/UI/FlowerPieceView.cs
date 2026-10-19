@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.Linq;
 using TMPro;
 using UnityEngine;
+using UnityEngine.Events;
 using UnityEngine.UI;
 
 /// <summary>
@@ -34,6 +35,28 @@ public class FlowerPieceView : MonoBehaviour
     public static FlowerPieceView GetOrAdd(GameObject target)
     {
         return target.TryGetComponent(out FlowerPieceView view) ? view : target.AddComponent<FlowerPieceView>();
+    }
+
+    /// <summary>슬롯 프리셋마다 자식 위치가 달라(화병은 Button이 VaseImage에 있다) 이름으로 깊이 찾는다. 없으면 null.</summary>
+    public static Transform FindIn(RectTransform slot, string childName)
+    {
+        return slot.GetComponentsInChildren<Transform>(true).FirstOrDefault(t => t.name == childName);
+    }
+
+    /// <summary>
+    /// 슬롯 클릭을 받는다. 화병 앞면·뱃지처럼 안쪽 버튼 위에 겹친 그림이 클릭을 먼저 받으면 안쪽 버튼에는 클릭이 닿지 않는다.
+    /// 그래서 클릭은 슬롯 맨 위에서 받고(자식 그림이 받은 클릭은 위로 올라온다), 안쪽 버튼은 꺼 둔다.
+    /// </summary>
+    public static void AttachClick(RectTransform slot, UnityAction onClick)
+    {
+        foreach (Button inner in slot.GetComponentsInChildren<Button>(true)) inner.enabled = false;
+        Button click = slot.GetComponent<Button>();
+        if (click == null)
+        {
+            click = slot.gameObject.AddComponent<Button>();
+            click.transition = Selectable.Transition.None;
+        }
+        click.onClick.AddListener(onClick);
     }
 
     private void Awake()

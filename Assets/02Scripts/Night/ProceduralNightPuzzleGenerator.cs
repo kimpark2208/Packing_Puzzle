@@ -32,24 +32,28 @@ public static class ProceduralNightPuzzleGenerator
             return false;
         }
 
-        stage = GenerateStage(gridSize, combo, isBonusStage: true);
+        stage = GenerateStage(gridSize, PickBlocks(), combo, isBonusStage: true);
         return true;
     }
 
-    /// <summary>주어진 꽃(최대 MaxBlocksPerStage종)을 모두 한 번 이상 써서 보드를 채울 수 있는 스테이지를 만든다.</summary>
-    public static NightPuzzleData GenerateStage(int gridSize, int[] flowerIds, bool isBonusStage)
+    /// <summary>퍼즐에 쓸 블록 MaxBlocksPerStage개를 블록 목록에서 무작위로 고른다(꽃과는 무관).</summary>
+    public static List<BlockData> PickBlocks()
     {
-        var blocks = flowerIds
-            .Select(id => BlockRegistry.Instance != null ? BlockRegistry.Instance.GetById(id) : null)
-            .Where(b => b != null)
-            .ToList();
+        return DataRegistry.Instance != null ? DataRegistry.Instance.PickRandomBlocks(MaxBlocksPerStage) : new List<BlockData>();
+    }
+
+    /// <summary>주어진 꽃(최대 MaxBlocksPerStage종)을 모두 한 번 이상 써서 보드를 채울 수 있는 스테이지를 만든다.</summary>
+    public static NightPuzzleData GenerateStage(int gridSize, List<BlockData> blocks, int[] flowerIds, bool isBonusStage)
+    {
+        blocks = blocks.Where(b => b != null).ToList();
+        int[] blockIds = blocks.Select(b => b.blockID).ToArray();
 
         bool[,] wall = new bool[gridSize, gridSize];
 
         if (blocks.Count == 0)
         {
             Debug.LogWarning("[ProceduralNightPuzzleGenerator] 사용할 블록 데이터가 없어 스테이지를 생성할 수 없습니다.");
-            return MakeData(gridSize, flowerIds, isBonusStage, wall);
+            return MakeData(gridSize, blockIds, flowerIds, isBonusStage, wall);
         }
 
         var cellCounts = blocks.Select(b => b.CellCount).Where(c => c > 0).Distinct().ToList();
@@ -61,7 +65,7 @@ public static class ProceduralNightPuzzleGenerator
         // DLX를 아예 돌리지 않는다 - 이 사전 필터가 없으면 절대 못 찾을 답을 수백 번 재시도하며 멈춰버린다.
         if (CanFillUsingAll(totalCells, mandatoryCells, cellCounts) && HasUniqueTilingUsingAll(gridSize, blocks, wall))
         {
-            return MakeData(gridSize, flowerIds, isBonusStage, wall);
+            return MakeData(gridSize, blockIds, flowerIds, isBonusStage, wall);
         }
 
         // 꽃 조합만으로 유일하게 완전히 채울 수 없다면 최소한의 칸을 벽(=임의의 필러)으로 막아본다.
@@ -79,7 +83,7 @@ public static class ProceduralNightPuzzleGenerator
             {
                 wall = foundWall;
                 Debug.Log($"[ProceduralNightPuzzleGenerator] 필러 {wallCellCount}칸으로 유일해 확보");
-                return MakeData(gridSize, flowerIds, isBonusStage, wall);
+                return MakeData(gridSize, blockIds, flowerIds, isBonusStage, wall);
             }
         }
 
@@ -100,7 +104,7 @@ public static class ProceduralNightPuzzleGenerator
             {
                 wall = foundWall;
                 Debug.Log($"[ProceduralNightPuzzleGenerator] 유일해는 못 찾았지만 필러 {wallCellCount}칸으로 풀리는 배치 확보 (정답이 여러 개일 수 있음)");
-                return MakeData(gridSize, flowerIds, isBonusStage, wall);
+                return MakeData(gridSize, blockIds, flowerIds, isBonusStage, wall);
             }
         }
 
@@ -109,7 +113,7 @@ public static class ProceduralNightPuzzleGenerator
         // 이건 "실제로 놓아본" 배치라 반드시 풀 수 있음이 보장된다(운에 의존하지 않음).
         wall = BuildGuaranteedWallFallback(gridSize, blocks);
         Debug.LogWarning("[ProceduralNightPuzzleGenerator] 무작위 탐색 실패, 예비(그리디) 배치로 대체합니다.");
-        return MakeData(gridSize, flowerIds, isBonusStage, wall);
+        return MakeData(gridSize, blockIds, flowerIds, isBonusStage, wall);
     }
 
     /// <summary>
@@ -117,7 +121,7 @@ public static class ProceduralNightPuzzleGenerator
     /// 모두 한 번 이상 쓰이게 하고, 나머지 칸을 채운다. 어떤 변형도 들어맞지 않는 칸만 필러(벽)로 남긴다.
     /// 직접 놓아본 배치이므로 항상 풀 수 있음이 보장된다.
     /// </summary>
-    private static bool[,] BuildGuaranteedWallFallback(int gridSize, List<FlowerData> blocks)
+    private static bool[,] BuildGuaranteedWallFallback(int gridSize, List<BlockData> blocks)
     {
         bool[,] covered = new bool[gridSize, gridSize];
 
@@ -195,7 +199,7 @@ public static class ProceduralNightPuzzleGenerator
     }
 
     /// <summary>주어진 꽃을 하나씩은 반드시 쓰고(mandatoryCells칸) 남는 칸을 꽃들의 칸 수 조합으로 채울 수 있는지.</summary>
-    private static bool CanFillUsingAll(int target, int mandatoryCells, List<int> cellCounts)
+    public static bool CanFillUsingAll(int target, int mandatoryCells, List<int> cellCounts)
     {
         return CanReachExactSum(target - mandatoryCells, cellCounts);
     }
@@ -225,7 +229,7 @@ public static class ProceduralNightPuzzleGenerator
         return reachable[target];
     }
 
-    private static bool TryFindWallPlacement(int gridSize, List<FlowerData> blocks, int wallCellCount, System.Diagnostics.Stopwatch stopwatch, bool requireUnique, out bool[,] wall)
+    private static bool TryFindWallPlacement(int gridSize, List<BlockData> blocks, int wallCellCount, System.Diagnostics.Stopwatch stopwatch, bool requireUnique, out bool[,] wall)
     {
         int totalCells = gridSize * gridSize;
 
@@ -260,7 +264,7 @@ public static class ProceduralNightPuzzleGenerator
     /// 방법이 정확히 하나만 존재하고, 그 방법이 주어진 꽃을 모두 한 번 이상 쓰는지 검증한다.
     /// (0개=불가능, 2개 이상=유일하지 않음 → 둘 다 실패로 취급)
     /// </summary>
-    private static bool HasUniqueTilingUsingAll(int gridSize, List<FlowerData> blocks, bool[,] wallGrid)
+    private static bool HasUniqueTilingUsingAll(int gridSize, List<BlockData> blocks, bool[,] wallGrid)
     {
         var dlx = BuildExactCoverInstance(gridSize, blocks, wallGrid, out int primaryColumnCount);
         if (primaryColumnCount == 0) return false;
@@ -275,7 +279,7 @@ public static class ProceduralNightPuzzleGenerator
     }
 
     /// <summary>유일성은 따지지 않고, 이 벽 배치로 주어진 꽃을 모두 한 번 이상 써서 완전히 채울 수 있는 방법이 하나라도 있는지만 검사한다.</summary>
-    private static bool HasTilingUsingAll(int gridSize, List<FlowerData> blocks, bool[,] wallGrid)
+    public static bool HasTilingUsingAll(int gridSize, List<BlockData> blocks, bool[,] wallGrid)
     {
         var dlx = BuildExactCoverInstance(gridSize, blocks, wallGrid, out int primaryColumnCount);
         if (primaryColumnCount == 0) return false;
@@ -304,7 +308,7 @@ public static class ProceduralNightPuzzleGenerator
         return true;
     }
 
-    private static DancingLinks BuildExactCoverInstance(int gridSize, List<FlowerData> blocks, bool[,] wallGrid, out int primaryColumnCount)
+    private static DancingLinks BuildExactCoverInstance(int gridSize, List<BlockData> blocks, bool[,] wallGrid, out int primaryColumnCount)
     {
         var cellToColumn = new Dictionary<int, int>();
         int columnIndex = 0;
@@ -356,12 +360,13 @@ public static class ProceduralNightPuzzleGenerator
         return dlx;
     }
 
-    private static NightPuzzleData MakeData(int gridSize, int[] flowerIds, bool isBonusStage, bool[,] wall)
+    private static NightPuzzleData MakeData(int gridSize, int[] blockIds, int[] flowerIds, bool isBonusStage, bool[,] wall)
     {
         return new NightPuzzleData
         {
             puzzleId = nextPuzzleId++,
             gridSize = gridSize,
+            requiredBlockIds = blockIds,
             requiredFlowerIds = flowerIds,
             isBonusStage = isBonusStage,
             wallGrid = wall

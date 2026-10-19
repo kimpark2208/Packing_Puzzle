@@ -1,0 +1,28 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 70548d3b9000ded4c8b3cf6e2d82ca29, type: 3}
+  m_Name: Furniture_15_MossyTileFloor
+  m_EditorClassIdentifier: Assembly-CSharp::FurnitureData
+  id: 15
+  category: 3
+  displayName: "\uC774\uB07C \uB080 \uD0C0\uC77C \uBC14\uB2E5\uC7AC"
+  description: "\uC774\uB07C\uAC00 \uB080 \uD0C0\uC77C \uBC14\uB2E5\uC7AC. \uBC1F\uC544\uB3C4
+    \uBC1F\uC544\uB3C4 \uD3ED\uC2E0\uD558\uAC8C \uB418\uC0B4\uC544\uB09C\uB2E4."
+  price: 9999
+  set: "\uC544\uD3EC\uCE7C\uB9BD\uC2A4"
+  availableFromDay: 3
+  inCatalog: 1
+  sprite: {fileID: 21300000, guid: b7f78e1a3ca5a0240ab670c970f2924e, type: 3}
+  morningSprite: {fileID: 0}
+  sunsetSprite: {fileID: 0}
+  eveningSprite: {fileID: 0}
+  extraSprites: []

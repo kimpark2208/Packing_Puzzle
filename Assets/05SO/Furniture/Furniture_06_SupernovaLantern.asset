@@ -1,0 +1,29 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 70548d3b9000ded4c8b3cf6e2d82ca29, type: 3}
+  m_Name: Furniture_06_SupernovaLantern
+  m_EditorClassIdentifier: Assembly-CSharp::FurnitureData
+  id: 6
+  category: 0
+  displayName: "\uCD08\uC2E0\uC131 \uB4F1\uBD88"
+  description: "\uC21C\uC2DD\uAC04\uC5D0 \uC0AC\uB77C\uC9C0\uB294 \uBE5B\uC744 \uD3EC\uCC29\uD574
+    \uB9CC\uB4E0 \uB4F1\uBD88. \uB108\uBB34 \uBE5B\uC774 \uB098 \uC624\uB798 \uBCF4\uBA74
+    \uB208\uC774 \uBA40\uC5B4\uBC84\uB9B4 \uAC83 \uAC19\uB2E4."
+  price: 7000
+  set: "\uBCC4\uC790\uB9AC"
+  availableFromDay: 9
+  inCatalog: 1
+  sprite: {fileID: 0}
+  morningSprite: {fileID: 21300000, guid: 8d25e9a6959d1d74a835d1f439047175, type: 3}
+  sunsetSprite: {fileID: 21300000, guid: 8d25e9a6959d1d74a835d1f439047175, type: 3}
+  eveningSprite: {fileID: 21300000, guid: 8d25e9a6959d1d74a835d1f439047175, type: 3}
+  extraSprites: []
