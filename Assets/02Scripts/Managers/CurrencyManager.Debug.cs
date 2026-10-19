@@ -18,6 +18,9 @@ public partial class CurrencyManager
         if (GUILayout.Button("Debug: 일수 +1(하루 정산 없이 다음 날 낮으로, 그날 밤 새 꽃 지급)") && GameManager.Instance != null)
             GameManager.Instance.DebugAdvanceDay();
 
+        if (GUILayout.Button("Debug: 예약 전화 걸기(메인 화면에서)"))
+            FindFirstObjectByType<ReservationCall>()?.Begin();
+
         if (GUILayout.Button("Debug: 하루 시간 -1분") && GameClock.Instance != null)
             GameClock.Instance.SkipDayTime(60f);
 

@@ -38,6 +38,9 @@ public class DayScenarioData : ScriptableObject
     [Tooltip("밤 시간이 흐르지 않고, 정해진 밤 손님을 모두 마쳐야 밤이 끝난다. 끝나면 하루 결산 없이 다음 날 낮으로 간다(1일차).")] public bool freeNight;
     [Tooltip("그날 정해진 밤 손님들(순서대로). 있으면 부적 꽃 대신 이 손님들이 먼저 온다.")] public NightVisit[] nightVisits = Array.Empty<NightVisit>();
 
+    [Header("예약 전화")]
+    [Tooltip("이 날 낮에 손님과 손님 사이(1~2번째 손님 뒤, 무작위)에 걸려 오는 예약 전화. 비우면 오지 않는다.")] public ReservationData reservationCall;
+
     [Header("해금(이 일차부터 켜진다)")]
     public bool unlocksPhone;
     public bool unlocksCalendar;

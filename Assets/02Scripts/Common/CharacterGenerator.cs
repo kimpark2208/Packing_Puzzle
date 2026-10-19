@@ -92,31 +92,8 @@ public class CharacterGenerator : MonoBehaviour
         return result;
     }
 
-    private bool portraitShown;
-    private Color skinColorBeforePortrait;
-
-    /// <summary>
-    /// 정해진 캐릭터(NPC)의 그림 한 장을 조합 레이어 중 피부 하나에만 넣고, 나머지 조합 레이어는 모두 끈다(체구가 작은 NPC).
-    /// 다음에 Apply/Randomize를 하면 레이어들이 다시 켜지고 피부 색도 원래대로 돌아온다.
-    /// </summary>
-    public void ShowPortrait(Sprite portrait)
-    {
-        foreach (Image layer in new[] { brow, cloth, eyes, mouth, hairBack, hairFront, hairSide, tieR, tieL }) Show(layer, null);
-        if (skin == null) return;
-
-        if (!portraitShown) skinColorBeforePortrait = skin.color;
-        portraitShown = true;
-        skin.color = Color.white; // 그림이 칠해진 색 그대로 보이게
-        Show(skin, portrait);
-    }
-
     public void Apply(CharacterAppearance appearance)
     {
-        if (portraitShown && skin != null)
-        {
-            skin.color = skinColorBeforePortrait;
-            portraitShown = false;
-        }
         Current = appearance;
         Show(brow, appearance.brow);
         Show(cloth, appearance.cloth);

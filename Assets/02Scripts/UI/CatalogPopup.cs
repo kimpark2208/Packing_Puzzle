@@ -36,7 +36,7 @@ public class CatalogPopup : MonoBehaviour
     [SerializeField, Tooltip("확대 보기 영역 안에 그림을 보여 줄 Image(ZoomPanView의 content).")] private Image expandedSprite;
     [SerializeField, Tooltip("확대 보기 영역의 축소 버튼: 누르면 카드 목록으로 돌아간다.")] private Button shrinkButton;
 
-    private readonly HashSet<int> ordered = new(); // 이번 씬에서 주문한 아이템. TODO: 가구/꾸미기 용품/유물의 구매(보유) 여부는 아직 저장하지 않는다
+    private readonly HashSet<string> ordered = new(); // 이번 씬에서 주문한 아이템("종류번호" 키). TODO: 가구와 유물의 구매(보유) 여부는 아직 저장하지 않는다(꾸미기 용품은 주문하면 CurrencyManager 재고에 들어간다)
     private static readonly FurnitureCategory[] FurnitureCategories = (FurnitureCategory[])Enum.GetValues(typeof(FurnitureCategory));
 
     private int selected;
@@ -172,22 +172,41 @@ public class CatalogPopup : MonoBehaviour
 
             FurnitureCategory chipCategory = categories[Mathf.Clamp(selectedChip, 0, categories.Count - 1)];
             foreach (FurnitureData furniture in AvailableFurniture().Where(f => f.category == chipCategory).OrderBy(f => f.id))
-                AddCard(furniture.id, furniture.displayName, furniture.description, furniture.price, furniture.CatalogSprite);
+                AddCard($"Furniture{furniture.id}", furniture.displayName, furniture.description, furniture.price, furniture.CatalogSprite);
+            return;
+        }
+
+        if (category == ShopManager.ShopCategory.Deco) // 꾸미기 용품은 DecorationData(DataRegistry)에서 읽고, 주문하면 바로 재고에 들어간다
+        {
+            foreach (DecorationData decoration in AvailableDecorations().OrderBy(d => d.id))
+            {
+                DecorationData item = decoration;
+                AddCard($"Deco{item.id}", item.displayName, item.description, item.price, item.sprite, () => CurrencyManager.Instance.AddDecorationStock(item.id, 1));
+            }
             return;
         }
 
         if (ShopManager.Instance == null) return;
 
         foreach (var item in ShopManager.Instance.GetItemsByCategory(category))
-            AddCard(item.itemId, item.itemName, item.description, item.price, null);
+            AddCard($"{category}{item.itemId}", item.itemName, item.description, item.price, null);
     }
 
-    /// <summary>카드 템플릿을 복제해 내용을 채운다. sprite가 없으면 템플릿의 그림을 그대로 둔다.</summary>
-    private void AddCard(int id, string itemName, string description, int price, Sprite sprite)
+    /// <summary>지금 카탈로그에 나오는 꾸미기 용품: 카탈로그 표시가 켜져 있고, 나오기 시작하는 일차가 된 것.</summary>
+    private static IEnumerable<DecorationData> AvailableDecorations()
+    {
+        if (DataRegistry.Instance == null) return Enumerable.Empty<DecorationData>();
+
+        int day = CurrencyManager.Instance != null ? CurrencyManager.Instance.CurrentDay : int.MaxValue;
+        return DataRegistry.Instance.Decorations.Where(d => d != null && d.inCatalog && d.availableFromDay <= day);
+    }
+
+    /// <summary>카드 템플릿을 복제해 내용을 채운다. sprite가 없으면 템플릿의 그림을 그대로 둔다. 주문하면(돈을 낸 뒤) onOrdered를 부른다.</summary>
+    private void AddCard(string key, string itemName, string description, int price, Sprite sprite, Action onOrdered = null)
     {
         RectTransform card = Instantiate(itemTemplate, content);
         card.gameObject.SetActive(true);
-        card.name = $"Item_{id}";
+        card.name = $"Item_{key}";
         card.Find("Body/Name").GetComponent<TMP_Text>().text = itemName;
         card.Find("Body/Desc").GetComponent<TMP_Text>().text = description;
         card.Find("Body/PriceIcon/PriceText").GetComponent<TMP_Text>().text = price.ToString("N0"); // PriceText는 PriceIcon의 자식이다
@@ -201,7 +220,7 @@ public class CatalogPopup : MonoBehaviour
 
         var order = card.Find("Body/OrderBTN").GetComponent<Button>();
         var orderText = order.GetComponentInChildren<TMP_Text>();
-        if (ordered.Contains(id))
+        if (ordered.Contains(key))
         {
             MarkOrdered(order, orderText);
             return;
@@ -210,7 +229,8 @@ public class CatalogPopup : MonoBehaviour
         order.onClick.AddListener(() =>
         {
             if (CurrencyManager.Instance == null || !CurrencyManager.Instance.TrySpendMoney(price)) return;
-            ordered.Add(id);
+            ordered.Add(key);
+            onOrdered?.Invoke();
             MarkOrdered(order, orderText);
         });
     }

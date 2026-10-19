@@ -21,7 +21,6 @@ public partial class CurrencyManager : Singleton<CurrencyManager>
     // ========== 포장지 (Wrapper) ==========
     private HashSet<int> ownedWrappers = new();
     private readonly Dictionary<int, int> wrapperStock = new(); // 포장지별 재고(소모품)
-    private readonly Dictionary<int, int> pendingWrapperStock = new(); // 오늘 선물로 받아 다음 날부터 쓸 수 있는 포장지
 
     // ========== 꽃 (Flower) ==========
     private HashSet<int> obtainedFlowers = new();           // 획득한 꽃 ID
@@ -165,12 +164,6 @@ public partial class CurrencyManager : Singleton<CurrencyManager>
         Debug.Log($"[CurrencyManager] 포장지 {wrapperId} 재고 {amount:+#;-#}개 → {wrapperStock[wrapperId]}개");
     }
 
-    /// <summary>선물로 받은 포장지는 다음 날부터 쓸 수 있다: 날이 바뀔 때(AdvanceDay) 재고에 더해진다.</summary>
-    public void AddWrapperStockNextDay(int wrapperId, int amount)
-    {
-        pendingWrapperStock[wrapperId] = pendingWrapperStock.GetValueOrDefault(wrapperId) + amount;
-    }
-
     /// <summary>포장지의 재고 수(받은 적이 없으면 0). 낮 퍼즐을 마치면 쓴 포장지가 하나 줄어든다(GameManager.ConsumeUsedWrapper).</summary>
     public int GetWrapperStock(int wrapperId) => wrapperStock.TryGetValue(wrapperId, out int count) ? count : 0;
 
@@ -239,8 +232,6 @@ public partial class CurrencyManager : Singleton<CurrencyManager>
     public void AdvanceDay()
     {
         currentDay++;
-        foreach (var gift in pendingWrapperStock) AddWrapperStock(gift.Key, gift.Value); // 어제 받은 포장지를 오늘부터 쓴다
-        pendingWrapperStock.Clear();
         TodayEarned = 0;
         TodaySpent = 0;
         todayScores.Clear();

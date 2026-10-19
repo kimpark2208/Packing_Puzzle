@@ -56,6 +56,10 @@ public class GameManager : Singleton<GameManager>
 
     private const string DefaultRejectResponseLine = CustomerSpeech.DefaultForceAcceptLine;
 
+    private int reservationAfterDay; // reservationAfter를 정한 일차
+    private int reservationAfter;    // 그날 몇 번째 손님을 마친 뒤 예약 전화가 오는가(1 또는 2)
+    private int reservationCallDay;  // 예약 전화를 이미 건 일차(하루에 한 번만 건다)
+
     private string pendingCustomerLine;
     private string pendingRejectResponseLine = DefaultRejectResponseLine;
     private bool orderInProgress; // 주문을 수락해 꽃 선택/퍼즐을 하는 중
@@ -119,6 +123,24 @@ public class GameManager : Singleton<GameManager>
 
         CurrentDayOrder = ScriptedOrder(CurrentScriptedVisit, day) ?? DayPuzzleGenerator.GenerateOrder(day, orderTemplates);
         CurrencyManager.Instance.SetCurrentRequirement(CurrentDayOrder.requirement);
+    }
+
+    /// <summary>손님이 떠나고 다음 손님이 오기 전, 지금 예약 전화가 걸려 올 차례인가: 오늘 시나리오에 예약 전화가 있고, 1~2번째(무작위) 손님을 마쳤고, 오늘 아직 안 걸었으면 그 예약을 돌려준다(그러면 오늘은 한 번 건 것으로 친다). 아니면 null.</summary>
+    public ReservationData TakeReservationCall()
+    {
+        int day = CurrencyManager.Instance.CurrentDay;
+        DayScenarioData scenario = ScenarioManager.Instance != null ? ScenarioManager.Instance.ForDay(day) : null;
+        if (scenario == null || scenario.reservationCall == null || reservationCallDay == day) return null;
+
+        if (reservationAfterDay != day)
+        {
+            reservationAfterDay = day;
+            reservationAfter = Random.Range(1, 3);
+        }
+        if (DayVisitIndex - 1 < reservationAfter) return null; // DayVisitIndex는 이미 다음 손님을 가리키므로, 마친 손님 수는 하나 적다
+
+        reservationCallDay = day;
+        return scenario.reservationCall;
     }
 
     /// <summary>정해진 방문의 대화에 주문 효과(`주문:꽃xN`, `주문:포장지N`)가 있으면 그 주문으로 낮 주문을 만든다. 주문 대사는 주문 효과가 달린 줄이다. 없거나 쓸 수 없으면 null(무작위 주문).</summary>
@@ -486,7 +508,7 @@ public class GameManager : Singleton<GameManager>
             CurrencyManager.Instance.AddFlowerStock(visit.flower.flowerID, visit.fixedReplicas);
         }
 
-        // 건너뛴 낮 대사에서 받았을 포장지 선물: 다음 날부터 쓸 수 있게 지급된다(이미 받았어도 한 번 더 지급되는 것은 디버그라 그냥 둔다)
+        // 건너뛴 낮 대사에서 받았을 포장지 선물을 지급한다(이미 받았어도 한 번 더 지급되는 것은 디버그라 그냥 둔다)
         if (scenario != null)
         {
             foreach (DayVisit visit in scenario.dayVisits)

@@ -10,15 +10,15 @@ using UnityEngine.UI;
 /// BuildLevel이 프리셋(WrapperPresetData)에 적힌 칸만 켜서 태그 색으로 칠하고 태그별 꽃 이미지를 채운다.
 /// 드래그해온 꽃은 자기 역할(속성)과 같은 태그의 빈 칸에만 놓을 수 있고, 놓으면 그 칸이 진하게 채워진다.
 ///
-/// TODO: 지금은 2링 포장지와 그 프리셋만 지원하는 임시 구조다. 3링 이상 포장지는 에디터에 둘 칸 구성과
-/// 맨 바깥 링 처리(반지름/이미지)를 새로 정해야 하고, 판정도 반지름·사분면 수식이라 칸 이미지와 따로 논다.
+/// 2링과 3링 포장지를 지원한다. 4링 포장지는 에디터에 4링 칸을 놓고 SupportedRings를 올려야 한다.
+/// 판정은 반지름·사분면 수식이라 칸 이미지와 따로 논다(칸 이미지를 바꾸면 centerRadius, ringSpacing도 맞출 것).
 /// </summary>
 public class DayPuzzleController : MonoBehaviour
 {
     public static DayPuzzleController Instance { get; private set; }
 
     /// <summary>에디터에 칸 오브젝트가 배치된 링 수. 3·4링 칸을 씬에 배치하면 이 값을 올린다(포장지는 최대 4링).</summary>
-    public const int SupportedRings = 2;
+    public const int SupportedRings = 3;
 
     [SerializeField] private RectTransform slotArea;    [SerializeField] private RectTransform flowerArea; // 칸과 같은 이름의 꽃 이미지를 두는 곳 (SlotArea와 같은 위치/크기)
     [SerializeField] private float centerRadius = 70f;
@@ -26,7 +26,17 @@ public class DayPuzzleController : MonoBehaviour
     [Header("씬 단독 실행용 기본 포장지/프리셋 (주문이 확정돼 있으면 주문의 프리셋을 쓴다)")]
     [SerializeField] private WrapperData wrapper;
     [SerializeField] private int presetIndex;
-    [SerializeField] private float outerRingVisualRadius = 550f; // 맨 바깥 링의 바깥 반지름(판정용)
+    [SerializeField] private float outerRingVisualRadius = 550f; // 2링 포장지의 맨 바깥 링의 바깥 반지름(판정용)
+    [SerializeField, Tooltip("3링 포장지의 맨 바깥 링(3링 칸)의 바깥 반지름(판정용). 3링 칸 그림 740px의 반지름 370.")] private float threeRingOuterVisualRadius = 370f;
+
+    [Header("링 칸 그림: 2링 포장지는 2링 칸이 맨 바깥(바깥 그림)이고, 3링 포장지는 2링 칸이 안쪽 그림으로 바뀌며 3링 칸이 맨 바깥이 된다")]
+    [SerializeField] private Sprite ring2InnerSprite; // Cell_2Ring
+    [SerializeField] private Sprite ring2OuterSprite; // Cell_2RingOuter
+    [Header("3링 포장지 크기: 3링 칸이 커서 칸과 그 위에 올라가는 것(꽃, 글로우, 데코)은 줄이고, 포장지 이미지는 늘린다. 2링 포장지는 모두 1배다")]
+    [SerializeField, Tooltip("보이는 포장지 이미지(WrapperArea의 자식 WrapperImage).")] private RectTransform wrapperArt;
+    [SerializeField, Tooltip("칸과 같이 크기가 바뀌는 영역들: SlotArea, FlowerArea, GlowArea, LeafArea, RibbonArea.")] private RectTransform[] scaledWithSlots;
+    [SerializeField, Range(0.5f, 1f)] private float threeRingSlotScale = 0.95f;
+    [SerializeField, Range(1f, 1.5f)] private float threeRingWrapperScale = 1.1f;
 
     [Header("FlowerArea의 꽃 이미지에 채울 태그별 이미지 (FlowerRole 순서: Line, Mass, Form, Filler)")]
     [SerializeField] private Sprite[] tagSprites;
@@ -37,6 +47,7 @@ public class DayPuzzleController : MonoBehaviour
     private const float FilledAlpha = 0f; // 꽃이 놓인 칸은 뒤의 셀 배경을 숨긴다
     private const int CollapseDiff = 2;
     private const int OverlapSamples = 5; // 꽃 사각형 한 변에 찍는 표본점 수(칸과의 겹침을 어림하는 데 쓴다)
+    private const float CellUnitsPerPixel = 0.5f; // 칸 그림 1픽셀 = 캔버스 0.5단위(1링 칸 그림 340px = 칸 170)
 
     [Header("꽃의 빛: 흐림은 더 투명하게, 빛남은 꽃 뒤의 글로우 이미지(GlowArea)를 켠다. 글로우 이미지는 꽃과 같은 그림을 쓰고 셰이더(UI/FlowerGlow)가 번지게 한다")]
     [SerializeField, Range(0f, 1f)] private float dimAlpha = 0.4f;
@@ -114,6 +125,7 @@ public class DayPuzzleController : MonoBehaviour
             slot.gameObject.SetActive(inWrapper);
             if (!inWrapper) continue;
 
+            ApplyRingSkin(slot);
             slot.Clear();
             slot.tag = preset.cellRoles[i];
             slot.SetHighlightColor(TagColor(slot.tag));
@@ -121,6 +133,8 @@ public class DayPuzzleController : MonoBehaviour
             if (glowImage != null) glowImage.sprite = tagSprites[(int)slot.tag]; // 후광은 꽃 그림을 번지게 해서 그린다
             regions.Add(slot);
         }
+
+        ApplyBoardScale();
 
         if (rebuild)
         {
@@ -130,6 +144,29 @@ public class DayPuzzleController : MonoBehaviour
         {
             ApplySpecialCells();
         }
+    }
+
+    /// <summary>3링 포장지는 칸과 그 위의 것(꽃, 글로우, 데코)을 줄이고 포장지 이미지를 늘린다. 2링 포장지는 모두 1배(에디터에는 3링 상태를 보며 작업해 둔다).</summary>
+    private void ApplyBoardScale()
+    {
+        bool three = activeRings >= 3;
+        if (wrapperArt != null) wrapperArt.localScale = Vector3.one * (three ? threeRingWrapperScale : 1f);
+        if (scaledWithSlots == null) return;
+
+        foreach (RectTransform area in scaledWithSlots)
+        {
+            if (area != null) area.localScale = Vector3.one * (three ? threeRingSlotScale : 1f);
+        }
+    }
+
+    /// <summary>2링 칸은 맨 바깥 링이면 바깥 그림, 안쪽 링이면(3링 포장지) 안쪽 그림을 쓴다. 칸 크기는 그림 크기를 따른다.</summary>
+    private void ApplyRingSkin(WrapperSlot slot)
+    {
+        if (slot.ringIndex != 1 || ring2InnerSprite == null || ring2OuterSprite == null) return;
+
+        Sprite sprite = activeRings >= 3 ? ring2InnerSprite : ring2OuterSprite;
+        slot.GetComponent<Image>().sprite = sprite;
+        ((RectTransform)slot.transform).sizeDelta = sprite.rect.size * CellUnitsPerPixel;
     }
 
     /// <summary>퍼즐이 만들어진 뒤 특수 칸을 정해 칸 이미지에 효과 머티리얼을 입힌다.</summary>
@@ -151,21 +188,23 @@ public class DayPuzzleController : MonoBehaviour
         DayPuzzleGenerator.DayOrder order = GameManager.Instance != null ? GameManager.Instance.CurrentDayOrder : null;
         if (order != null && order.preset != null)
         {
-            activeRings = Mathf.Min(order.wrapper.ringCount, SupportedRings);
+            activeRings = Mathf.Min(order.preset.MaxRing, SupportedRings); // 포장지가 2링·3링 프리셋을 함께 가질 수 있어서 프리셋의 링 수를 따른다
             TintWrapper(order.wrapper);
             return order.preset;
         }
 
         if (wrapper == null || wrapper.presets.Count == 0) return null;
-        activeRings = Mathf.Min(wrapper.ringCount, SupportedRings);
+        WrapperPresetData standalone = wrapper.presets[Mathf.Clamp(presetIndex, 0, wrapper.presets.Count - 1)];
+        activeRings = Mathf.Min(standalone.MaxRing, SupportedRings);
         TintWrapper(wrapper);
-        return wrapper.presets[Mathf.Clamp(presetIndex, 0, wrapper.presets.Count - 1)];
+        return standalone;
     }
 
     /// <summary>포장지 이미지를 고른 포장지의 색으로 물들인다. 꾸미기에서 포장지 그림을 바꿔도 이미지의 색은 그대로라서 같은 색으로 보인다.</summary>
     private void TintWrapper(WrapperData data)
     {
         if (wrapperImage != null && wrapperImage.TryGetComponent(out Image image)) image.color = data.color;
+        if (wrapperArt != null && wrapperArt.TryGetComponent(out Image art)) art.color = data.color; // 보이는 포장지 그림은 WrapperArea의 자식이다
     }
 
     /// <summary>꽃 이미지는 FlowerArea 아래에 칸과 같은 이름(= position)으로 둔다.</summary>
@@ -334,7 +373,7 @@ public class DayPuzzleController : MonoBehaviour
             float outer = centerRadius + (ring + 1) * ringSpacing;
             bool isOuterMost = ring == ringCount - 1;
 
-            float bandOuter = isOuterMost ? outerRingVisualRadius : outer;
+            float bandOuter = isOuterMost ? (ringCount >= 3 ? threeRingOuterVisualRadius : outerRingVisualRadius) : outer;
             if (dist <= inner || dist > bandOuter) continue;
 
             WrapperSlot.Quadrant quadrant = GetQuadrant(local);
@@ -388,4 +427,45 @@ public class DayPuzzleController : MonoBehaviour
     }
 
     public IReadOnlyList<WrapperSlot> AllSlots => regions;
+
+#if UNITY_EDITOR
+    /// <summary>Play 없이 포장지 보드의 모습을 확인하는 에디터 미리보기(Tools/Day/Ring Preview). 프리셋의 칸만 켜서 태그 색으로 칠하고, 링 수에 맞는 크기와 칸 그림을 적용한다.
+    /// ringSprites는 중앙, 1링, 2링, 3링 순서로 칸 그림을 바꿔 본다(null이면 씬의 그림 그대로). 저장하지 않는 미리보기라서 씬을 저장하면 안 된다.</summary>
+    public void EditorPreview(WrapperData data, WrapperPresetData preset, Sprite[] ringSprites, bool showFlowers)
+    {
+        activeRings = Mathf.Min(preset.MaxRing, SupportedRings);
+        TintWrapper(data);
+        ApplyBoardScale();
+
+        foreach (WrapperSlot slot in slotArea.GetComponentsInChildren<WrapperSlot>(true))
+        {
+            int i = (int)slot.position;
+            bool inWrapper = i < preset.cellRoles.Length;
+            slot.gameObject.SetActive(inWrapper);
+            Transform flowerImage = FlowerImageOf(slot);
+            Image glowImage = GlowImageOf(slot);
+            if (glowImage != null) glowImage.gameObject.SetActive(false);
+            if (flowerImage != null) flowerImage.gameObject.SetActive(inWrapper && showFlowers);
+            if (!inWrapper) continue;
+
+            ApplyRingSkin(slot);
+            var image = slot.GetComponent<Image>();
+            int ring = slot.ringIndex + 1; // 0 = 중앙
+            if (ringSprites != null && ring < ringSprites.Length && ringSprites[ring] != null)
+            {
+                image.sprite = ringSprites[ring];
+                ((RectTransform)slot.transform).sizeDelta = ringSprites[ring].rect.size * CellUnitsPerPixel;
+            }
+
+            FlowerData.FlowerRole role = preset.cellRoles[i];
+            image.color = TagColor(role);
+            if (flowerImage != null && showFlowers && tagSprites != null && (int)role < tagSprites.Length)
+            {
+                var flower = flowerImage.GetComponent<Image>();
+                flower.sprite = tagSprites[(int)role];
+                flower.color = Color.white;
+            }
+        }
+    }
+#endif
 }

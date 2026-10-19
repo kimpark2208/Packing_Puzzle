@@ -36,14 +36,14 @@ public class GameClock : Singleton<GameClock>
     public MoodLevel Mood => MoodRatio > HappyAbove ? MoodLevel.Happy : MoodRatio > NormalAbove ? MoodLevel.Normal : MoodLevel.Bad;
 
     /// <summary>기분 시간이 지금 실제로 줄고 있는가(주문을 수락했고, 낮 화면이고, 설정/결과로 멈춰 있지 않다).</summary>
-    public bool MoodFlowing => moodActive && running && !paused && !TutorialHold;
+    public bool MoodFlowing => moodActive && running && !Paused && !TutorialHold;
 
     /// <summary>튜토리얼 안내가 떠 있는 동안 true: 하루/기분/밤 시간이 모두 멈춘다(설정 창의 멈춤과 따로 센다).</summary>
     public bool TutorialHold { get; set; }
 
     private bool running;
     private bool moodActive; // 현재 주문이 진행 중이라 기분 시간이 흐르는가
-    private bool paused;     // 설정 창이 열려 있는가
+    private int pauseCount; // 멈춤을 건 곳의 수(설정 창, NPC 대화, 정산 결과, 예약 전화 …): 모두 풀어야 시간이 흐른다
     private bool nightScene;  // 지금 메인 화면의 밤 상황(밤 손님/밤 종료)이거나 밤 퍼즐 씬인가
     private bool nightLook;   // 시계를 밤 모습으로 보여 주는 화면인가(nightScene이거나 부적 화면)
     private bool nightActive; // 밤이 시작됐고 아직 끝나지 않았는가
@@ -67,7 +67,7 @@ public class GameClock : Singleton<GameClock>
 
     private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
     {
-        paused = false; // 씬이 바뀌면 설정 창은 닫힌 상태로 시작한다
+        pauseCount = 0; // 씬이 바뀌면 멈춤은 모두 풀린 채로 시작한다
         MorningFill = -1f; // 밤 → 낮 연출은 메인 화면이 열릴 때 다시 시작한다
         // 메인 화면은 하나(낮 메인)라서, 낮 시간이 흐르는지 밤 시간이 흐르는지는 메인 화면의 상황(MainState)으로 정한다.
         MainState main = GameManager.Instance != null ? GameManager.Instance.MainState : MainState.DayCustomer;
@@ -87,7 +87,7 @@ public class GameClock : Singleton<GameClock>
 
     private void Update()
     {
-        if (paused || TutorialHold) return;
+        if (Paused || TutorialHold) return;
         if (running) Tick(Time.deltaTime);
         if (nightScene && nightActive) TickNight(Time.deltaTime);
     }
@@ -160,11 +160,13 @@ public class GameClock : Singleton<GameClock>
         moodActive = false;
     }
 
-    /// <summary>설정 창을 열고 닫을 때, 정산 결과 화면이 뜰 때: 멈춰 있는 동안 하루/기분 시간이 모두 멈춘다.</summary>
+    /// <summary>시간을 멈추거나(true) 푼다(false). 설정 창, NPC 대화, 정산 결과, 예약 전화처럼 여럿이 겹쳐 멈출 수 있어서 횟수로 센다(true마다 false가 짝이어야 하고, 모두 풀려야 시간이 흐른다). 멈춰 있는 동안 하루/기분 시간이 모두 멈춘다.</summary>
     public void SetPaused(bool value)
     {
-        paused = value;
+        pauseCount = Mathf.Max(0, pauseCount + (value ? 1 : -1));
     }
+
+    private bool Paused => pauseCount > 0;
 
     /// <summary>시나리오에서 낮을 건너뛸 때: 하루 남은 시간을 seconds 동안 시계가 빠르게 감기듯이 0까지 줄인다(시계 게이지와 낮 → 노을 모습이 따라 움직인다).
     /// 낮이 끝났다는 이벤트(OnDayTimeUp)는 내지 않는다. 이 뒤의 흐름(전등, 밤 시작)은 부른 쪽이 직접 이어 간다.</summary>

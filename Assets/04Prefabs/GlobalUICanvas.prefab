@@ -69,6 +69,7 @@ GameObject:
   - component: {fileID: 5552381740975757658}
   - component: {fileID: 7169248503976988258}
   - component: {fileID: 1121833708081264177}
+  - component: {fileID: 1522668731672314341}
   m_Layer: 0
   m_Name: NoticeToast
   m_TagString: Untagged
@@ -93,7 +94,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: -19.999817, y: -560}
+  m_AnchoredPosition: {x: -19.999695, y: -560}
   m_SizeDelta: {x: 400, y: 110}
   m_Pivot: {x: 0, y: 0.5}
 --- !u!222 &5552381740975757658
@@ -117,7 +118,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
   m_Material: {fileID: 0}
-  m_Color: {r: 0.9528302, g: 0.9109424, b: 0.80451226, a: 1}
+  m_Color: {r: 0.9528302, g: 0.9109424, b: 0.80451226, a: 0.78431374}
   m_RaycastTarget: 0
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -150,6 +151,21 @@ MonoBehaviour:
   slideInSeconds: 0.3
   holdSeconds: 1.5
   slideOutSeconds: 0.3
+--- !u!114 &1522668731672314341
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 101267627939495890}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: cfabb0440166ab443bba8876756fdfa9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Shadow
+  m_EffectColor: {r: 0, g: 0, b: 0, a: 0.627451}
+  m_EffectDistance: {x: 5, y: -10}
+  m_UseGraphicAlpha: 1
 --- !u!1 &284326282800976932
 GameObject:
   m_ObjectHideFlags: 0
@@ -1687,6 +1703,7 @@ GameObject:
   - component: {fileID: 6849161280399269379}
   - component: {fileID: 3973298552634732057}
   - component: {fileID: 427987958565290589}
+  - component: {fileID: 1168544543594886852}
   m_Layer: 0
   m_Name: DayLabel
   m_TagString: Untagged
@@ -1733,9 +1750,7 @@ MonoBehaviour:
   dayText: {fileID: 5547963724472357496}
   year: 1
   season: "\uBD04"
-  introSeconds: 2
-  fadeSeconds: 0.3
-  group: {fileID: 427987958565290589}
+  fader: {fileID: 1168544543594886852}
   dayColor: {r: 0.353, g: 0.231, b: 0.141, a: 1}
   nightColor: {r: 1, g: 0.965, b: 0.89, a: 1}
 --- !u!225 &427987958565290589
@@ -1750,6 +1765,21 @@ CanvasGroup:
   m_Interactable: 0
   m_BlocksRaycasts: 0
   m_IgnoreParentGroups: 0
+--- !u!114 &1168544543594886852
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3183915585639312570}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 73525775d9b92564998b9238d827204d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::UIFader
+  fadeInSeconds: 0.3
+  holdSeconds: 2
+  fadeOutSeconds: 0.3
 --- !u!1 &3373411915183915554
 GameObject:
   m_ObjectHideFlags: 0

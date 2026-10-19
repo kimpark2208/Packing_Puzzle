@@ -15,6 +15,7 @@ MonoBehaviour:
   day: 6
   skipDayBusiness: 0
   dayVisits: []
+  freeNight: 0
   nightVisits:
   - npc: {fileID: 11400000, guid: 8fc2b91183bd1a44cbec42b26b262194, type: 2}
     dialogueId: siren_d6_visit
@@ -22,6 +23,7 @@ MonoBehaviour:
     flower: {fileID: 11400000, guid: 33889ca4b222efda2e6ffe142371f85d, type: 2}
     fixedReplicas: 20
     reactionPrefix: siren_react
+  reservationCall: {fileID: 11400000, guid: 6dde361723e33844888a3bb38150ebcd, type: 2}
   unlocksPhone: 0
   unlocksCalendar: 1
   dayToNightSound: {fileID: 0}

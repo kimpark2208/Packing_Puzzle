@@ -436,6 +436,16 @@ MonoBehaviour:
   - {fileID: 11400000, guid: c5c1b362f6c7b394da52b18393b5748c, type: 2}
   - {fileID: 11400000, guid: 21949192684ee0d4b9d5ba71dbbbefb4, type: 2}
   - {fileID: 11400000, guid: 8b52babf01d19cd48b1eb53c78790958, type: 2}
+  decorations:
+  - {fileID: 11400000, guid: 7e78285c3426ecf4b86bfe1a8a851f66, type: 2}
+  - {fileID: 11400000, guid: c93cd04cccc8c294783b8d9e7e5ada27, type: 2}
+  - {fileID: 11400000, guid: a4db56c9835355a45a5cd46fff3d1973, type: 2}
+  - {fileID: 11400000, guid: 120d84d8ad5de3d479e70208c7ae4a59, type: 2}
+  - {fileID: 11400000, guid: 4c8186bcdf8027f47b9e8261634f5ba9, type: 2}
+  - {fileID: 11400000, guid: 2ac19f00f52737244a2fb5c8f0d443c7, type: 2}
+  - {fileID: 11400000, guid: 6168abcd914d35b45acd3b1dddd6cd77, type: 2}
+  - {fileID: 11400000, guid: 2afc95e8f8a647147991e0e7d69a2589, type: 2}
+  - {fileID: 11400000, guid: d66cf50695d083447bbb0e22476fd930, type: 2}
 --- !u!114 &438470796
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -463,8 +473,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::CurrencyManager
   dontDestroyOnLoad: 1
   initialMoney: 0
-  initialFlowerStock: 20
-  outOfStockFlowerIds: 04000000
   initialCharms: 20
   maxCharms: 30
 --- !u!4 &438470799

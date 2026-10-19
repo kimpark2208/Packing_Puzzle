@@ -16,4 +16,8 @@ MonoBehaviour:
   category: 3
   displayName: "\uB098\uBE44 \uD540"
   price: 250
+  description: "\uCCA0\uC0AC\uB85C \uB9CC\uB4E0 \uB098\uBE44 \uD540"
+  inCatalog: 1
+  availableFromDay: 5
   sprite: {fileID: 8196531519459296852, guid: 3aa01898f31fd5c47a95dfd7a63db8ad, type: 3}
+  sizeScale: 1

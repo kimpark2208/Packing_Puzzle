@@ -37,13 +37,13 @@ MonoBehaviour:
   - npc: {fileID: 0}
     dialogueId: 
     dialogueOnly: 0
-    flower: {fileID: 11400000, guid: 2cee97a2a4448bd77c8c6e5b0b02d02a, type: 2}
+    flower: {fileID: 11400000, guid: 227b50a9f7749eaf0641d2896bf87bca, type: 2}
     fixedReplicas: 20
     reactionPrefix: 
   - npc: {fileID: 0}
     dialogueId: 
     dialogueOnly: 0
-    flower: {fileID: 11400000, guid: 54be2c2f4f04102a72cff051f9762d00, type: 2}
+    flower: {fileID: 11400000, guid: 76877ecdd9d2763942ff5298c068785b, type: 2}
     fixedReplicas: 20
     reactionPrefix: 
   - npc: {fileID: 0}

@@ -1,0 +1,43 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d03c33870a2cf8e40a8964fdf972468e, type: 3}
+  m_Name: Reservation_01_Wedding
+  m_EditorClassIdentifier: Assembly-CSharp::ReservationData
+  title: "\uC18C\uAD6D\uC744 \uC655\uCC3D \uB123\uC740 \uACB0\uD63C\uC2DD \uAF43\uB2E4\uBC1C"
+  calendarLabel: "\uACB0\uD63C\uC2DD \uC8FC\uBB38"
+  callLine: "\uB2E8\uCCB4 \uC8FC\uBB38 \uD558\uB098 \uB123\uACE0\uC2F6\uC740\uB370\uC694!
+    <b>\uC18C\uAD6D\uC744 \uC655\uCC3D \uB123\uC740 \uACB0\uD63C\uC2DD \uAF43\uB2E4\uBC1C</b>\uC774
+    \uD544\uC694\uD574\uC694!"
+  deadlineDays: 4
+  items:
+  - name: "\uC18C\uAD6D"
+    kind: 0
+    id: 2
+    count: 5
+    icon: {fileID: 0}
+  - name: "\uC6E8\uB529 \uB9AC\uBCF8"
+    kind: 2
+    id: 3
+    count: 1
+    icon: {fileID: 8996674452995383470, guid: 18e56fd24f2cf0047beedc5f1e4e9cfc, type: 3}
+  - name: "\uBD84\uD64D\uC0C9 \uD3EC\uC7A5\uC9C0"
+    kind: 1
+    id: 1
+    count: 5
+    icon: {fileID: 0}
+  - name: "\uAF43\uB2E4\uBC1C"
+    kind: 3
+    id: 0
+    count: 5
+    icon: {fileID: 0}
+  reward: 5000
+  deposit: 1000

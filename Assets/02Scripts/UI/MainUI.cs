@@ -42,6 +42,7 @@ public class MainUI : MonoBehaviour
     private bool leaving; // 마무리 대사를 하고 퇴장하는 중(낮 종료/밤 종료)
 
     private GameObject catalogPopup;
+    private GameObject calendarPopup; // 예약확인(달력) 화면
     private GameObject telephoneBar; // 전화기를 누르면 뜨는 메뉴 바(안에 상품주문 버튼이 카탈로그를 연다)
     private bool phoneUnlocked = true; // 전화기를 쓸 수 있는가(시나리오의 해금 일차부터)
     private GameObject bubbleContainer;
@@ -115,6 +116,7 @@ public class MainUI : MonoBehaviour
         speech = new CustomerSpeech(SceneFind.One<TMP_Text>(scene, SceneObjectNames.BubbleText));
         bubbleContainer = SceneFind.One<Transform>(scene, SceneObjectNames.BubbleContainer)?.gameObject;
         catalogPopup = SceneFind.One<Transform>(scene, SceneObjectNames.CatalogPopup)?.gameObject;
+        calendarPopup = SceneFind.One<Transform>(scene, SceneObjectNames.ReservationCalendar)?.gameObject;
         characterRoots = System.Array.ConvertAll(SceneObjectNames.CharacterRoots, n => SceneFind.One<Transform>(scene, n)?.gameObject);
         character = SceneFind.One<CharacterGenerator>(scene, SceneObjectNames.DayCharacter);
 
@@ -180,10 +182,17 @@ public class MainUI : MonoBehaviour
         }
         SceneFind.One<Button>(scene, SceneObjectNames.CatalogButton)?.onClick.AddListener(OpenCatalog);
         Button booking = SceneFind.One<Button>(scene, SceneObjectNames.BookingButton);
-        if (booking != null) booking.interactable = scenario == null || scenario.IsCalendarUnlocked(day); // 달력은 해금된 날부터
+        if (booking != null)
+        {
+            booking.interactable = scenario == null || scenario.IsCalendarUnlocked(day); // 달력은 해금된 날부터
+            booking.onClick.AddListener(OpenCalendar);
+        }
         telephoneBar?.SetActive(false);
         catalogPopup.SetActive(false);
+        calendarPopup?.SetActive(false);
     }
+
+    private bool PopupOpen => (catalogPopup != null && catalogPopup.activeSelf) || (calendarPopup != null && calendarPopup.activeSelf);
 
     /// <summary>
     /// 대사를 시작한다. 말풍선과 응답 버튼을 숨겨 두었다가, 씬 전환의 페이드가 다 걷힌 뒤(걷힐 게 없으면 한 프레임 뒤)에 보이고 대사(와 말소리)를 시작한다.
@@ -204,7 +213,7 @@ public class MainUI : MonoBehaviour
     /// <summary>전화기를 누르면 전화기 바가 뜨고, 다시 누르면 닫힌다. 카탈로그가 열려 있는 동안은 바를 띄우지 않는다.</summary>
     private void ToggleTelephoneBar()
     {
-        if (!phoneUnlocked || telephoneBar == null || catalogPopup.activeSelf) return; // 전화기가 해금되기 전에는 눌러도 반응이 없다
+        if (!phoneUnlocked || telephoneBar == null || PopupOpen || ReservationCall.Busy) return; // 전화기가 해금되기 전과 예약 전화가 울리는 동안(받는 일은 ReservationCall이 한다)에는 메뉴 바를 열지 않는다
 
         telephoneBar.SetActive(!telephoneBar.activeSelf);
     }
@@ -216,13 +225,20 @@ public class MainUI : MonoBehaviour
         if (!catalogPopup.activeSelf) catalogPopup.SetActive(true);
     }
 
+    /// <summary>바의 예약확인 버튼: 달력 화면이 열린다(닫기는 화면의 닫기 버튼). 열리면 전화기 바는 닫는다.</summary>
+    private void OpenCalendar()
+    {
+        telephoneBar?.SetActive(false);
+        if (calendarPopup != null && !calendarPopup.activeSelf) calendarPopup.SetActive(true);
+    }
+
     private void Update()
     {
         if (state != MainState.DayEnding || nightStarting) return;
 
         // 낮 종료가 되면 손님이 아직 말하는 중이어도 스와이프로 선반을 오갈 수 있다(카탈로그가 열려 있는 동안은 막는다).
         // 등불은 낮 종료 손님이 떠난 뒤, 카운터 화면에 있을 때만 켤 수 있고, 선반(부적) 화면으로 가면 사라진다.
-        if (swipe != null) swipe.Enabled = !(catalogPopup != null && catalogPopup.activeSelf);
+        if (swipe != null) swipe.Enabled = !PopupOpen;
         if (lantern != null)
         {
             bool atHome = swipe == null || swipe.IsAtHome;
@@ -316,7 +332,7 @@ public class MainUI : MonoBehaviour
 
     /// <summary>
     /// NPC 하나와 정해진 대화를 한다: (이전 손님이 있으면 나가고) NPC가 들어오고 -> 대화를 재생하고 -> leaveAfter면 나간다. 대화하는 동안은 시간이 흐르지 않는다.
-    /// 체구가 큰 NPC는 큰 캐릭터(BigChar)에 그림을, 작은 NPC는 (전용 모습이 생기기 전까지) 무작위 손님 모습을 보인다.
+    /// 작은 NPC는 작은 캐릭터(SmallChar)에, 큰 NPC는 큰 캐릭터(BigChar)에 그림을 보인다(그림이 없는 NPC는 무작위 손님 모습).
     /// </summary>
     private System.Collections.IEnumerator TalkScripted(NpcData npc, Dialogue dialogue, bool previousLeaves, bool leaveAfter)
     {
@@ -360,16 +376,11 @@ public class MainUI : MonoBehaviour
     }
 
     /// <summary>
-    /// NPC의 그림을 캐릭터 자리에 보인다. 체구가 큰 NPC는 큰 캐릭터(BigChar)에 그림을 넣고, 체구가 작은 NPC는 노말 캐릭터(NomalChar)의
-    /// 조합 레이어 중 피부 하나에만 그림을 넣고 나머지 조합 레이어는 끈다.
+    /// NPC의 그림을 캐릭터 자리에 보인다. 체구가 작은 NPC는 작은 캐릭터(SmallChar)에, 큰 NPC는 큰 캐릭터(BigChar)에 그림을 넣는다.
     /// </summary>
     private void ShowNpc(NpcData npc)
     {
-        if (character == null) return;
-
-        bool big = npc.characterType == NpcCharacterType.Big;
-        ShowCharacterStyle(big, npc.portrait);
-        if (!big) character.ShowPortrait(npc.portrait);
+        ShowCharacterStyle(npc.characterType, npc.portrait);
     }
 
     /// <summary>
@@ -407,18 +418,23 @@ public class MainUI : MonoBehaviour
         Game.StartNight(new List<int>());
     }
 
-    /// <summary>캐릭터 자리에 체구가 큰 캐릭터(BigChar, 그림 한 장)를 보일지, 작은 캐릭터(NomalChar, 부위 조합)를 보일지 정한다.</summary>
-    private void ShowCharacterStyle(bool big, Sprite portrait)
+    /// <summary>
+    /// 캐릭터 자리에 어느 모습을 보일지 정한다: npcType이 null이면 무작위 손님(NomalChar, 부위 조합), Small이면 작은 NPC(SmallChar), Big이면 큰 NPC(BigChar).
+    /// SmallChar·BigChar에는 portrait 그림을 넣고, 나머지는 끈다.
+    /// </summary>
+    private void ShowCharacterStyle(NpcCharacterType? npcType, Sprite portrait)
     {
         if (character == null) return;
 
-        Transform normal = character.transform.Find(SceneObjectNames.NormalChar);
-        Transform bigChar = character.transform.Find(SceneObjectNames.BigChar);
-        if (normal != null) normal.gameObject.SetActive(!big);
-        if (bigChar == null) return;
+        Transform random = character.transform.Find(SceneObjectNames.NormalChar);
+        Transform small = character.transform.Find(SceneObjectNames.SmallChar);
+        Transform big = character.transform.Find(SceneObjectNames.BigChar);
+        if (random != null) random.gameObject.SetActive(npcType == null);
+        if (small != null) small.gameObject.SetActive(npcType == NpcCharacterType.Small);
+        if (big != null) big.gameObject.SetActive(npcType == NpcCharacterType.Big);
 
-        bigChar.gameObject.SetActive(big);
-        if (big && bigChar.TryGetComponent(out Image image)) image.sprite = portrait;
+        Transform shown = npcType == NpcCharacterType.Small ? small : npcType == NpcCharacterType.Big ? big : null;
+        if (shown != null && shown.TryGetComponent(out Image image)) image.sprite = portrait;
     }
 
     /// <summary>새 손님이 왔다: 무작위 캐릭터로 바꾸고, 반응 대사와 낮 종료 대사를 같은 손님이 하도록 기억해 둔다.</summary>
@@ -426,7 +442,7 @@ public class MainUI : MonoBehaviour
     {
         if (character == null) return;
 
-        ShowCharacterStyle(false, null); // 무작위 손님은 체구가 작은 캐릭터(NomalChar)다
+        ShowCharacterStyle(null, null); // 무작위 손님은 부위를 조합한 캐릭터(NomalChar)다
         character.Randomize(IsNight); // 밤 손님은 피부가 파란 귀신, 낮 손님은 그 피부를 뺀 사람이다
         if (Game != null) Game.CustomerLook = character.Current;
         if (!arrive) return;
@@ -488,7 +504,7 @@ public class MainUI : MonoBehaviour
     {
         if (character == null) return;
 
-        ShowCharacterStyle(false, null); // 메인 씬은 큰 캐릭터(BigChar)가 켜진 채 열리므로, 무작위 손님은 작은 캐릭터로 되돌린다
+        ShowCharacterStyle(null, null); // 메인 씬은 NPC 캐릭터(SmallChar·BigChar)가 켜진 채 열릴 수 있으므로, 무작위 손님 모습으로 되돌린다
         if (Game != null && Game.CustomerLook is CharacterAppearance look) character.Apply(look);
         else ShowNewCustomer();
     }
@@ -641,7 +657,7 @@ public class MainUI : MonoBehaviour
         if (showingReaction)
         {
             showingReaction = false;
-            if (!TryBeginScriptedVisit(previousLeaves: true)) StartCoroutine(NextCustomerRoutine(true)); // 반응 대사가 끝났으니 이 손님이 나가고 다음 손님이 온다(기분 시간은 말풍선이 뜰 때 가득 찬다)
+            StartCoroutine(NextVisitRoutine()); // 반응 대사가 끝났으니 이 손님이 나가고 다음 손님이 온다(기분 시간은 말풍선이 뜰 때 가득 찬다)
             return;
         }
 
@@ -649,6 +665,30 @@ public class MainUI : MonoBehaviour
         Game?.AcceptOrder();
         SetAnswerButtons(false); // 수락한 뒤에는 응답 버튼이 필요 없다
         StartCoroutine(GoToFlowerSelectAfterDelay());
+    }
+
+    /// <summary>
+    /// 반응 대사가 끝난 뒤: 이전 손님이 나가고 다음 손님이 온다. 단, 오늘 예약 전화가 걸려 올 차례면 이전 손님이 나간 뒤 전화가 울리고, 전화가 끝나야(받아서 수락·거절을 했거나, 못 받고 끊겼거나) 다음 손님이 온다.
+    /// </summary>
+    private System.Collections.IEnumerator NextVisitRoutine()
+    {
+        ReservationData reservation = ReservationCall.Instance != null && Game != null ? Game.TakeReservationCall() : null;
+        bool called = reservation != null;
+        if (called)
+        {
+            changingCustomer = true;
+            SetBubble(false);
+            PanelMotion motion = character != null ? character.GetComponent<PanelMotion>() : null;
+            if (character != null) PanelMotion.Close(character.gameObject);
+            yield return new WaitForSecondsRealtime((motion != null ? motion.Seconds : 0f) + customerSwapDelay);
+
+            ReservationCall.Instance.Begin(reservation);
+            yield return null;
+            while (ReservationCall.Busy) yield return null;
+            yield return new WaitForSecondsRealtime(customerSwapDelay);
+        }
+
+        if (!TryBeginScriptedVisit(previousLeaves: !called)) StartCoroutine(NextCustomerRoutine(!called));
     }
 
     /// <summary>수락한 뒤 잠시 있다가 꽃 선택 페이지로 넘어간다(도착하면 돌아올 수 없다: OnSwipeArrived).</summary>

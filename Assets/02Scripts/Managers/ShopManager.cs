@@ -109,33 +109,7 @@ public class ShopManager : Singleton<ShopManager>
 
         // 가구(Furniture)는 FurnitureData(DataRegistry)에서 읽는다 — 카탈로그가 직접 보여 준다
 
-        // ========== 장식 (Deco) ==========
-        allItems.Add(new ShopItem
-        {
-            itemId = 201,
-            itemName = "화분",
-            price = 100,
-            category = ShopCategory.Deco,
-            description = "작은 화분"
-        });
-
-        allItems.Add(new ShopItem
-        {
-            itemId = 202,
-            itemName = "액자",
-            price = 250,
-            category = ShopCategory.Deco,
-            description = "벽에 걸 액자"
-        });
-
-        allItems.Add(new ShopItem
-        {
-            itemId = 203,
-            itemName = "조명",
-            price = 400,
-            category = ShopCategory.Deco,
-            description = "밝은 조명"
-        });
+        // 꾸미기 용품(Deco)은 DecorationData(DataRegistry)에서 읽는다 — 카탈로그가 직접 보여 준다
 
         // ========== 예술품 (Artifact) ==========
         allItems.Add(new ShopItem

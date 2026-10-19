@@ -14,9 +14,13 @@ public class DataRegistry : Singleton<DataRegistry>
     [SerializeField] private List<BlockData> blocks = new();
     [SerializeField] private List<WrapperData> wrappers = new();
     [SerializeField, Tooltip("카탈로그(가구 탭)에 나오는 가구들.")] private List<FurnitureData> furniture = new();
+    [SerializeField, Tooltip("꾸미기 용품 전부(카탈로그의 꾸미기 용품 탭, 보유 재고의 기준).")] private List<DecorationData> decorations = new();
 
     public IReadOnlyList<FlowerData> Flowers => flowers;
     public IReadOnlyList<FurnitureData> Furniture => furniture;
+    public IReadOnlyList<DecorationData> Decorations => decorations;
+
+    public DecorationData GetDecoration(int decorationId) => decorations.FirstOrDefault(d => d != null && d.id == decorationId);
     public IReadOnlyList<BlockData> Blocks => blocks;
 
     public FlowerData GetFlower(int flowerId) => flowers.FirstOrDefault(f => f != null && f.flowerID == flowerId);

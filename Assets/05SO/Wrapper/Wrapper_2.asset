@@ -15,8 +15,8 @@ MonoBehaviour:
   wrapperId: 2
   wrapperColor: 6
   color: {r: 0.97, g: 0.97, b: 0.97, a: 1}
-  ringCount: 2
-  maxFlowerTypes: 6
+  ringCount: 3
+  maxFlowerTypes: 8
   flowersPerDraw: 3
   presets:
-  - {fileID: 11400000, guid: fb0fd875b9d76644cb73d260f9294929, type: 2}
+  - {fileID: 11400000, guid: 5a2872adde175db47ad2599f78f6dcae, type: 2}

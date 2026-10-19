@@ -15,9 +15,7 @@ public class DayLabel : MonoBehaviour
 
     [SerializeField, Min(1), Tooltip("몇 년차인가(베타는 1년차뿐).")] private int year = 1;
     [SerializeField, Tooltip("계절(베타는 봄뿐).")] private string season = "봄";
-    [SerializeField, Min(0f), Tooltip("하루가 시작될 때 \"N년차 계절\"이 다 보인 채로 떠 있는 시간(초). 그 뒤 \"N일\"로 바뀐다.")] private float introSeconds = 1f;
-    [SerializeField, Min(0f), Tooltip("글씨가 나타나고 사라지는 시간(초). \"N년차 계절\"이 서서히 나타나고, 서서히 사라지고, \"N일\"이 서서히 나타난다. 0이면 바로 바뀐다.")] private float fadeSeconds = 0.3f;
-    [SerializeField, Tooltip("세 글씨를 한꺼번에 서서히 보이고 숨기는 CanvasGroup(DayLabel 오브젝트에 둔다).")] private CanvasGroup group;
+    [SerializeField, Tooltip("세 글씨를 한꺼번에 서서히 보이고 숨기는 UIFader(DayLabel 오브젝트에 둔다). \"N년차 계절\"이 Fade In으로 나타나 Hold 동안 떠 있다가 Fade Out으로 사라지고, \"N일\"이 Fade In으로 나타난다.")] private UIFader fader;
 
     [Header("글씨 색")]
     [SerializeField, Tooltip("시계가 낮 모습일 때.")] private Color dayColor = new(0.353f, 0.231f, 0.141f, 1f);
@@ -31,7 +29,7 @@ public class DayLabel : MonoBehaviour
         yearText.text = $"{year}년차";
         seasonText.text = season;
         SetIntro(false, false);
-        group.alpha = 1f; // 에디터에서 저장된 투명도와 상관없이 보이게 시작한다(년차·계절은 Intro가 0에서 올린다)
+        fader.Alpha = 1f; // 에디터에서 저장된 투명도와 상관없이 보이게 시작한다(년차·계절은 Intro가 0에서 올린다)
 
         // 하루가 막 시작됐으면 시계가 다 채워질 때까지 비워 두었다가 "N년차 계절"을 보인다
         if (GameManager.Instance != null && GameManager.Instance.ConsumeDayIntro()) StartCoroutine(Intro());
@@ -60,23 +58,11 @@ public class DayLabel : MonoBehaviour
         yield return null; // 같은 프레임의 다른 Start(메인 화면의 밤 → 낮 연출)가 먼저 끝나게 한다
         while (SceneTransition.Busy || (GameClock.Instance != null && GameClock.Instance.MorningFill >= 0f)) yield return null;
 
-        group.alpha = 0f;
+        fader.Alpha = 0f;
         SetIntro(true, false);
-        yield return Fade(0f, 1f);
-        yield return new WaitForSecondsRealtime(introSeconds);
-        yield return Fade(1f, 0f);
+        yield return fader.Pulse();
         SetIntro(false, true);
-        yield return Fade(0f, 1f);
-    }
-
-    private IEnumerator Fade(float from, float to)
-    {
-        for (float t = 0f; t < fadeSeconds; t += Time.unscaledDeltaTime)
-        {
-            group.alpha = Mathf.Lerp(from, to, t / fadeSeconds);
-            yield return null;
-        }
-        group.alpha = to;
+        yield return fader.FadeIn();
     }
 
     /// <summary>년차·계절을 보일지, 일을 보일지 정한다(둘 다 false면 비워 둔다).</summary>
