@@ -29,7 +29,7 @@ public class TutorialPopup : MonoBehaviour
 
     public static TutorialPopup Instance { get; private set; }
 
-    /// <summary>팝업이 떠 있는 동안 true. 닫힌 뒤에 이어서 할 일은 WaitWhile(() => TutorialPopup.IsShowing)로 기다린다.</summary>
+    /// <summary>팝업이 떠 있는 동안 true(닫히는 모션이 끝날 때까지 포함). 닫힌 뒤에 이어서 할 일은 WaitWhile(() => TutorialPopup.IsShowing)로 기다린다.</summary>
     public static bool IsShowing { get; private set; }
 
     [SerializeField] private GameObject content;   // 켜고 끄는 영역(막 + 카드)
@@ -46,6 +46,7 @@ public class TutorialPopup : MonoBehaviour
     private Page[] pages = Array.Empty<Page>();
     private int index;
     private string currentId; // 지금 떠 있는 안내의 id
+    private bool closing;     // 닫히는 모션 중(이 동안 새 팝업이 열리면 모션이 끝나며 새 카드를 꺼 버리므로 IsShowing을 유지해 막는다)
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
     private static void ResetStatics()
@@ -69,9 +70,9 @@ public class TutorialPopup : MonoBehaviour
         if (Instance == this) Instance = null;
         if (IsShowing)
         {
-            seen.Remove(currentId); // 읽기 전에 씬이 바뀌어 사라진 안내는 다음에 다시 보여 준다
+            if (!closing) seen.Remove(currentId); // 읽기 전에 씬이 바뀌어 사라진 안내는 다음에 다시 보여 준다(이미 닫은 안내는 그대로 읽은 것으로 둔다)
             IsShowing = false;
-            if (GameClock.Instance != null) GameClock.Instance.TutorialHold = false;
+            if (GameClock.Instance != null && !closing) GameClock.Instance.TutorialHold = false; // 닫는 중이면 닫을 때 이미 풀었다(그 사이 다른 안내가 잡은 멈춤을 풀지 않게)
         }
     }
 
@@ -125,10 +126,15 @@ public class TutorialPopup : MonoBehaviour
 
     private void Close()
     {
-        if (!IsShowing) return; // 닫히는 모션 중에 또 눌렀다
+        if (!IsShowing || closing) return; // 닫히는 모션 중에 또 눌렀다
 
-        IsShowing = false;
+        closing = true;
         if (GameClock.Instance != null) GameClock.Instance.TutorialHold = false;
-        PanelMotion.Close(card, () => { if (!IsShowing) content.SetActive(false); }); // 닫히는 동안 새 팝업이 열렸으면 그대로 둔다
+        PanelMotion.Close(card, () =>
+        {
+            closing = false;
+            IsShowing = false; // 모션이 끝난 뒤에야 다음 안내가 열릴 수 있다
+            content.SetActive(false);
+        });
     }
 }

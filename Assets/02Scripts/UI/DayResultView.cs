@@ -139,7 +139,7 @@ public class DayResultView : MonoBehaviour
     {
         float from = gauge.Value;
         float duration = MoveDuration;
-        for (float t = 0f; t < duration; t += Time.unscaledDeltaTime)
+        for (float t = 0f; t < duration; t += GameTime.Delta) // 튜토리얼 안내가 떠 있는 동안은 연출도 멈춘다
         {
             gauge.Value = Mathf.Lerp(from, target, EaseOut(t / duration));
             yield return null;
@@ -161,7 +161,7 @@ public class DayResultView : MonoBehaviour
         RectTransform mainRect = mainPillBackground.rectTransform, prevRect = prevPillBackground.rectTransform;
         float duration = MoveDuration;
 
-        for (float t = 0f; ; t += Time.unscaledDeltaTime)
+        for (float t = 0f; ; t += GameTime.Delta)
         {
             float u = duration > 0f ? Mathf.Clamp01(t / duration) : 1f;
             float e = EaseOut(u);
@@ -209,6 +209,6 @@ public class DayResultView : MonoBehaviour
     /// <summary>빨리감기가 켜지면 남은 대기도 짧아진다.</summary>
     private IEnumerator Wait(float seconds)
     {
-        for (float t = 0f; t < seconds * (fast ? fastScale : 1f); t += Time.unscaledDeltaTime) yield return null;
+        for (float t = 0f; t < seconds * (fast ? fastScale : 1f); t += GameTime.Delta) yield return null;
     }
 }

@@ -8,7 +8,7 @@ using UnityEngine.SceneManagement;
 public static class TutorialBootstrap
 {
     /// <summary>false면 튜토리얼 오브젝트를 끈다(씬/프리팹에 켜진 채 저장돼 있어도). 다시 보이려면 true로 바꾼다.</summary>
-    public const bool Enabled = false;
+    public const bool Enabled = true;
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
     private static void Start()

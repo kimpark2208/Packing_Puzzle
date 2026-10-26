@@ -139,7 +139,7 @@ public class StemBendPuzzlePanel : RepairPuzzlePanel
     {
         if (!playing) return;
 
-        if (!drawing && Input.GetMouseButtonDown(0))
+        if (!drawing && Input.GetMouseButtonDown(0) && !TutorialPopup.IsShowing && !TutorialOverlay.IsShowing) // 튜토리얼 팝업 뒤의 칸이 눌려 그리기가 시작되지 않게
         {
             NightCellView cell = CellAt(Input.mousePosition);
             if (cell != null && !unavailable[cell.Coord.y, cell.Coord.x]) StartDrawing(cell);

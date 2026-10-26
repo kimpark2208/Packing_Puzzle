@@ -207,7 +207,7 @@ public class DayPuzzleUI : MonoBehaviour
     /// <summary>붕괴는 확인 버튼을 누를 때까지 기다리지 않고, 잠깐 보여준 뒤 바로 퍼즐을 다시 시작한다.</summary>
     private System.Collections.IEnumerator AutoProceedAfterCollapse()
     {
-        yield return new WaitForSeconds(CollapseAutoProceedDelay);
+        yield return GameTime.Wait(CollapseAutoProceedDelay); // 튜토리얼 안내가 떠 있는 동안은 세지 않아, 안내를 읽는 사이 퍼즐이 다시 시작되지 않는다
         OnCollapseConfirmed();
     }
 

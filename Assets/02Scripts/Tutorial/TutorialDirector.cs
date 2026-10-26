@@ -29,7 +29,7 @@ public class TutorialDirector : MonoBehaviour
             if (TutorialPopup.HasSeen(trigger.id)) continue;
 
             TutorialPopupData data = popups != null ? popups.FirstOrDefault(p => p != null && p.id == trigger.id) : null;
-            if (data == null || !Ready(trigger.id, trigger.when)) continue;
+            if (data == null || !Ready("popup:" + trigger.id, trigger.when)) continue; // 배너형과 id가 같아도(charm) "연달아 두 번 참" 표시가 서로 지우지 않게 접두어를 붙인다
 
             TutorialPopup.Play(data);
             return; // 한 번에 하나만(나머지는 다음에)
@@ -38,7 +38,7 @@ public class TutorialDirector : MonoBehaviour
         foreach (var lesson in TutorialLessons.All)
         {
             if (TutorialOverlay.HasSeen(lesson.id)) continue;
-            if (!Ready(lesson.id, lesson.when)) continue;
+            if (!Ready("banner:" + lesson.id, lesson.when)) continue;
 
             TutorialOverlay.Play(lesson.id, lesson.steps());
             return;

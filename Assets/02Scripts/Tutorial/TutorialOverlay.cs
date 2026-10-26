@@ -19,13 +19,11 @@ public class TutorialOverlay : MonoBehaviour
     {
         public readonly string text;
         public readonly Func<IEnumerable<RectTransform>> targets; // 보여 주는 순간에 찾는다(레이아웃이 자리 잡은 뒤의 위치를 쓰려고)
-        public readonly bool skipIfHidden;                        // 대상이 없거나 화면 밖이면 이 장면을 건너뛴다
 
-        private Step(string text, Func<IEnumerable<RectTransform>> targets, bool skipIfHidden = false)
+        private Step(string text, Func<IEnumerable<RectTransform>> targets)
         {
             this.text = text;
             this.targets = targets;
-            this.skipIfHidden = skipIfHidden;
         }
 
         /// <summary>배너만 보여 준다.</summary>
@@ -36,9 +34,6 @@ public class TutorialOverlay : MonoBehaviour
 
         /// <summary>여러 대상을 모두 감싸는 영역을 밝게 살린다.</summary>
         public static Step On(string text, Func<IEnumerable<RectTransform>> targets) => new(text, targets);
-
-        /// <summary>대상 하나를 밝게 살린다. 대상이 없거나 화면 밖이면 이 장면은 건너뛴다(화면에 따라 있을 수도 없을 수도 있는 것).</summary>
-        public static Step OnIfShown(string text, Func<RectTransform> target) => new(text, () => new[] { target() }, true);
     }
 
     private const string EmphasisColor = "#C8501E";
@@ -48,6 +43,7 @@ public class TutorialOverlay : MonoBehaviour
     private const float Padding = 12f;             // 밝게 살린 영역을 대상보다 조금 크게 잡는 여백
     private const float HandBobPixels = 12f;
     private const float HandBobSpeed = 6f;
+    private const float SettleSeconds = 0.6f;      // 장면을 띄운 직후, 스와이프나 카드 모션이 끝나며 대상이 움직이는 동안 밝은 영역을 다시 맞추는 시간
 
     private static readonly HashSet<string> seen = new();
 
@@ -68,6 +64,7 @@ public class TutorialOverlay : MonoBehaviour
     [SerializeField] private Button confirmButton;
 
     private bool confirmed;
+    private string currentId; // 지금 떠 있는 안내의 id
     private Vector2 handBase;
     private Vector2 handDirection; // 손가락이 가리키는 쪽의 반대 방향(흔들리는 방향)
 
@@ -91,6 +88,7 @@ public class TutorialOverlay : MonoBehaviour
         if (Instance == this) Instance = null;
         if (IsShowing)
         {
+            seen.Remove(currentId); // 끝까지 보기 전에 씬이 바뀌어 끊긴 안내는 다음에 다시 보여 준다(팝업과 같다)
             IsShowing = false;
             if (GameClock.Instance != null) GameClock.Instance.TutorialHold = false;
         }
@@ -106,6 +104,7 @@ public class TutorialOverlay : MonoBehaviour
     {
         if (Instance == null || steps.Length == 0 || IsShowing || TutorialPopup.IsShowing || !seen.Add(id)) return;
 
+        Instance.currentId = id;
         Instance.StartCoroutine(Instance.Run(steps));
     }
 
@@ -118,7 +117,13 @@ public class TutorialOverlay : MonoBehaviour
         {
             yield return null; // 레이아웃이 자리 잡은 뒤에 위치를 계산한다
             confirmed = false;
-            if (!Show(step)) continue;
+            Show(step);
+
+            for (float t = 0f; t < SettleSeconds && !confirmed && step.targets != null; t += Time.unscaledDeltaTime)
+            {
+                yield return null;
+                Show(step); // 스와이프나 카드 모션이 끝나기 전에 위치를 잡았을 수 있어 잠깐 동안 다시 맞춘다
+            }
             yield return new WaitUntil(() => confirmed);
         }
 
@@ -127,8 +132,8 @@ public class TutorialOverlay : MonoBehaviour
         if (GameClock.Instance != null) GameClock.Instance.TutorialHold = false;
     }
 
-    /// <summary>한 장면을 보여 준다. 건너뛰어야 하는 장면이면 아무것도 바꾸지 않고 false를 돌려준다.</summary>
-    private bool Show(Step step)
+    /// <summary>한 장면을 보여 준다.</summary>
+    private void Show(Step step)
     {
         content.gameObject.SetActive(true);
         Rect all = content.rect;
@@ -146,8 +151,6 @@ public class TutorialOverlay : MonoBehaviour
                 hole = Rect.MinMaxRect(Mathf.Min(hole.xMin, other.xMin), Mathf.Min(hole.yMin, other.yMin), Mathf.Max(hole.xMax, other.xMax), Mathf.Max(hole.yMax, other.yMax));
             }
         }
-        if (step.skipIfHidden && (!hasTarget || !all.Contains(hole.center))) return false;
-
         bannerText.text = step.text;
         foreach (RectTransform dim in new[] { dimTop, dimBottom, dimLeft, dimRight }) dim.gameObject.SetActive(hasTarget);
         hand.gameObject.SetActive(hasTarget);
@@ -158,7 +161,7 @@ public class TutorialOverlay : MonoBehaviour
             PlaceBanner(true);
             Place(holeBlocker, all.xMin, all.yMin, all.width, all.height);
             PlaceConfirm(null, true);
-            return true;
+            return;
         }
 
         hole = Rect.MinMaxRect(hole.xMin - Padding, hole.yMin - Padding, hole.xMax + Padding, hole.yMax + Padding);
@@ -173,7 +176,6 @@ public class TutorialOverlay : MonoBehaviour
         PlaceBanner(bannerTop);
         PlaceHand(hole, all);
         PlaceConfirm(hole, bannerTop);
-        return true;
     }
 
     private void PlaceBanner(bool top)

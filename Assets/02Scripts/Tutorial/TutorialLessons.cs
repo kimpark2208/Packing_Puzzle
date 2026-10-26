@@ -88,11 +88,18 @@ public static class TutorialLessons
         // (꽃 역할 소개와 꽃다발 만들기 기본은 팝업형 day-flower, day-puzzle이 맡는다)
 
         // 낮 퍼즐: 화면에 따라 나오는 것들만 짚는다
-        ("puzzle-special", () => In(GameManager.SceneDayPuzzle) && Active(FlowerBucket) && TutorialPopup.HasSeen("day-puzzle"), () => new[] // 팝업형 day-puzzle을 본 뒤에
+        // 팝업형 day-puzzle을 본 뒤에. 퍼즐에 그 칸이 있을 때만 보여 줘서(없는 칸의 안내가 id만 쓰고 사라지지 않게) 셋으로 나눈다
+        ("puzzle-star", () => PuzzleTipReady() && SpecialSlot(SpecialCell.Star) != null, () => new[]
         {
-            OnIfShown($"{Em("별 칸")}에 놓은 꽃은 기본적으로 {Em("빛나요")}.", () => SpecialSlot(SpecialCell.Star)),
-            OnIfShown($"{Em("그늘 칸")}에 놓은 꽃은 기본적으로 {Em("흐려져요")}.\n이웃한 꽃이 빛나면 그늘이 사라져요.", () => SpecialSlot(SpecialCell.Shade)),
-            OnIfShown($"원하는 꽃이 안 나오면 {Em("[다시 뽑기]")}를 눌러요.\n숫자는 남은 횟수예요.", () => Rt(RerollButton)),
+            On($"{Em("별 칸")}에 놓은 꽃은 기본적으로 {Em("빛나요")}.", () => SpecialSlot(SpecialCell.Star)),
+        }),
+        ("puzzle-shade", () => PuzzleTipReady() && SpecialSlot(SpecialCell.Shade) != null, () => new[]
+        {
+            On($"{Em("그늘 칸")}에 놓은 꽃은 기본적으로 {Em("흐려져요")}.\n이웃한 꽃이 빛나면 그늘이 사라져요.", () => SpecialSlot(SpecialCell.Shade)),
+        }),
+        ("puzzle-reroll", () => PuzzleTipReady() && Active(RerollButton), () => new[]
+        {
+            On($"원하는 꽃이 안 나오면 {Em("[다시 뽑기]")}를 눌러요.\n숫자는 남은 횟수예요.", () => Rt(RerollButton)),
         }),
         ("wilted", () => In(GameManager.SceneDayPuzzle) && WiltedFlower() != null, () => new[]
         {
@@ -188,6 +195,9 @@ public static class TutorialLessons
         float x = RectTransformUtility.WorldToScreenPoint(cam, rt.TransformPoint(rt.rect.center)).x;
         return x > width * 0.05f && x < width * 0.95f;
     }
+
+    /// <summary>낮 퍼즐 안내(별·그늘·다시 뽑기)를 보여 줄 때가 됐는가: 팝업형 day-puzzle을 본 뒤.</summary>
+    private static bool PuzzleTipReady() => In(GameManager.SceneDayPuzzle) && Active(FlowerBucket) && TutorialPopup.HasSeen("day-puzzle");
 
     private static bool LanternReady()
     {
