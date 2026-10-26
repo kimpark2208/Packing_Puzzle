@@ -48,6 +48,18 @@ public class DecorationPlacer : MonoBehaviour
         return anchored.TryGetValue(data.category, out PlacedDecoration item) && item != null && item.Data == data;
     }
 
+    /// <summary>이 용품이 지금 꽃다발 위에 놓여 있는가(리본/풀은 자리에, 카드/장식은 어디든). 예약 필수 용품을 놓았는지 볼 때 쓴다.</summary>
+    public bool Contains(DecorationData data)
+    {
+        if (IsPlaced(data)) return true;
+
+        foreach (PlacedDecoration item in layer.GetComponentsInChildren<PlacedDecoration>())
+        {
+            if (item != null && item.Data == data) return true;
+        }
+        return false;
+    }
+
     /// <summary>카드를 눌렀다: 용품을 기본 자리에 놓는다. 리본/풀은 같은 것이 놓여 있으면 빼고, 아니면 그 자리의 것을 바꿔 놓는다.</summary>
     public void Place(DecorationData data)
     {

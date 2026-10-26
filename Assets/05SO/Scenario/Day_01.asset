@@ -37,7 +37,7 @@ MonoBehaviour:
   - npc: {fileID: 0}
     dialogueId: 
     dialogueOnly: 0
-    flower: {fileID: 11400000, guid: 227b50a9f7749eaf0641d2896bf87bca, type: 2}
+    flower: {fileID: 11400000, guid: fd58ca5521476c37a0849379e5974903, type: 2}
     fixedReplicas: 20
     reactionPrefix: 
   - npc: {fileID: 0}
@@ -52,6 +52,8 @@ MonoBehaviour:
     flower: {fileID: 11400000, guid: 16226a08c178069ea7b63539f612cb16, type: 2}
     fixedReplicas: 20
     reactionPrefix: 
+  reservationCall: {fileID: 0}
+  reservationCallAfterCustomers: 1
   unlocksPhone: 0
   unlocksCalendar: 0
   dayToNightSound: {fileID: 0}

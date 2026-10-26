@@ -33,8 +33,8 @@ public partial class CurrencyManager
         if (GUILayout.Button("Debug: 손님 기분 -20%") && GameClock.Instance != null)
             GameClock.Instance.DrainMood(0.2f);
 
-        if (GUILayout.Button("Debug: 낮 퍼즐 강제 제출"))
-            FindFirstObjectByType<DayPuzzleUI>()?.DebugForceSubmit();
+        if (GUILayout.Button("Debug: 낮 퍼즐 스킵(주문 수락 뒤부터, 퍼즐 씬이면 강제 제출)"))
+            GameManager.Instance?.DebugSkipDayPuzzle();
 
         if (GUILayout.Button("Debug: 캐릭터 새로 뽑기(밤이면 파란 피부 귀신)"))
         {

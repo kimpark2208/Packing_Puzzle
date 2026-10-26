@@ -76,9 +76,15 @@ public class PuzzleSettlement
             ledger.Add(ScoreReason.RequirementMissed, -settings.requirementMissedPenalty);
         }
 
-        // 퍼즐이 끝난 순간 손님 기분
-        if (context.MoodRatio >= settings.goodMoodRatio) ledger.Add(ScoreReason.MoodGood, settings.goodMoodBonus);
-        if (context.MoodRatio <= settings.badMoodRatio) ledger.Add(ScoreReason.MoodBad, -settings.badMoodPenalty);
+        // 퍼즐이 끝난 순간 손님 기분(예약 꽃다발에는 손님이 없다)
+        if (!context.Reservation)
+        {
+            if (context.MoodRatio >= settings.goodMoodRatio) ledger.Add(ScoreReason.MoodGood, settings.goodMoodBonus);
+            if (context.MoodRatio <= settings.badMoodRatio) ledger.Add(ScoreReason.MoodBad, -settings.badMoodPenalty);
+        }
+
+        // 예약 필수 꾸미기 용품을 꽃다발에 놓지 않았으면 크게 감산(하나라도 빠지면 한 번)
+        if (context.MissingSupplies > 0) ledger.Add(ScoreReason.SupplyMissing, -settings.supplyMissingPenalty);
 
         // 꽃다발이 무너질 때마다 붕괴 1회당 감산
         if (context.CollapseCount > 0) ledger.Add(ScoreReason.Collapse, -settings.collapsePenalty * context.CollapseCount);

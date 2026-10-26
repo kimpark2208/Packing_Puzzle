@@ -54,7 +54,7 @@ public class WaterPuzzlePanel : RepairPuzzlePanel
     {
         if (finished || !holdButton.IsHeld) return;
 
-        level += Time.unscaledDeltaTime / fillSeconds;
+        level += GameTime.Delta / fillSeconds;
         if (level >= 1f) level = 0f; // 가득 차 넘치면 비워지고 다시 채운다
         water.fillAmount = level;
     }
@@ -78,7 +78,7 @@ public class WaterPuzzlePanel : RepairPuzzlePanel
 
     private IEnumerator SolveAfterDelay()
     {
-        yield return new WaitForSecondsRealtime(solvedDelay);
+        yield return GameTime.Wait(solvedDelay);
         Solve();
     }
 }

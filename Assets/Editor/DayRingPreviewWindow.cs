@@ -63,7 +63,7 @@ public class DayRingPreviewWindow : EditorWindow
         for (int i = 0; i < RingNames.Length; i++)
             ringSprites[i] = (Sprite)EditorGUILayout.ObjectField(RingNames[i], ringSprites[i], typeof(Sprite), false);
         if (GUILayout.Button("그림 모두 비우기")) ringSprites = new Sprite[RingNames.Length];
-        showFlowers = EditorGUILayout.ToggleLeft("꽃 이미지도 보기(태그별 꽃 그림)", showFlowers);
+        showFlowers = EditorGUILayout.ToggleLeft("꽃 이미지도 보기(칸의 역할을 가진 첫 꽃의 링별 그림)", showFlowers);
 
         EditorGUILayout.Space();
         using (new EditorGUI.DisabledScope(problem != null || EditorApplication.isPlaying))
@@ -90,7 +90,8 @@ public class DayRingPreviewWindow : EditorWindow
             return;
         }
 
-        controller.EditorPreview(wrapper, preset, ringSprites, showFlowers);
+        FlowerData[] flowers = AssetDatabase.FindAssets("t:FlowerData").Select(guid => AssetDatabase.LoadAssetAtPath<FlowerData>(AssetDatabase.GUIDToAssetPath(guid))).Where(f => f != null).OrderBy(f => f.flowerID).ToArray();
+        controller.EditorPreview(wrapper, preset, ringSprites, showFlowers, role => flowers.FirstOrDefault(f => f.flowerRole == role));
         previewing = true;
         UnityEditorInternal.InternalEditorUtility.RepaintAllViews();
     }

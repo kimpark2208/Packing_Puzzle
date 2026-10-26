@@ -168,17 +168,17 @@ public class MemoryPuzzlePanel : RepairPuzzlePanel
                 if (result == InputResult.Wrong)
                 {
                     message.text = "틀렸어요! 다시 볼게요";
-                    yield return new WaitForSecondsRealtime(stagePauseSeconds);
+                    yield return GameTime.Wait(stagePauseSeconds);
                 }
             }
             while (result != InputResult.Correct);
 
             message.text = "좋아요!";
-            yield return new WaitForSecondsRealtime(stagePauseSeconds);
+            yield return GameTime.Wait(stagePauseSeconds);
         }
 
         message.text = "기억이 돌아왔어요!";
-        yield return new WaitForSecondsRealtime(stagePauseSeconds);
+        yield return GameTime.Wait(stagePauseSeconds);
         Solve();
     }
 
@@ -186,11 +186,11 @@ public class MemoryPuzzlePanel : RepairPuzzlePanel
     private IEnumerator ShowSequence()
     {
         message.text = "순서를 잘 보세요";
-        yield return new WaitForSecondsRealtime(gapSeconds * 2f);
+        yield return GameTime.Wait(gapSeconds * 2f);
         foreach (int index in sequence)
         {
             yield return Glow(index, showSeconds);
-            yield return new WaitForSecondsRealtime(gapSeconds);
+            yield return GameTime.Wait(gapSeconds);
         }
     }
 
@@ -204,7 +204,7 @@ public class MemoryPuzzlePanel : RepairPuzzlePanel
         Petals[index].transform.SetAsLastSibling();
 
         float fade = Mathf.Min(0.12f, seconds * 0.4f);
-        for (float time = 0f; time < seconds; time += Time.unscaledDeltaTime)
+        for (float time = 0f; time < seconds; time += GameTime.Delta)
         {
             float strength = Mathf.Clamp01(Mathf.Min(time / fade, (seconds - time) / fade));
             Color color = glowColor;

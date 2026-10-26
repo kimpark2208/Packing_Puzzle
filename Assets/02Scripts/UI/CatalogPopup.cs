@@ -39,8 +39,9 @@ public class CatalogPopup : MonoBehaviour
     private readonly HashSet<string> ordered = new(); // 이번 씬에서 주문한 아이템("종류번호" 키). TODO: 가구와 유물의 구매(보유) 여부는 아직 저장하지 않는다(꾸미기 용품은 주문하면 CurrencyManager 재고에 들어간다)
     private static readonly FurnitureCategory[] FurnitureCategories = (FurnitureCategory[])Enum.GetValues(typeof(FurnitureCategory));
 
+    private bool clockPaused; // 이 팝업이 시간을 멈춰 두었는가(열릴 때 멈추고 닫힐 때 푼다)
     private int selected;
-    private int selectedChip;     // 가구 탭에서 고른 칩(가구 카테고리 번호)
+    private int selectedChip;    // 가구 탭에서 고른 칩(가구 카테고리 번호)
     private bool syncingChips;    // 코드가 칩을 맞추는 동안은 칩을 눌러도 목록을 다시 채우지 않는다
     private Color[] tabBaseColors; // 프리팹에 둔 탭 색/높이(고르지 않은 탭의 모습)
     private float[] tabBaseHeights;
@@ -133,6 +134,17 @@ public class CatalogPopup : MonoBehaviour
     private void OnEnable()
     {
         Select(selected);
+        if (GameClock.Instance != null && !clockPaused)
+        {
+            GameClock.Instance.SetPaused(true); // 카탈로그를 보는 동안은 하루 시간과 손님 기분 시간이 멈춘다
+            clockPaused = true;
+        }
+    }
+
+    private void OnDisable()
+    {
+        if (GameClock.Instance != null && clockPaused) GameClock.Instance.SetPaused(false);
+        clockPaused = false;
     }
 
     private void Select(int index)
@@ -172,7 +184,12 @@ public class CatalogPopup : MonoBehaviour
 
             FurnitureCategory chipCategory = categories[Mathf.Clamp(selectedChip, 0, categories.Count - 1)];
             foreach (FurnitureData furniture in AvailableFurniture().Where(f => f.category == chipCategory).OrderBy(f => f.id))
-                AddCard($"Furniture{furniture.id}", furniture.displayName, furniture.description, furniture.price, furniture.CatalogSprite);
+            {
+                FurnitureData item = furniture;
+                string key = $"Furniture{item.id}";
+                if (CurrencyManager.Instance != null && CurrencyManager.Instance.IsFurnitureOrdered(item.id)) ordered.Add(key); // 주문했거나 이미 설치된 가구는 다시 주문할 수 없다
+                AddCard(key, item.displayName, item.description, item.price, item.CatalogSprite, () => CurrencyManager.Instance.OrderFurniture(item.id)); // 주문하면 다음 날 설치된다
+            }
             return;
         }
 
@@ -192,13 +209,14 @@ public class CatalogPopup : MonoBehaviour
             AddCard($"{category}{item.itemId}", item.itemName, item.description, item.price, null);
     }
 
-    /// <summary>지금 카탈로그에 나오는 꾸미기 용품: 카탈로그 표시가 켜져 있고, 나오기 시작하는 일차가 된 것.</summary>
+    /// <summary>지금 카탈로그에 나오는 꾸미기 용품: 카탈로그 표시가 켜져 있고, 나오기 시작하는 일차가 되었고, 아직 가지고 있지 않은 것(이미 산 용품은 나오지 않는다).</summary>
     private static IEnumerable<DecorationData> AvailableDecorations()
     {
         if (DataRegistry.Instance == null) return Enumerable.Empty<DecorationData>();
 
-        int day = CurrencyManager.Instance != null ? CurrencyManager.Instance.CurrentDay : int.MaxValue;
-        return DataRegistry.Instance.Decorations.Where(d => d != null && d.inCatalog && d.availableFromDay <= day);
+        CurrencyManager currency = CurrencyManager.Instance;
+        int day = currency != null ? currency.CurrentDay : int.MaxValue;
+        return DataRegistry.Instance.Decorations.Where(d => d != null && d.inCatalog && d.availableFromDay <= day && (currency == null || currency.GetDecorationStock(d.id) <= 0));
     }
 
     /// <summary>카드 템플릿을 복제해 내용을 채운다. sprite가 없으면 템플릿의 그림을 그대로 둔다. 주문하면(돈을 낸 뒤) onOrdered를 부른다.</summary>

@@ -1,0 +1,34 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 563bff9d3474c0945aa0772be79cc9f9, type: 3}
+  m_Name: Tutorial_reservation-prep
+  m_EditorClassIdentifier: Assembly-CSharp::TutorialPopupData
+  id: reservation-prep
+  title: "\uC608\uC57D \uC8FC\uBB38 \uC900\uBE44"
+  icon: {fileID: 21300000, guid: 9a9c1d38a8418c649ad9d1e01fc5923e, type: 3}
+  pages:
+  - image: {fileID: 21300000, guid: 1eadf738ebb6a50428194079b2647b2c, type: 3}
+    text: "\uC608\uC57D\uB41C \uC8FC\uBB38\uC744 \uC900\uBE44\uD574\uC57C \uD574\uC694.\n\uC804\uD654\uAE30\uB97C
+      \uD130\uCE58\uD574 <b>\uC608\uC57D\uD655\uC778</b>\uC744 \uB20C\uB7EC \uB2EC\uB825
+      \uD654\uBA74\uC744 \uC5F4\uC5B4\uC694."
+  - image: {fileID: 21300000, guid: b65f3d20827fc8247a3dc1034e9e5210, type: 3}
+    text: "\uB2EC\uB825 \uD654\uBA74\uC5D0\uC11C <b>\uC608\uC57D \uB0A0\uC9DC</b>\uB97C
+      \uD130\uCE58\uD574\uC694."
+  - image: {fileID: 21300000, guid: 8efeb46716ac742478ca9f2d7dd994c5, type: 3}
+    text: "\uC608\uC57D \uB0B4\uC6A9\uC744 \uD655\uC778\uD574\uBCF4\uBA70, \uD544\uC694\uD55C
+      \uAF43\uACFC \uC6A9\uD488\uB4E4\uC744 <b>\uD50C\uB7EC\uC2A4 \uBC84\uD2BC</b>\uC744
+      \uB20C\uB7EC \uBCF4\uAD00\uD574\uC694."
+  - image: {fileID: 21300000, guid: 45b6b6b6b69367b43892ce455b1b294d, type: 3}
+    text: "\uC608\uC57D 3\uC77C \uC804\uAE4C\uC9C0\uB294 \uC790\uC720\uB86D\uAC8C
+      \uC8FC\uBB38\uC744 \uCDE8\uC18C\uD560 \uC218 \uC788\uC5B4\uC694.\n\uCDE8\uC18C
+      \uC2DC\uAE30\uB97C \uB2A6\uC73C\uBA74 \uC608\uC57D\uAE08\uC758 \uBA87 \uBC30\uB97C
+      \uBB3C\uC5B4\uC918\uC57C \uD558\uB2C8 \uC8FC\uC758\uD558\uC138\uC694!"

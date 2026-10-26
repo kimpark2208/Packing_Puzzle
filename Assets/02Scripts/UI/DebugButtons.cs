@@ -20,7 +20,7 @@ public class DebugButtons : MonoBehaviour
     {
         dayMinusButton.onClick.AddListener(() => GameClock.Instance?.SkipDayTime(SkipSeconds));
         nightMinusButton.onClick.AddListener(() => GameClock.Instance?.SkipNightTime(SkipSeconds));
-        dayPuzzleSkipButton.onClick.AddListener(() => CloseThen(() => FindFirstObjectByType<DayPuzzleUI>()?.DebugForceSubmit()));
+        dayPuzzleSkipButton.onClick.AddListener(() => CloseThen(() => GameManager.Instance?.DebugSkipDayPuzzle()));
         nightPuzzleSkipButton.onClick.AddListener(() => CloseThen(() => GameManager.Instance?.DebugSkipNightPuzzle()));
     }
 

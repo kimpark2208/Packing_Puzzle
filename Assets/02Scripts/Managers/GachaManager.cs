@@ -50,7 +50,8 @@ public class GachaManager : MonoBehaviour
     private static FlowerPool NewPool(IEnumerable<FlowerData> flowers)
     {
         var order = GameManager.Instance != null ? GameManager.Instance.CurrentDayOrder : null;
-        System.Func<FlowerData, int> stockOf = CurrencyManager.Instance != null ? f => CurrencyManager.Instance.GetFlowerStock(f.flowerID) : null;
+        System.Func<FlowerData, int> stockOf = GameManager.Instance != null ? f => GameManager.Instance.CraftFlowerStock(f.flowerID) // 예약 꽃다발의 필수 꽃은 보관해 둔 것만 나온다
+            : CurrencyManager.Instance != null ? f => CurrencyManager.Instance.GetFlowerStock(f.flowerID) : null;
         return new FlowerPool(flowers, order != null ? order.preset : null, stockOf);
     }
 

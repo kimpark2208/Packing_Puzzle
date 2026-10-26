@@ -50,10 +50,15 @@ public partial class CurrencyManager : Singleton<CurrencyManager>
     public IReadOnlyCollection<int> OwnedWrappers => ownedWrappers;
 
     /// <summary>지금 쓸 수 있는 포장지: 재고가 있는 것. 재고가 있는 포장지가 하나도 없으면 막히지 않도록 보유한 포장지 전부(포장지를 사는 곳이 생기기 전까지의 임시 대비).</summary>
+    /// <summary>포장지 개수를 일단 따지지 않는다: 가진 포장지는 재고와 상관없이 쓸 수 있고, 퍼즐을 마쳐도 줄지 않는다(재고 수는 계속 기록만 한다). 개수 제도가 정해지면 false로 바꾼다.</summary>
+    public const bool WrappersUnlimited = true;
+
     public IReadOnlyCollection<int> UsableWrappers
     {
         get
         {
+            if (WrappersUnlimited) return ownedWrappers.ToList();
+
             List<int> inStock = ownedWrappers.Where(id => GetWrapperStock(id) > 0).ToList();
             return inStock.Count > 0 ? inStock : ownedWrappers.ToList();
         }
@@ -232,6 +237,7 @@ public partial class CurrencyManager : Singleton<CurrencyManager>
     public void AdvanceDay()
     {
         currentDay++;
+        InstallPendingFurniture(); // 어제 주문한 가구는 상인이 출근 전에 설치해 두었다
         TodayEarned = 0;
         TodaySpent = 0;
         todayScores.Clear();

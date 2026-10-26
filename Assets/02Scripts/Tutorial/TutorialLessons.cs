@@ -44,18 +44,40 @@ public static class TutorialLessons
     private const string CollapsePopup = "Canvas/CollapsePopup";
     private const string ResultGauge = "ResultCanvas/DayResultPopup/Gauge";
 
-    private const string NightNote = "Canvas/Puzzle/NoteBack";
-    private const string NightGrid = "Canvas/Puzzle/NightGrid";
-    private const string NightResult = "Canvas/ResultPopup";
+    private const string ReservationAccept = MainRoot + "ReservationPopup/Card/ReservationAcceptBTN"; // 예약 쇼카드의 수락 버튼
 
-    // ── 안내 목록(보여 주는 순서) ───────────────────────────────────────────────
+    /// <summary>예약 쇼카드 안내의 id. 이 안내를 보기 전의 첫 예약은 거절할 수 없다(ReservationShowCard).</summary>
+    public const string ReservationCallLesson = "reservation-call";
+
+    // ── 팝업형 안내(베타 기획서 04 튜토리얼 이미지) ──────────────────────────────
+    // 제목, 그림, 설명은 TutorialPopupData 에셋(id가 같은 것)에 있고, 여기서는 언제 보여 줄지만 정한다. 배너형(아래 All)보다 먼저 검사한다.
+    public static readonly (string id, Func<bool> when)[] PopupTriggers =
+    {
+        // 낮
+        ("day-flower", () => In(GameManager.SceneDayMain) && Main == MainState.DayCustomer && Visible(FlowerConfirm)),                       // 꽃 선택 페이지에 처음 오면
+        ("day-puzzle", () => In(GameManager.SceneDayPuzzle) && Active(FlowerBucket)),                                                        // 낮 퍼즐에 처음 들어오면
+        ("charm", () => In(GameManager.SceneDayMain) && Main == MainState.DayEnding),                                                        // 낮 장사가 끝나면(낮 종료에는 수락 버튼이 없다)
+        ("furniture", () => In(GameManager.SceneDayMain) && Main == MainState.DayCustomer && PhoneUnlocked() && !MerchantTalking() && !Crafting && Visible(AcceptButton)), // 2일차 가구 상인이 떠난 뒤(다음 손님이 말할 때)
+        ("reservation-prep", () => In(GameManager.SceneDayMain) && Main == MainState.DayCustomer && !Crafting && HasReservation() && !ReservationCall.Busy && Visible(AcceptButton)), // 예약을 수락한 뒤 다음 손님이 오면
+        ("reservation-craft", () => In(GameManager.SceneDayMain) && Crafting && Visible(FlowerConfirm)),                                      // 예약일에 꽃 선택 페이지로 넘어가면
+
+        // 밤
+        ("night-diagnosis", () => In(GameManager.SceneNightPuzzle) && !SceneTransition.Busy && Game != null && Game.CurrentNightCase != null && UnityEngine.Object.FindFirstObjectByType<NightDiagnosisUI>() != null), // 진단 화면에서 꽃을 받으면
+        ("night-loss", () => RepairOpen(FlowerData.Ailment.PetalLoss)),
+        ("night-stem", () => RepairOpen(FlowerData.Ailment.StemBend)),
+        ("night-scatter", () => RepairOpen(FlowerData.Ailment.PetalScatter)),
+        ("night-wilt", () => RepairOpen(FlowerData.Ailment.Wilt)),
+        ("night-faded", () => RepairOpen(FlowerData.Ailment.FadedMemory)),
+    };
+
+    // ── 배너형 안내 목록(보여 주는 순서) ────────────────────────────────────────
     public static readonly (string id, Func<bool> when, Func<Step[]> steps)[] All =
     {
-        // 낮 손님: 첫 주문
-        ("welcome", () => In(GameManager.SceneDayMain) && Main == MainState.DayCustomer && Active(AcceptButton), () => new[]
+        // 예약 쇼카드(베타 기획서: 이전 튜토리얼 방식): 처음 걸려 온 예약은 수락하게 한다(ReservationShowCard가 이 안내를 보기 전까지 거절 버튼을 막는다)
+        (ReservationCallLesson, () => In(GameManager.SceneDayMain) && Active(ReservationAccept), () => new[]
         {
-            On($"손님이 원하는 {Em("포장지")}와 {Em("꽃 요구사항")}을 말해요.\n이 주문대로 꽃다발을 만들어요.", () => Rt(SpeechBubble)),
-            On($"{Em($"[{Label(AcceptButton)}]")}로 주문을 받으면 손님이 기다리기 시작해요.\n오래 기다릴수록 손님의 기분이 깎여요.", () => Rt(AcceptButton)),
+            Banner($"예약 주문이 걸려왔어요! 필요한 꽃과 용품들을 {Em("예약일까지 준비")}하면 일반 주문보다 훨씬 더 많은 돈을 받아요."),
+            On($"{Em("[수락]")}을 눌러 예약을 받아요.", () => Rt(ReservationAccept)),
         }),
 
         // 꽃 선택 페이지(주문을 받으면 자동으로 넘어온다)
@@ -63,22 +85,14 @@ public static class TutorialLessons
         {
             On($"주문의 {Em("포장지")}를 골라요.\n포장지마다 필요한 꽃의 수가 달라요.", () => Children(WrapperBoxes)),
         }),
-        ("flowers", () => In(GameManager.SceneDayMain) && Main == MainState.DayCustomer && Visible(FlowerConfirm), () => new[]
-        {
-            On($"꽃은 네 역할로 나뉘어요. {Em("꽃병")}에 {Em("꽃의 재고")}가 표시돼요.\n최대 개수를 다 채우지 않아도, 역할마다 하나 이상 선택하면 {Em($"[{Label(FlowerConfirm)}]")}로 넘어갈 수 있어요.", () => Rt(FlowerShelves)),
-        }),
+        // (꽃 역할 소개와 꽃다발 만들기 기본은 팝업형 day-flower, day-puzzle이 맡는다)
 
-        // 낮 퍼즐: 꽃 놓기
-        ("puzzle-board", () => In(GameManager.SceneDayPuzzle) && Active(FlowerBucket), () => new[]
+        // 낮 퍼즐: 화면에 따라 나오는 것들만 짚는다
+        ("puzzle-special", () => In(GameManager.SceneDayPuzzle) && Active(FlowerBucket) && TutorialPopup.HasSeen("day-puzzle"), () => new[] // 팝업형 day-puzzle을 본 뒤에
         {
-            On($"이웃한 꽃과 {Em("색 궁합")}이 좋으면 꽃이 {Em("빛나고")}, 안 맞으면 {Em("흐려져요")}.\n빛나는 꽃이 많을수록 꽃다발의 상태가 좋아져요.", () => Rt(SlotArea)),
             OnIfShown($"{Em("별 칸")}에 놓은 꽃은 기본적으로 {Em("빛나요")}.", () => SpecialSlot(SpecialCell.Star)),
             OnIfShown($"{Em("그늘 칸")}에 놓은 꽃은 기본적으로 {Em("흐려져요")}.\n이웃한 꽃이 빛나면 그늘이 사라져요.", () => SpecialSlot(SpecialCell.Shade)),
-            On($"칸의 색은 놓을 수 있는 꽃의 {Em("역할")}이에요.", () => Rt(SlotArea)),
-            On($"바구니의 꽃을 {Em("끌어서")} 테두리와 같은 색 칸에 놓으세요.", () => Rt(FlowerBucket)),
-            On($"양쪽에 꽃을 고르게 놓으세요.\n한쪽이 {Em("2개 이상")} 많아지면 꽃다발이 {Em("무너져요!")}", () => Rt(Board)),
             OnIfShown($"원하는 꽃이 안 나오면 {Em("[다시 뽑기]")}를 눌러요.\n숫자는 남은 횟수예요.", () => Rt(RerollButton)),
-            On($"{Em("보관 칸")}에 꽃 하나를 맡겨 두었다가 나중에 꺼내 쓸 수 있어요.", () => Rt(StorageSlot)),
         }),
         ("wilted", () => In(GameManager.SceneDayPuzzle) && WiltedFlower() != null, () => new[]
         {
@@ -100,10 +114,7 @@ public static class TutorialLessons
         }),
 
         // 낮이 끝난 뒤: 부적과 전등
-        ("day-end", () => In(GameManager.SceneDayMain) && Main == MainState.DayEnding && Active(AcceptButton), () => new[]
-        {
-            Banner($"{Em("낮 영업")} 끝! 화면을 {Em("밀면")} 옆의 {Em("꽃 선반")}으로 갈 수 있어요."),
-        }),
+        // (낮 영업이 끝났다는 안내와 부적 소개는 팝업형 charm이 맡는다)
         ("charm", () => In(GameManager.SceneDayMain) && Main == MainState.DayEnding && Visible(CharmUse), () => new[]
         {
             On($"{Em("얻고 싶은 꽃")}에 {Em("부적")}을 붙여요. 최대 {Em("6개")}지만, 다 붙이지 않아도 돼요.\n그 꽃을 만들어줄 {Em("손님")}이 밤에 와요. 끝나면 밀어서 다시 카운터로 돌아와요.", () => Rt(FlowerShelves)),
@@ -113,26 +124,37 @@ public static class TutorialLessons
             On($"{Em("전등")}을 켜면 {Em("밤 영업")}이 시작돼요.", () => Rt(Lantern)),
         }),
 
-        // 밤
-        ("night-customer", () => In(GameManager.SceneDayMain) && Main == MainState.NightCustomer && Active(AcceptButton), () => new[]
-        {
-            On($"밤에는 {Em("특별한 손님")}이 부적을 붙인 꽃을 얻을 수 있는 {Em("퍼즐")}을 부탁해요.\n{Em($"[{Label(AcceptButton)}]")}를 누르면 시작해요.", () => Rt(AcceptButton)),
-        }),
-        ("night-puzzle", () => In(GameManager.SceneNightPuzzle) && Active(NightGrid), () => new[]
-        {
-            On($"왼쪽 {Em("수첩")} 위의 위의 블럭을 {Em("오른쪽 칸")}에 {Em("그려 넣어요")}.", () => Rt(NightNote)),
-            On($"블럭은 {Em("좌우반전")}이나 {Em("회전")}한 모양으로 그려도 돼요. 그린 블럭을 다시 누르면 지워요.\n{Em("어두운 칸")}은 그릴 수 없어요. 빈칸을 {Em("빈틈없이")} 채우면 완성!", () => Rt(NightGrid)),
-        }),
-        ("night-result", () => In(GameManager.SceneNightPuzzle) && Active(NightResult), () => new[]
-        {
-            Banner($"퍼즐을 풀면 {Em("꽃")}을 얻어요. 얻은 꽃은 다음 날 꽃 선택에서 쓸 수 있어요."),
-        }),
+        // (밤 안내는 팝업형 night-*이 맡는다. 첫 주문·밤 손님 소개 배너와 옛 밤 퍼즐 씬의 그림 그리기 안내는 시나리오 대사와 겹쳐서 뺐다)
     };
 
     // ── 찾기 도우미 ─────────────────────────────────────────────────────────────
     private static bool In(string scene) => SceneManager.GetActiveScene().name == scene;
 
     private static MainState Main => GameManager.Instance != null ? GameManager.Instance.MainState : MainState.DayCustomer;
+
+    private static GameManager Game => GameManager.Instance;
+
+    /// <summary>예약 꽃다발을 만드는 날인가.</summary>
+    private static bool Crafting => Game != null && Game.Crafting;
+
+    /// <summary>수락한 예약이 있는가.</summary>
+    private static bool HasReservation() => CurrencyManager.Instance != null && CurrencyManager.Instance.Reservations.Count > 0;
+
+    /// <summary>오늘부터 전화기를 쓸 수 있는가(시나리오의 해금 일차. 시나리오가 없으면 처음부터 쓸 수 있으니 안내하지 않는다).</summary>
+    private static bool PhoneUnlocked() => ScenarioManager.Instance != null && CurrencyManager.Instance != null && ScenarioManager.Instance.IsPhoneUnlocked(CurrencyManager.Instance.CurrentDay);
+
+    /// <summary>지금 가구 상인이 대화하는 중인가(상인이 떠나야 가구 주문 안내를 한다).</summary>
+    private static bool MerchantTalking()
+    {
+        DayVisit? visit = Game != null ? Game.CurrentScriptedVisit : null;
+        return visit.HasValue && visit.Value.dialogueId != null && visit.Value.dialogueId.StartsWith("merchant");
+    }
+
+    /// <summary>밤 수리 퍼즐에서 그 아픔의 퍼즐이 지금 열려 있는가.</summary>
+    private static bool RepairOpen(FlowerData.Ailment ailment)
+    {
+        return In(GameManager.SceneNightPuzzle) && UnityEngine.Object.FindObjectsByType<RepairPuzzlePanel>(FindObjectsSortMode.None).Any(p => p.Ailment == ailment && p.gameObject.activeInHierarchy);
+    }
 
     /// <summary>경로의 오브젝트(켜져 있을 때만. GameObject.Find는 경로로 찾으면 꺼진 것도 돌려주므로 직접 거른다).</summary>
     private static GameObject Go(string path)

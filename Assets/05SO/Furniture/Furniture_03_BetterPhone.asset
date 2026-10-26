@@ -27,3 +27,4 @@ MonoBehaviour:
   sunsetSprite: {fileID: 21300000, guid: 11b009c94680c1b47a16948c64cecce0, type: 3}
   eveningSprite: {fileID: 21300000, guid: b6201c96d469c124f8471995df07f53a, type: 3}
   extraSprites: []
+  sceneImageName: CounterTelephone

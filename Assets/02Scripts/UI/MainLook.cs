@@ -32,6 +32,36 @@ public class MainLook : MonoBehaviour
 
     [SerializeField, Min(0.1f), Tooltip("하루 결산(또는 결산 없는 밤)이 끝나 다음 날 낮으로 갈 때 밤 → 낮으로 섞이는 시간(초).")] private float morningBlendSeconds = 1f;
 
+    private LookSprite[] looks = System.Array.Empty<LookSprite>(); // images에 설치된 가구의 그림을 입힌 것(Apply가 정한다)
+
+    /// <summary>
+    /// 설치된 가구가 이 이미지 자리(sceneImageName)를 차지하면 그 가구의 낮·노을·밤 그림으로 바꾼다. 같은 자리에 여럿이면 나중에 설치된 것이 쓰인다.
+    /// 주문한 가구는 다음 날 설치되므로(CurrencyManager.InstallPendingFurniture) 주문한 날에는 바뀌지 않는다.
+    /// </summary>
+    private LookSprite[] WithInstalledFurniture()
+    {
+        var result = (LookSprite[])images.Clone();
+        CurrencyManager currency = CurrencyManager.Instance;
+        DataRegistry registry = DataRegistry.Instance;
+        if (currency == null || registry == null) return result;
+
+        foreach (int id in currency.InstalledFurniture)
+        {
+            FurnitureData furniture = registry.GetFurniture(id);
+            if (furniture == null || string.IsNullOrEmpty(furniture.sceneImageName)) continue;
+
+            for (int i = 0; i < result.Length; i++)
+            {
+                if (result[i].imageName != furniture.sceneImageName) continue;
+
+                if (furniture.DaySprite != null) result[i].day = furniture.DaySprite;
+                if (furniture.SunsetSprite != null) result[i].sunset = furniture.SunsetSprite;
+                if (furniture.NightSprite != null) result[i].night = furniture.NightSprite;
+            }
+        }
+        return result;
+    }
+
     private readonly List<(PhaseBlend phase, LookSprite look)> blends = new();
     private MainState state;
     private bool nightBlending;
@@ -44,7 +74,8 @@ public class MainLook : MonoBehaviour
         SetActive(nightOnlyNames, night);
 
         blends.Clear();
-        foreach (LookSprite entry in images)
+        looks = WithInstalledFurniture();
+        foreach (LookSprite entry in looks)
         {
             Sprite sprite = state == MainState.DayCustomer ? entry.day : state == MainState.DayEnding ? entry.sunset : entry.night;
             foreach (Image image in SceneFind.All<Image>(gameObject.scene, entry.imageName))
@@ -158,7 +189,7 @@ public class MainLook : MonoBehaviour
     /// <summary>섞지 않는 이미지(전화기, 계산대, 말풍선 …)의 그림을 고른 모습으로 바꾼다(비워 둔 모습은 그대로 둔다).</summary>
     private void SetSprites(Func<LookSprite, Sprite> pick)
     {
-        foreach (LookSprite entry in images)
+        foreach (LookSprite entry in looks)
         {
             Sprite sprite = pick(entry);
             if (sprite == null) continue;

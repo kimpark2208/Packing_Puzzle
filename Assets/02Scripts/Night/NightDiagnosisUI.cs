@@ -327,7 +327,7 @@ public class NightDiagnosisUI : MonoBehaviour
             flowerOffset = center;
             SetFlowerVisible(true);
         }
-        yield return new WaitForSecondsRealtime(curedDelay);
+        yield return GameTime.Wait(curedDelay);
     }
 
     /// <summary>화병(flowerObjects의 첫 번째)의 가운데가 화면 가운데에서 얼마나 떨어져 있는지(캔버스 x, 오른쪽이 양수).</summary>

@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System.Collections;
+using System.Collections.Generic;
 using System.Linq;
 using TMPro;
 using UnityEngine;
@@ -28,9 +29,16 @@ public class ReservationCalendar : MonoBehaviour
     [SerializeField] private Button cancelButton;
     [SerializeField] private ReservationStoragePopup storagePopup;
     [SerializeField] private ReservationCancelPopup cancelPopup;
+    [SerializeField, Tooltip("예약일에 예약자가 왔는데 수납하지 않은 경우에 뜨는 \"달력 화면으로 갈까요?\" 확인 팝업(문구는 팝업에 적어 둔다).")] private ReservationConfirmPopup storePrompt;
+
+    [Header("예약 수락 연출")]
+    [SerializeField, Min(0f), Tooltip("예약을 수락한 직후 달력이 열려 예약일을 보여 주는 시간(초). 달력이 열린 뒤 예약일 표시가 톡 하고 나타나고, 이 시간이 지나면 달력이 닫힌다.")] private float acceptPreviewSeconds = 1f;
 
     private readonly List<GameObject> rows = new();
+    private ReservationRecord hiddenRecord; // 수락 연출에서 아직 표시를 안 보여 준 예약(그 예약일 칸은 일반 칸으로 보인다)
     private ReservationRecord selected;
+    private bool promptOnly; // 안내 팝업만 보이는 상태(달력 카드는 아직 안 열렸다)
+    private bool closed;     // 달력이 닫혀 꺼졌다(PickupStoreFlow가 기다린다)
     private int monthStart; // 이번 달 첫날 바로 앞의 일차(첫 달이면 0)
     private Color reservedInner, reservedDay, todayInner, normalInner, normalDay; // 견본 칸에서 읽어 둔 색
 
@@ -61,6 +69,12 @@ public class ReservationCalendar : MonoBehaviour
     {
         selected = null;
         detail.SetActive(false);
+        if (promptOnly)
+        {
+            card.SetActive(false); // 안내 팝업만 보인다(달력 카드는 팝업에서 수락하면 PickupStoreFlow가 연다)
+            return;
+        }
+
         card.SetActive(true); // 닫을 때 카드가 꺼지므로 다시 켠다
         RefreshCells();
     }
@@ -69,7 +83,74 @@ public class ReservationCalendar : MonoBehaviour
     private void Close()
     {
         PanelMotion.Close(detail);
-        PanelMotion.Close(card, () => gameObject.SetActive(false));
+        PanelMotion.Close(card, () =>
+        {
+            gameObject.SetActive(false);
+            closed = true;
+        });
+    }
+
+    /// <summary>
+    /// 예약일에 예약자가 찾아왔는데 필요한 꽃은 가지고 있으면서 수납하지 않은 경우: 안내 팝업("예약 물품을 수납하지 않았습니다. 달력 화면으로 갈까요?")만 띄운다.
+    /// 거절하면 팝업이 닫히고 went(false). 수락하면 달력 화면이 열리고(이 예약이 골라진 채 보관 패널이 열린다) 플레이어가 달력을 닫을 때까지 기다린 뒤 went(true).
+    /// 부른 쪽(MainUI)은 이 코루틴이 끝나면 준비 상태를 다시 본다.
+    /// </summary>
+    public IEnumerator PickupStoreFlow(ReservationRecord record, System.Action<bool> went)
+    {
+        promptOnly = true;
+        gameObject.SetActive(true);
+        bool? choice = null;
+        storePrompt.Open(null, accepted => choice = accepted);
+        while (!choice.HasValue) yield return null;
+
+        promptOnly = false;
+        if (!choice.Value)
+        {
+            yield return GameTime.Wait(0.35f); // 팝업이 닫히는 동안
+            gameObject.SetActive(false);
+            went(false);
+            yield break;
+        }
+
+        closed = false;
+        card.SetActive(true); // 달력 화면으로 넘어간다
+        RefreshCells();
+        selected = record;
+        RefreshDetail();
+        detail.SetActive(true);
+        while (!closed) yield return null;
+        went(true);
+    }
+
+    /// <summary>
+    /// 예약을 수락한 직후의 연출: 달력이 열리고, 잠시 뒤 예약일 칸에 예약 표시가 톡 하고 나타나며, acceptPreviewSeconds가 지나면 달력이 닫힌다.
+    /// 부른 쪽(ReservationCall)이 이 코루틴이 끝날 때까지 기다린다(그동안 손님이 오지 않고 시간이 멈춰 있다).
+    /// </summary>
+    public IEnumerator PlayAcceptedPreview(ReservationRecord record)
+    {
+        hiddenRecord = record; // 열리는 동안은 이 예약일 칸이 아직 일반 칸이다
+        gameObject.SetActive(true);
+        PanelMotion motion = card.GetComponent<PanelMotion>();
+        float moveSeconds = motion != null ? motion.Seconds : 0f;
+        yield return GameTime.Wait(moveSeconds + 0.1f);
+
+        hiddenRecord = null;
+        RefreshCells(); // 예약일 칸이 예약이 있는 칸의 모습으로 바뀐다
+        int index = record.DueDay - 1 - monthStart;
+        Transform cell = index >= 0 && index < grid.childCount ? grid.GetChild(index) : null; // 예약일이 다음 달이면 칸이 없다
+        float popSeconds = Mathf.Min(0.35f, acceptPreviewSeconds * 0.5f);
+        for (float t = 0f; cell != null && t < popSeconds; t += Time.unscaledDeltaTime)
+        {
+            float u = t / popSeconds;
+            cell.localScale = Vector3.one * (1f + 0.35f * (1f - u) * (1f - u)); // 커졌다가 제 크기로 돌아온다
+            yield return null;
+        }
+        if (cell != null) cell.localScale = Vector3.one;
+        yield return GameTime.Wait(Mathf.Max(0f, acceptPreviewSeconds - popSeconds));
+
+        if (gameObject.activeSelf) Close();
+        yield return GameTime.Wait(moveSeconds);
+        hiddenRecord = null;
     }
 
     private int Today => Currency != null ? Currency.CurrentDay : 1;
@@ -87,6 +168,7 @@ public class ReservationCalendar : MonoBehaviour
             Transform cell = grid.GetChild(i);
             int day = monthStart + i + 1;
             ReservationRecord record = RecordOn(day);
+            if (record != null && record == hiddenRecord) record = null;
             bool isToday = day == today;
 
             Transform inner = cell.Find("Frame/Inner");
@@ -150,8 +232,7 @@ public class ReservationCalendar : MonoBehaviour
                 add.interactable = Currency.MaxStorable(record, i) > 0; // 보관할 재고가 없으면 눌러도 소용없다
                 add.onClick.AddListener(() => storagePopup.Open(record, index, RefreshDetail));
             }
-            else if (item.kind == ReservationData.ItemKind.Bouquet) count.text = $"X{item.count}"; // 꽃다발은 예약 당일에 만들 개수다
-            else count.text = $"<color={Red}>미보유</color>";
+            else count.text = Currency.HasItem(item) ? "보유" : $"<color={Red}>미보유</color>"; // 포장지와 꾸미기 용품은 개수를 따지지 않고 보유 여부만(임시)
         }
     }
 

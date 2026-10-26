@@ -28,6 +28,13 @@ public class FurnitureData : ScriptableObject
     public Sprite sunsetSprite;
     public Sprite eveningSprite;
     [Tooltip("가구에 딸린 그림들(예: 성단 무리 천막에 뜨는 별자리 10종, 선반의 위·아래 그림).")] public Sprite[] extraSprites;
+    [Header("메인 화면 반영")]
+    [Tooltip("주문한 다음 날 이 가구가 설치되면 그림을 바꿀 메인 화면 이미지의 이름(MainLook의 imageName과 같다. 전화기 = CounterTelephone, 계산대 = CounterPos, 천막 = CounterHang). 비워 두면 화면에는 반영하지 않는다.")] public string sceneImageName;
+
+    /// <summary>설치됐을 때 낮(아침)·노을·밤(저녁)에 쓰는 그림. 비어 있는 시간대는 앞 시간대 그림을 대신 쓴다(그림이 하나뿐이면 셋 다 같다).</summary>
+    public Sprite DaySprite => morningSprite != null ? morningSprite : sprite;
+    public Sprite SunsetSprite => sunsetSprite != null ? sunsetSprite : DaySprite;
+    public Sprite NightSprite => eveningSprite != null ? eveningSprite : SunsetSprite;
 
     /// <summary>카탈로그에 보여 줄 그림: 시간대별 그림이 있으면 낮(아침) 그림, 없으면 sprite.</summary>
     public Sprite CatalogSprite => morningSprite != null ? morningSprite : sprite;

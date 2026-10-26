@@ -41,13 +41,14 @@ public class OrderPopup : MonoBehaviour
         if (orderPopup.activeSelf) RefreshOrder();
     }
 
-    /// <summary>손님이 말한 주문(포장지 색 + 요구사항)을 주문서에 적는다.</summary>
+    /// <summary>손님이 말한 주문(포장지 색 + 요구사항)을 주문서에 적는다. 예약 꽃다발을 만드는 날에는 예약 제목과 지금까지 만든 꽃다발 수·누적 점수를 적는다.</summary>
     private void RefreshOrder()
     {
         var order = GameManager.Instance != null ? GameManager.Instance.CurrentDayOrder : null;
         int day = CurrencyManager.Instance != null ? CurrencyManager.Instance.CurrentDay : 1;
 
         orderNumberText.text = $"No. {day:0000}";
-        orderBodyText.text = order == null ? "" : order.orderLine;
+        bool crafting = GameManager.Instance != null && GameManager.Instance.Crafting;
+        orderBodyText.text = crafting ? GameManager.Instance.Craft.OrderSheetText() : order == null ? "" : order.orderLine;
     }
 }

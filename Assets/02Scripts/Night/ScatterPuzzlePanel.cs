@@ -244,7 +244,7 @@ public class ScatterPuzzlePanel : RepairPuzzlePanel
         if (placed < loosePetals.Length) yield break;
 
         message.text = solvedMessage;
-        yield return new WaitForSecondsRealtime(solvedDelay);
+        yield return GameTime.Wait(solvedDelay);
         Solve();
     }
 

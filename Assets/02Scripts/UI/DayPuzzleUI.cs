@@ -65,6 +65,16 @@ public class DayPuzzleUI : MonoBehaviour
         if (resultView != null) resultView.gameObject.SetActive(false);
 
         if (collapsePopup != null) collapsePopup.SetActive(false);
+
+        if (GameManager.Instance != null && GameManager.Instance.ConsumeDebugSkip()) StartCoroutine(SubmitAfterReveal()); // 디버그 스킵으로 넘어왔다
+    }
+
+    /// <summary>디버그 스킵: 씬 전환 연출이 걷힌 뒤 지금 놓인 꽃(없다)으로 강제 제출한다.</summary>
+    private System.Collections.IEnumerator SubmitAfterReveal()
+    {
+        while (SceneTransition.Busy) yield return null;
+        yield return null;
+        DebugForceSubmit();
     }
 
     private void OnDestroy()
@@ -144,10 +154,14 @@ public class DayPuzzleUI : MonoBehaviour
     /// <summary>퍼즐이 끝난 순간 정산한다(손님 기분 판정에 쓰이므로 기분 시간을 멈추기 전에 계산한다).</summary>
     private SettlementResult Settle(PuzzleEndKind endKind)
     {
-        customerLate = IsCustomerLate();
+        bool crafting = Crafting;
+        customerLate = !crafting && IsCustomerLate();
         SettlementResult result = settlement.Settle(endKind, collapseCount);
-        CurrencyManager.Instance.AddMoney(result.Payout); // 정산은 금액만 계산하고, 지급은 여기서 한다
-        CurrencyManager.Instance.RecordRoundScore(result.Score); // 하루 평점은 그날 퍼즐 점수의 평균으로 정한다
+        if (!crafting) // 예약 꽃다발은 재화도 하루 평점도 매기지 않고 점수만 쌓는다(보상은 예약자가 마지막에 평균 점수로 준다)
+        {
+            CurrencyManager.Instance.AddMoney(result.Payout); // 정산은 금액만 계산하고, 지급은 여기서 한다
+            CurrencyManager.Instance.RecordRoundScore(result.Score); // 하루 평점은 그날 퍼즐 점수의 평균으로 정한다
+        }
         GameManager.Instance?.ConsumeUsedFlowers(board.PlacementHistory); // 퍼즐이 끝났으니 놓은 꽃이 소모된다(붕괴 재시작은 끝이 아니다)
         GameManager.Instance?.ConsumeUsedWrapper(); // 포장지도 한 장 소모된다
         GameClock.Instance?.StopMood(); // 퍼즐이 끝났으니 기분 시간은 다음 주문까지 멈춘다
@@ -166,9 +180,11 @@ public class DayPuzzleUI : MonoBehaviour
             return;
         }
 
-        resultView.Show(result, OnResultConfirmed); // 마지막에 한 번 더 누르면 닫히고 OnResultConfirmed로 이어진다
+        resultView.Show(result, OnResultConfirmed, showPayout: !Crafting); // 마지막에 한 번 더 누르면 닫히고 OnResultConfirmed로 이어진다. 예약 꽃다발은 획득 재화를 보여 주지 않는다
         if (bouquetPhoto != null) bouquetPhoto.Take(); // 결과 화면이 켜진 뒤에, 포토카드에 완성한 꽃다발(꾸미기 포함)을 넣는다
     }
+
+    private static bool Crafting => GameManager.Instance != null && GameManager.Instance.Crafting;
 
     private static bool IsCustomerLate()
     {
@@ -216,6 +232,12 @@ public class DayPuzzleUI : MonoBehaviour
     {
         GameClock.Instance?.SetPaused(false);
         if (GameManager.Instance == null) return;
+
+        if (Crafting) // 예약 꽃다발: 점수를 쌓고 다음 꽃다발의 포장지 선택으로(다 만들었으면 예약자의 반응으로) 돌아간다
+        {
+            GameManager.Instance.FinishReservationBouquet(lastScore);
+            return;
+        }
 
         // 손님 기분이 다 닳은 뒤에 끝났으면 "늦으셨네요.", 아니면 요구사항을 못 채웠으면 손님이 화내고,
         // 채웠으면 만족한다.

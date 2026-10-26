@@ -8,6 +8,9 @@ public class ReservationRecord
     public readonly int acceptedDay;
     public readonly int[] stored; // data.items와 같은 순서로, 항목마다 보관한 수
 
+    /// <summary>예약일에 예약자가 찾아와 준비가 되었다고 확인한 예약(꽃다발 제작을 기다린다. 제작 시스템은 아직 없다).</summary>
+    public bool pickedUp;
+
     public ReservationRecord(ReservationData data, int acceptedDay)
     {
         this.data = data;
@@ -60,30 +63,78 @@ public partial class CurrencyManager
         return true;
     }
 
-    /// <summary>항목의 보유 재고(보관할 수 있는 항목이 아니면 0).</summary>
-    public int GetItemStock(ReservationData.Item item)
+    /// <summary>예약일에 예약자가 찾아왔을 때의 준비 상태.</summary>
+    public enum PickupState
     {
-        if (!item.Storable) return 0;
+        Ready,        // 필요한 꽃을 모두 보관했고 포장지와 꾸미기 용품도 가지고 있다
+        NeedsStoring, // 꽃은 수량만큼 가지고 있지만 아직 다 보관(수납)하지 않았다: 보관하면 준비가 끝난다
+        NotReady,     // 보관해도 준비할 수 없다(꽃이 모자라거나 포장지·꾸미기 용품이 없다)
+    }
+
+    /// <summary>미준비로 예약일을 넘기면 예약금의 이 배수를 돌려줘야 한다(PDF의 "예약금의 2배 환불", 지불하는 것으로 처리).</summary>
+    public const int NoShowFeeMultiplier = 2;
+
+    /// <summary>미준비일 때 다음 예약 주문이 늦게 걸려 오는 일수.</summary>
+    public const int NoShowDelayDays = 5;
+
+    public PickupState GetPickupState(ReservationRecord record)
+    {
+        bool allStored = true, canStore = true;
+        for (int i = 0; i < record.data.items.Length; i++)
+        {
+            ReservationData.Item item = record.data.items[i];
+            if (!item.Storable)
+            {
+                if (!HasItem(item)) return PickupState.NotReady; // 포장지와 꾸미기 용품은 가지고 있는지만 본다
+                continue;
+            }
+
+            if (record.stored[i] >= item.count) continue;
+
+            allStored = false;
+            if (record.stored[i] + GetFlowerStock(item.id) < item.count) canStore = false;
+        }
+        return allStored ? PickupState.Ready : canStore ? PickupState.NeedsStoring : PickupState.NotReady;
+    }
+
+    /// <summary>예약일에 준비하지 못했다: 예약금의 NoShowFeeMultiplier배를 돌려주고(돈이 모자라면 0까지), 보관해 둔 꽃은 재고로 돌아오며, 예약은 없어진다.</summary>
+    public void FailReservation(ReservationRecord record)
+    {
+        AddMoney(-record.data.deposit * NoShowFeeMultiplier);
+        for (int i = 0; i < record.data.items.Length; i++) AddItemStock(record.data.items[i], record.stored[i]);
+        reservations.Remove(record);
+    }
+
+    /// <summary>예약 꽃다발 제작을 마쳤다: 보상(payout)을 받고, 쓰고 남은 보관 꽃은 재고로 돌아오며, 예약은 끝난다.</summary>
+    public void FinishReservation(ReservationRecord record, int payout)
+    {
+        AddMoney(payout);
+        for (int i = 0; i < record.data.items.Length; i++) AddItemStock(record.data.items[i], record.stored[i]);
+        reservations.Remove(record);
+    }
+
+    /// <summary>꽃 항목의 보유 재고(보관할 수 있는 항목이 아니면 0).</summary>
+    public int GetItemStock(ReservationData.Item item) => item.Storable ? GetFlowerStock(item.id) : 0;
+
+    /// <summary>항목을 가지고 있는가(임시 규칙): 꽃은 재고가 있으면, 포장지는 얻었으면, 꾸미기 용품은 샀거나 받았으면. 연결하지 않은 항목(id 0)은 미보유다.</summary>
+    public bool HasItem(ReservationData.Item item)
+    {
+        if (item.id <= 0) return false;
 
         switch (item.kind)
         {
-            case ReservationData.ItemKind.Flower: return GetFlowerStock(item.id);
-            case ReservationData.ItemKind.Wrapper: return GetWrapperStock(item.id);
-            default: return GetDecorationStock(item.id);
+            case ReservationData.ItemKind.Flower: return GetFlowerStock(item.id) > 0;
+            case ReservationData.ItemKind.Wrapper: return HasWrapper(item.id);
+            default: return GetDecorationStock(item.id) > 0;
         }
     }
 
-    /// <summary>항목의 보유 재고를 늘리거나(음수면 줄인다).</summary>
+    /// <summary>꽃 항목의 보유 재고를 늘리거나(음수면 줄인다).</summary>
     private void AddItemStock(ReservationData.Item item, int amount)
     {
         if (!item.Storable || amount == 0) return;
 
-        switch (item.kind)
-        {
-            case ReservationData.ItemKind.Flower: AddFlowerStock(item.id, amount); break;
-            case ReservationData.ItemKind.Wrapper: AddWrapperStock(item.id, amount); break;
-            default: AddDecorationStock(item.id, amount); break;
-        }
+        AddFlowerStock(item.id, amount);
     }
 
     /// <summary>지금 보관할 수 있는 최대 개수: 재고와, 아직 더 필요한 수 중 작은 쪽.</summary>

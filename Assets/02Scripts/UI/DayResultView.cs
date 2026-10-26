@@ -41,6 +41,7 @@ public class DayResultView : MonoBehaviour
     private const string FinishedHint = "한 번 누르면 계속";
 
     private Action onClosed;
+    private bool showPayout = true;
     private bool fast;
     private bool finished;
     private Vector2 mainBase, prevBase; // 에디터에 놓아 둔 알약 자리
@@ -55,9 +56,11 @@ public class DayResultView : MonoBehaviour
         mainTextColor = mainPillText.color;
     }
 
-    public void Show(SettlementResult result, Action closed)
+    /// <param name="showPayout">false면 마지막의 "획득 재화" 알약을 보여 주지 않는다(예약 꽃다발은 점수만 판정한다).</param>
+    public void Show(SettlementResult result, Action closed, bool showPayout = true)
     {
         onClosed = closed;
+        this.showPayout = showPayout;
         GetComponentInParent<Canvas>(true).gameObject.SetActive(true); // 에디터에서 작업하느라 캔버스를 꺼 두어도 결과 화면은 뜨게 한다
         gameObject.SetActive(true);
         StopAllCoroutines();
@@ -79,6 +82,7 @@ public class DayResultView : MonoBehaviour
         fast = false;
         finished = false;
         gauge.Value = 0f;
+        gauge.SetBandsVisible(showPayout);
         mainPillBackground.gameObject.SetActive(false);
         prevPillBackground.gameObject.SetActive(false);
         hintText.text = PlayingHint;
@@ -102,9 +106,12 @@ public class DayResultView : MonoBehaviour
             yield return Wait(stepSeconds);
         }
 
-        if (shownAny) SetPrevPill(mainPillText.text, mainPillBackground.color);
-        SetMainPill($"획득 재화  {result.Payout}", payoutColor);
-        RisePills(shownAny);
+        if (showPayout)
+        {
+            if (shownAny) SetPrevPill(mainPillText.text, mainPillBackground.color);
+            SetMainPill($"획득 재화  {result.Payout}", payoutColor);
+            RisePills(shownAny);
+        }
         yield return MoveGauge(result.Score);
 
         finished = true;
@@ -187,6 +194,7 @@ public class DayResultView : MonoBehaviour
             case ScoreReason.Collapse: return "꽃다발 붕괴";
             case ScoreReason.MoodBad: return "손님 기분 나쁨";
             case ScoreReason.RequirementMissed: return "요구사항 미달성";
+            case ScoreReason.SupplyMissing: return "예약 용품 미포함";
             default: return reason.ToString();
         }
     }

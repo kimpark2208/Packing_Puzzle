@@ -10,7 +10,8 @@ public enum ScoreReason
     MoodGood,            // 가산: 손님 기분 좋음
     Collapse,            // 감산: 꽃다발 붕괴(횟수만큼)
     MoodBad,             // 감산: 손님 기분 나쁨
-    RequirementMissed    // 감산: 주문 요구조건 미충족
+    RequirementMissed,   // 감산: 주문 요구조건 미충족
+    SupplyMissing        // 감산: 예약 필수 꾸미기 용품을 꽃다발에 놓지 않음(예약 꽃다발 제작)
 }
 
 /// <summary>

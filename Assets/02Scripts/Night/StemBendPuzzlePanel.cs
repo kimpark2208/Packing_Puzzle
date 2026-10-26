@@ -336,7 +336,7 @@ public class StemBendPuzzlePanel : RepairPuzzlePanel
     {
         playing = false;
         message.text = solvedMessage;
-        yield return new WaitForSecondsRealtime(solvedDelay);
+        yield return GameTime.Wait(solvedDelay);
         Solve();
     }
 }

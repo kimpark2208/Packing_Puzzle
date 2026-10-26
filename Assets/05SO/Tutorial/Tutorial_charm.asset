@@ -1,0 +1,27 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 563bff9d3474c0945aa0772be79cc9f9, type: 3}
+  m_Name: Tutorial_charm
+  m_EditorClassIdentifier: Assembly-CSharp::TutorialPopupData
+  id: charm
+  title: "\uBD80\uC801"
+  icon: {fileID: 21300000, guid: c7acb271e3d838c4aa3dab9d8323b864, type: 3}
+  pages:
+  - image: {fileID: 21300000, guid: e091ffd2fa3b55240ab16c6617b2c037, type: 3}
+    text: "\uB0AE \uC7A5\uC0AC\uAC00 \uB05D\uB0AC\uC5B4\uC694.\n\uD654\uBA74\uC744
+      \uC606\uC73C\uB85C \uB118\uAE30\uBA74, <b>\uBD80\uC801</b>\uC744 \uC0AC\uC6A9\uD560
+      \uC218 \uC788\uC5B4\uC694!"
+  - image: {fileID: 21300000, guid: 7716d9b1ab9a1414baeca60e9b9467d8, type: 3}
+    text: "\uC7AC\uACE0\uAC00 \uBD80\uC871\uD55C \uAF43\uC758 \uAF43\uBCD1\uC744
+      \uD074\uB9AD\uD558\uBA74 \uBD80\uC801\uC774 \uBD99\uC5B4\uC694.\n\uBD80\uC801\uC774
+      \uBD99\uC740 \uAF43\uC744 \uAC00\uC9C4 <b>\uADC0\uC2E0\uB4E4\uC774 \uBC24\uC5D0
+      \uCC3E\uC544\uC62C</b> \uAC70\uC608\uC694."

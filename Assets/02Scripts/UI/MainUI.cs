@@ -22,7 +22,8 @@ public class MainUI : MonoBehaviour
     [SerializeField, Tooltip("주문을 수락한 뒤 꽃 선택으로 저절로 넘어갈 때(스와이프 시작) 나는 소리.")] private AudioClip forcedSwipeSound;
     [SerializeField, Range(0f, 1f)] private float forcedSwipeVolume = 0.8f;
     [SerializeField] private float acceptToSelectDelay = 1f; // 낮 주문을 수락한 뒤 꽃 선택 화면으로 자동으로 넘어가기까지의 시간(초)
-    [SerializeField, Min(0.1f), Tooltip("시나리오가 낮을 건너뛸 때(1일차) 낮이 빨리 감기는 시간(초).")] private float timeSkipSeconds = 3f;
+    [SerializeField, Min(0.1f), Tooltip("시나리오가 낮을 건너뛸 때(1일차)와 예약자의 반응이 끝난 뒤 남은 시간이 빨리 감기는 시간(초).")] private float timeSkipSeconds = 3f;
+    [SerializeField, Min(0f), Tooltip("예약 꽃다발을 만들 때 메인 화면이 열리고 포장지 선택 페이지로 넘어가기까지의 시간(초).")] private float craftSwipeDelay = 0.4f;
     [SerializeField, Min(0f), Tooltip("낮을 건너뛸 때 전등이 나타난 뒤 저절로 켜지기까지 시간(초).")] private float lanternLightDelay = 0.3f;
 
     [Header("소리")]
@@ -58,6 +59,7 @@ public class MainUI : MonoBehaviour
     private bool nightStarting;      // 등불을 켜서 밤으로 넘어가는 중
     private bool hidingCustomer;     // 손님이 사라지는 중(한 번만 처리한다)
     private MainLook mainLook;       // 화면 모습(낮/노을/밤)과 섞기
+    private bool npcPaused;          // NPC와 대화하느라 시간을 멈춰 두었는가(PauseForNpc)
     private bool changingCustomer;   // 손님이 바뀌는 중(말풍선 -> 나가는 모션 -> 들어오는 모션 -> 말풍선). 그동안은 응답 버튼을 무시한다
 
     private static GameManager Game => GameManager.Instance;
@@ -73,6 +75,16 @@ public class MainUI : MonoBehaviour
     {
         EventBus.OnNightTimeUp -= OnNightTimeUp;
         if (swipe != null) swipe.Arrived -= OnSwipeArrived;
+        PauseForNpc(false);
+    }
+
+    /// <summary>NPC와 대화하는 동안(들어온 뒤 대사, 주문을 수락하기 전, 꽃다발 반응 대사와 친밀 대사) 하루/밤 시간과 손님 기분 시간이 가지 않게 한다. 켜진 채 다시 켜도 한 번만 센다.</summary>
+    private void PauseForNpc(bool on)
+    {
+        if (on == npcPaused) return;
+
+        npcPaused = on;
+        GameClock.Instance?.SetPaused(on);
     }
 
     private void Start()
@@ -137,6 +149,11 @@ public class MainUI : MonoBehaviour
         GameObject shelfRoot = SceneFind.One<Transform>(scene, SceneObjectNames.ShelfRoot)?.gameObject;
         bool hasSidePage = state == MainState.DayCustomer || state == MainState.DayEnding;
         if (shelfRoot != null) shelfRoot.SetActive(hasSidePage);
+        if (shelfRoot != null && state == MainState.DayEnding) // 낮 종료의 옆 페이지는 부적을 붙이는 꽃 선반(FlowerArea)이다. 포장지 선택(WrapperArea)은 낮 손님의 것이라 켜 둔 채 저장돼 있어도 끈다
+        {
+            shelfRoot.transform.Find("WrapperArea")?.gameObject.SetActive(false);
+            shelfRoot.transform.Find("FlowerArea")?.gameObject.SetActive(true);
+        }
         shelf = shelfRoot != null ? shelfRoot.GetComponentInChildren<NightRequestUI>(true) : null;
         if (shelf != null) shelf.gameObject.SetActive(state == MainState.DayEnding);
         FlowerSelectUI flowerSelect = shelfRoot != null ? shelfRoot.GetComponentInChildren<FlowerSelectUI>(true) : null;
@@ -192,6 +209,16 @@ public class MainUI : MonoBehaviour
         calendarPopup?.SetActive(false);
     }
 
+    /// <summary>지금 가구 상인의 대사를 재생하는 중인가.</summary>
+    private bool MerchantTalking
+    {
+        get
+        {
+            DayVisit? visit = Game != null ? Game.CurrentScriptedVisit : null;
+            return dialoguePlayer != null && dialoguePlayer.Playing && visit.HasValue && visit.Value.dialogueId != null && visit.Value.dialogueId.StartsWith("merchant");
+        }
+    }
+
     private bool PopupOpen => (catalogPopup != null && catalogPopup.activeSelf) || (calendarPopup != null && calendarPopup.activeSelf);
 
     /// <summary>
@@ -213,7 +240,7 @@ public class MainUI : MonoBehaviour
     /// <summary>전화기를 누르면 전화기 바가 뜨고, 다시 누르면 닫힌다. 카탈로그가 열려 있는 동안은 바를 띄우지 않는다.</summary>
     private void ToggleTelephoneBar()
     {
-        if (!phoneUnlocked || telephoneBar == null || PopupOpen || ReservationCall.Busy) return; // 전화기가 해금되기 전과 예약 전화가 울리는 동안(받는 일은 ReservationCall이 한다)에는 메뉴 바를 열지 않는다
+        if (!phoneUnlocked || telephoneBar == null || PopupOpen || ReservationCall.Busy || MerchantTalking) return; // 가구 상인이 말하는 동안에는 전화기를 쓰지 않는다(상인이 떠난 뒤 구재민이 말할 때부터 쓴다) // 전화기가 해금되기 전과 예약 전화가 울리는 동안(받는 일은 ReservationCall이 한다)에는 메뉴 바를 열지 않는다
 
         telephoneBar.SetActive(!telephoneBar.activeSelf);
     }
@@ -268,13 +295,29 @@ public class MainUI : MonoBehaviour
     /// <summary>낮 손님: 주문을 말한다. 이전 손님의 반응 대사가 있으면 그것부터 말한다.</summary>
     private void BeginDayCustomer()
     {
+        if (Game != null && Game.Craft != null) // 예약일: 손님은 더 오지 않고 예약 꽃다발만 만든다
+        {
+            StartCoroutine(Game.Crafting ? CraftingRoutine() : ReservationReactionRoutine());
+            return;
+        }
+
         string angryLine = Game != null ? Game.ConsumePendingCustomerLine() : null;
         showingReaction = !string.IsNullOrEmpty(angryLine);
+        if (!showingReaction && Game != null && calendarPopup != null)
+        {
+            ReservationRecord due = Game.TakePickupReservation(); // 오늘이 예약일이면 예약자가 하루의 첫 손님으로 온다
+            if (due != null)
+            {
+                StartCoroutine(PickupRoutine(due));
+                return;
+            }
+        }
         if (!showingReaction && TryBeginScriptedVisit()) return;
 
         if (showingReaction)
         {
             ShowPreviousNpcOrCustomer(); // 반응 대사는 방금 주문을 한 그 손님이 한다
+            if (Game != null && Game.PreviousNpc != null) PauseForNpc(true); // NPC의 반응 대사(와 이어지는 친밀 대사)를 듣는 동안은 시간이 가지 않는다
             SayAfterReveal(() => speech.Show(angryLine));
             forceAcceptLine = GameManager.Instance != null
                 ? GameManager.Instance.ConsumePendingRejectResponseLine()
@@ -349,7 +392,7 @@ public class MainUI : MonoBehaviour
         if (previousLeaves && character != null)
         {
             PanelMotion.Close(character.gameObject);
-            yield return new WaitForSecondsRealtime(seconds + customerSwapDelay);
+            yield return GameTime.Wait(seconds + customerSwapDelay);
         }
 
         if (npc != null && npc.portrait != null)
@@ -359,20 +402,20 @@ public class MainUI : MonoBehaviour
             motion?.PlayShow();
         }
         else ShowNewCustomer(arrive: true); // 그림이 없는 NPC는 전용 모습이 생기기 전까지 무작위 손님 모습
-        yield return new WaitForSecondsRealtime(seconds + 0.1f);
+        yield return GameTime.Wait(seconds + 0.1f);
 
         SetBubble(true);
         changingCustomer = false;
-        GameClock.Instance?.SetPaused(true);
+        PauseForNpc(true);
         yield return dialoguePlayer.Play(dialogue);
-        GameClock.Instance?.SetPaused(false);
+        if (!leaveAfter) yield break; // 주문을 말하러 이어지는 방문은 주문을 수락할 때까지 시간이 멈춘 채로 있다(OnAcceptClicked)
 
-        if (!leaveAfter) yield break;
+        PauseForNpc(false);
 
         changingCustomer = true;
         SetBubble(false);
         if (character != null) PanelMotion.Close(character.gameObject);
-        yield return new WaitForSecondsRealtime(seconds + customerSwapDelay);
+        yield return GameTime.Wait(seconds + customerSwapDelay);
     }
 
     /// <summary>
@@ -404,7 +447,7 @@ public class MainUI : MonoBehaviour
             lantern.SetIsOnWithoutNotify(false);
         }
         lanternLight?.SetLit(false);
-        yield return new WaitForSecondsRealtime(lanternLightDelay);
+        yield return GameTime.Wait(lanternLightDelay);
 
         lantern?.SetIsOnWithoutNotify(true); // 저절로 켜진다
         lanternLight?.SetLit(true);
@@ -414,7 +457,7 @@ public class MainUI : MonoBehaviour
 
         float blend = mainLook != null ? mainLook.PlayNightBlend() : 0f;
         float jingle = nightStartJingle != null ? nightStartJingle.length : 0f;
-        yield return new WaitForSecondsRealtime(Mathf.Max(lanternDelay, blend, jingle)); // 밤 휘슬이 끝날 때까지 기다린다
+        yield return GameTime.Wait(Mathf.Max(lanternDelay, blend, jingle)); // 밤 휘슬이 끝날 때까지 기다린다
         Game.StartNight(new List<int>());
     }
 
@@ -467,11 +510,11 @@ public class MainUI : MonoBehaviour
         if (previousLeaves && character != null)
         {
             PanelMotion.Close(character.gameObject);
-            yield return new WaitForSecondsRealtime(seconds + customerSwapDelay); // 나가는 모션이 끝나고 잠시 쉰 뒤 새 손님이 들어온다
+            yield return GameTime.Wait(seconds + customerSwapDelay); // 나가는 모션이 끝나고 잠시 쉰 뒤 새 손님이 들어온다
         }
 
         ShowNewCustomer(arrive: true);
-        yield return new WaitForSecondsRealtime(seconds + 0.1f); // 들어오는 모션은 한 프레임 뒤에 시작한다
+        yield return GameTime.Wait(seconds + 0.1f); // 들어오는 모션은 한 프레임 뒤에 시작한다
 
         SetBubble(true);
         if (IsNight)
@@ -517,6 +560,13 @@ public class MainUI : MonoBehaviour
             GameManager.Instance.ConsumePendingCustomerLine();
             GameManager.Instance.ConsumePendingRejectResponseLine();
         }
+        if (Game != null && Game.ConsumeSkipEndingCustomer()) // 예약일이 끝났다: 마무리 손님 없이 바로 선반과 전등을 쓸 수 있다
+        {
+            SetBubble(false);
+            foreach (GameObject root in characterRoots) if (root != null) root.SetActive(false);
+            customerGone = true;
+            return;
+        }
         ShowPreviousCustomer();
         SayAfterReveal(() =>
         {
@@ -533,6 +583,7 @@ public class MainUI : MonoBehaviour
         {
             showingReaction = true;
             ShowPreviousNpcOrCustomer();
+            if (Game.PreviousNpc != null) PauseForNpc(true); // NPC의 반응 대사를 듣는 동안은 밤 시간이 가지 않는다
             string notice = Game.ConsumePendingNotice();
             SayAfterReveal(() =>
             {
@@ -643,6 +694,7 @@ public class MainUI : MonoBehaviour
             }
 
             showingReaction = false; // 반응 대사가 끝났다: 다음 손님이 있으면 이 손님이 나가고 다음 손님이 오고, 없으면 이 손님이 나가며 밤이 끝난다
+            PauseForNpc(false);
             if (Game != null && Game.HasNightCustomer)
             {
                 if (!TryBeginScriptedNightVisit(previousLeaves: true)) StartCoroutine(NextCustomerRoutine(true));
@@ -661,10 +713,138 @@ public class MainUI : MonoBehaviour
             return;
         }
 
+        PauseForNpc(false); // NPC와의 대화(주문 포함)는 끝났다: 이제부터 시간이 간다
         GameClock.Instance?.StartMood(); // 주문을 수락하는 순간부터 손님 기분 시간이 줄어든다
         Game?.AcceptOrder();
         SetAnswerButtons(false); // 수락한 뒤에는 응답 버튼이 필요 없다
         StartCoroutine(GoToFlowerSelectAfterDelay());
+    }
+
+    private static readonly string[] PickupReadyAnswers = { "네!", "그래요" };
+    private static readonly string[] PickupNotReadyAnswers = { "뭐라고요?", "네?" };
+
+    /// <summary>
+    /// 예약일: 예약자가 찾아와 준비가 됐냐고 묻는다. 준비 상태에 따라 답 버튼이 다르다(준비됨 = 네!/그래요, 안 됨 = 뭐라고요?/네?).
+    /// 필요한 꽃은 가지고 있으면서 수납하지 않았다면, 예약자가 말한 뒤 답 버튼 없이 1초 기다렸다가 "달력 화면으로 갈까요?"를 묻는다. 거절하면 미완료로 답하고, 수락하면 달력에서 수납한 뒤 준비가 됐는지 다시 보고 답한다.
+    /// 준비됐다고 답하면 예약은 제작 대기가 된다(제작 시스템은 아직 없다). 준비 안 됐다고 답하면 예약금의 2배를 돌려주고 예약이 없어지며, 같은 예약 전화가 5일 뒤에 다시 온다.
+    /// 이 모든 동안 시간이 가지 않는다. 끝나면 예약자가 나가고 평소의 첫 손님이 온다.
+    /// </summary>
+    private System.Collections.IEnumerator PickupRoutine(ReservationRecord record)
+    {
+        CurrencyManager currency = CurrencyManager.Instance;
+        ReservationData data = record.data;
+        changingCustomer = true;
+        SetBubble(false);
+        PauseForNpc(true);
+        if (SceneTransition.Busy)
+        {
+            if (character != null) character.gameObject.SetActive(false); // 페이드가 걷히는 동안은 숨겼다가, 다 걷히면 들어오는 모션과 함께 나타낸다
+            while (SceneTransition.Busy) yield return null;
+        }
+
+        PanelMotion motion = character != null ? character.GetComponent<PanelMotion>() : null;
+        float seconds = motion != null ? motion.Seconds : 0f;
+        ShowNewCustomer(arrive: true); // 예약자는 전용 그림이 생기기 전까지 무작위 손님 모습
+        yield return GameTime.Wait(seconds + 0.1f);
+        SetBubble(true);
+        changingCustomer = false;
+
+        CurrencyManager.PickupState state = currency.GetPickupState(record);
+        if (state == CurrencyManager.PickupState.NeedsStoring)
+        {
+            SetAnswerButtons(false);
+            speech.Show(data.pickupLine); // 답 버튼 없이 말만 한다
+            while (speech.IsTyping) yield return null;
+            yield return GameTime.Wait(1f);
+
+            ReservationCalendar calendar = calendarPopup.GetComponent<ReservationCalendar>();
+            bool went = false;
+            yield return calendar.PickupStoreFlow(record, w => went = w);
+            state = went ? currency.GetPickupState(record) : CurrencyManager.PickupState.NotReady; // 거절하면 미완료로 답한다
+            if (state != CurrencyManager.PickupState.Ready) state = CurrencyManager.PickupState.NotReady; // 달력에서 다 수납하지 않고 닫았어도 미완료다
+        }
+
+        bool ready = state == CurrencyManager.PickupState.Ready;
+        var ask = new Dialogue { id = "reservation_pickup_ask", lines = { new DialogueLine { text = data.pickupLine, answers = ready ? PickupReadyAnswers : PickupNotReadyAnswers } } };
+        yield return dialoguePlayer.Play(ask);
+        var reply = new Dialogue { id = "reservation_pickup_reply", lines = { new DialogueLine { text = ready ? data.pickupReadyReply : data.pickupFailReply } } };
+        yield return dialoguePlayer.Play(reply);
+
+        if (!ready)
+        {
+            int fee = data.deposit * CurrencyManager.NoShowFeeMultiplier;
+            currency.FailReservation(record);
+            Game.DelayReservationCall(data, CurrencyManager.NoShowDelayDays);
+            NoticeToast.Show($"예약 취소 {NoticeToast.Highlight($"-{fee:N0}")}");
+        }
+
+        changingCustomer = true;
+        SetBubble(false);
+        if (character != null) PanelMotion.Close(character.gameObject);
+        yield return GameTime.Wait(seconds + customerSwapDelay);
+        PauseForNpc(false);
+        if (ready)
+        {
+            Game.BeginReservationCraft(record); // 준비됐다: 오늘은 예약 꽃다발만 만든다
+            yield break;
+        }
+        if (!TryBeginScriptedVisit(previousLeaves: false)) StartCoroutine(NextCustomerRoutine(false)); // 평소의 첫 손님
+    }
+
+    /// <summary>
+    /// 예약 꽃다발을 만드는 중에 메인 화면이 열렸다(꽃다발 하나를 마칠 때마다 이 화면으로 돌아온다): 손님 없이 바로 포장지 선택 페이지로 넘어간다.
+    /// 시간은 흐른다(손님 기분 시간은 쓰지 않는다).
+    /// </summary>
+    private System.Collections.IEnumerator CraftingRoutine()
+    {
+        changingCustomer = true;
+        SetBubble(false);
+        if (character != null) character.gameObject.SetActive(false);
+        while (SceneTransition.Busy) yield return null;
+
+        yield return GameTime.Wait(craftSwipeDelay);
+        Sfx.Play(forcedSwipeSound, forcedSwipeVolume);
+        if (swipe != null) swipe.MoveTo(1);
+    }
+
+    /// <summary>
+    /// 예약 꽃다발을 다 만들었거나 시간이 끝났다: 예약자가 다시 나타나 평균 점수 등급에 맞는 말을 하고, 보상(보상금 × 등급 배율)을 준 뒤 나간다.
+    /// 그러고 나서 남은 하루 시간이 빠르게 흘러 낮 종료로 넘어간다. 이 동안 시간은 가지 않는다.
+    /// </summary>
+    private System.Collections.IEnumerator ReservationReactionRoutine()
+    {
+        ReservationCraft craft = Game.Craft;
+        changingCustomer = true;
+        SetBubble(false);
+        PauseForNpc(true);
+        if (character != null) character.gameObject.SetActive(false);
+        while (SceneTransition.Busy) yield return null;
+
+        PanelMotion motion = character != null ? character.GetComponent<PanelMotion>() : null;
+        float seconds = motion != null ? motion.Seconds : 0f;
+        ShowPreviousCustomer(); // 찾아왔던 그 예약자
+        if (character != null) character.gameObject.SetActive(true);
+        motion?.PlayShow();
+        yield return GameTime.Wait(seconds + 0.1f);
+        SetBubble(true);
+        changingCustomer = false;
+
+        ReservationGrade grade = craft.Grade;
+        var reaction = new Dialogue { id = "reservation_result", lines = { new DialogueLine { text = craft.Data.GradeLine(grade) } } };
+        yield return dialoguePlayer.Play(reaction);
+
+        int payout = Game.CollectReservationReward();
+        NoticeToast.Show($"예약 보상 {NoticeToast.Highlight($"+{payout:N0}")} ({grade}등급)");
+
+        changingCustomer = true;
+        SetBubble(false);
+        if (character != null) PanelMotion.Close(character.gameObject);
+        yield return GameTime.Wait(seconds + customerSwapDelay);
+
+        GameClock clock = GameClock.Instance;
+        if (clock != null && clock.DayRemaining > 0.5f) yield return clock.FastForwardDay(timeSkipSeconds); // 남은 시간은 빠르게 흘러간다
+        PauseForNpc(false);
+        Game.EndReservationDay();
     }
 
     /// <summary>
@@ -672,6 +852,15 @@ public class MainUI : MonoBehaviour
     /// </summary>
     private System.Collections.IEnumerator NextVisitRoutine()
     {
+        string bondId = Game != null ? Game.ConsumeBondDialogueId() : null; // 정해진 손님의 친밀 대사는 꽃다발 반응 대사 바로 뒤에 한다
+        Dialogue bond = !string.IsNullOrEmpty(bondId) && ScenarioManager.Instance != null ? ScenarioManager.Instance.Dialogue.Get(bondId) : null;
+        if (bond != null)
+        {
+            PauseForNpc(true);
+            yield return dialoguePlayer.Play(bond);
+        }
+        PauseForNpc(false); // 반응 대사와 친밀 대사가 끝났다
+
         ReservationData reservation = ReservationCall.Instance != null && Game != null ? Game.TakeReservationCall() : null;
         bool called = reservation != null;
         if (called)
@@ -680,12 +869,12 @@ public class MainUI : MonoBehaviour
             SetBubble(false);
             PanelMotion motion = character != null ? character.GetComponent<PanelMotion>() : null;
             if (character != null) PanelMotion.Close(character.gameObject);
-            yield return new WaitForSecondsRealtime((motion != null ? motion.Seconds : 0f) + customerSwapDelay);
+            yield return GameTime.Wait((motion != null ? motion.Seconds : 0f) + customerSwapDelay);
 
             ReservationCall.Instance.Begin(reservation);
             yield return null;
             while (ReservationCall.Busy) yield return null;
-            yield return new WaitForSecondsRealtime(customerSwapDelay);
+            yield return GameTime.Wait(customerSwapDelay);
         }
 
         if (!TryBeginScriptedVisit(previousLeaves: !called)) StartCoroutine(NextCustomerRoutine(!called));
@@ -752,7 +941,7 @@ public class MainUI : MonoBehaviour
             if (root.TryGetComponent(out PanelMotion motion)) wait = Mathf.Max(wait, motion.Seconds);
             PanelMotion.Close(root);
         }
-        if (wait > 0f) yield return new WaitForSecondsRealtime(wait);
+        if (wait > 0f) yield return GameTime.Wait(wait);
 
         if (state == MainState.DayEnding) customerGone = true; // 낮 종료 손님이 사라졌으니 선반으로 스와이프하고, 전등을 켜서 밤을 시작할 수 있다(Update)
         if (state == MainState.NightEnding && GameManager.Instance != null) GameManager.Instance.EndNight(); // 손님이 사라지면 하루 결산 화면으로

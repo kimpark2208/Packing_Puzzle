@@ -24,6 +24,7 @@ MonoBehaviour:
     fixedReplicas: 20
     reactionPrefix: siren_react
   reservationCall: {fileID: 11400000, guid: 6dde361723e33844888a3bb38150ebcd, type: 2}
+  reservationCallAfterCustomers: 1
   unlocksPhone: 0
   unlocksCalendar: 1
   dayToNightSound: {fileID: 0}

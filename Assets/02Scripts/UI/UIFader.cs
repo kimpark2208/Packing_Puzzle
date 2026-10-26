@@ -36,7 +36,7 @@ public class UIFader : MonoBehaviour
     public IEnumerator Pulse()
     {
         yield return FadeIn();
-        if (holdSeconds > 0f) yield return new WaitForSecondsRealtime(holdSeconds);
+        if (holdSeconds > 0f) yield return GameTime.Wait(holdSeconds);
         yield return FadeOut();
     }
 
@@ -44,7 +44,7 @@ public class UIFader : MonoBehaviour
     public IEnumerator FadeTo(float alpha, float seconds)
     {
         float from = Alpha;
-        for (float t = 0f; t < seconds; t += Time.unscaledDeltaTime)
+        for (float t = 0f; t < seconds; t += GameTime.Delta)
         {
             Alpha = Mathf.Lerp(from, alpha, t / seconds);
             yield return null;

@@ -15,7 +15,10 @@ MonoBehaviour:
   day: 3
   skipDayBusiness: 0
   dayVisits: []
+  freeNight: 0
   nightVisits: []
-  unlocksPhone: 1
+  reservationCall: {fileID: 0}
+  reservationCallAfterCustomers: 1
+  unlocksPhone: 0
   unlocksCalendar: 0
   dayToNightSound: {fileID: 0}

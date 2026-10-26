@@ -38,6 +38,18 @@ public class ResultGauge : MonoBehaviour
         set => slider.value = value;
     }
 
+    /// <summary>구간 라벨(재화 배율)을 보이거나 숨긴다. 예약 꽃다발은 점수만 판정하므로 숨긴다.</summary>
+    public void SetBandsVisible(bool visible)
+    {
+        if (bands == null) return;
+
+        foreach (Band band in bands)
+        {
+            if (band.background != null) band.background.gameObject.SetActive(visible);
+            if (band.label != null) band.label.gameObject.SetActive(visible);
+        }
+    }
+
     private void Update()
     {
         if (slider == null) return;

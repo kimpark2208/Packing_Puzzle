@@ -63,8 +63,23 @@ public class FlowerData : ScriptableObject
     [Header("꽃 선택 선반 - 화병에 꽂히는 줄기까지 있는 꽃 (색상은 런타임에 ColorPalette로 틴트됨)")]
     public Sprite stemSprite;
 
-    [Header("낮 퍼즐 - 칸이 채워졌을 때 칸에 들어가는 꽃 이미지 (꽃마다 따로 만들 예정, 지금은 같은 역할이면 Temp_역할 이미지를 임시로 사용)")]
-    public Sprite dayFillSprite;
+    /// <summary>낮 퍼즐 칸 그림의 개수: 중앙 + 1~4링.</summary>
+    public const int RingSpriteCount = 5;
+
+    [Header("낮 퍼즐 - 칸이 채워졌을 때 칸에 들어가는 꽃 이미지 (꽃마다 따로 만들 예정). 꽃이 놓이는 링에 따라 다른 그림을 쓴다")]
+    [Tooltip("0 = 중앙, 1 = 1링, 2 = 2링, 3 = 3링, 4 = 4링. 비어 있는 링은 안쪽 링의 그림을 대신 쓴다. 색은 런타임에 꽃 색으로 칠해진다.")] public Sprite[] ringSprites = new Sprite[RingSpriteCount];
+
+    /// <summary>ring(0 = 중앙, 1~4 = 링)에 놓일 때의 꽃 그림. 그 링의 그림이 비어 있으면 안쪽 링의 그림을, 아무것도 없으면 null.</summary>
+    public Sprite RingSprite(int ring)
+    {
+        if (ringSprites == null) return null;
+
+        for (int i = Mathf.Min(ring, ringSprites.Length - 1); i >= 0; i--)
+        {
+            if (ringSprites[i] != null) return ringSprites[i];
+        }
+        return null;
+    }
 
     /// <summary>밤 퍼즐의 진단용 꽃 그림은 꽃잎 6장으로 나뉜다.</summary>
     public const int PetalPartCount = 6;

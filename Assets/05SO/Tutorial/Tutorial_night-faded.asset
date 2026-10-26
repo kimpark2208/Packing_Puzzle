@@ -1,0 +1,25 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 563bff9d3474c0945aa0772be79cc9f9, type: 3}
+  m_Name: Tutorial_night-faded
+  m_EditorClassIdentifier: Assembly-CSharp::TutorialPopupData
+  id: night-faded
+  title: "\uD750\uB824\uC9D0"
+  icon: {fileID: 0}
+  pages:
+  - image: {fileID: 21300000, guid: b69d0c0974acdbc4093b4b4a771efb07, type: 3}
+    text: "\uC720\uB839 \uC8FC\uC778\uACFC\uC758 \uC720\uB300\uAC10\uC774 \uC57D\uD574\uC9C4
+      \uAF43\uC758 \uAE30\uC5B5\uC744 \uB418\uC9DA\uC5B4\uC918\uC57C \uD574\uC694."
+  - image: {fileID: 21300000, guid: 2190812fb4ae7bc48b40a8625ce81ca9, type: 3}
+    text: "\uAF43\uC78E\uC774 \uCC28\uB840\uB300\uB85C \uBE5B\uB098\uBA74, <b>\uBE5B\uB09C
+      \uC21C\uC11C</b>\uC640 \uAF43\uC78E\uC758 \uC704\uCE58\uB97C \uAE30\uC5B5\uD574
+      \uC7AC\uD604\uD574\uC694."

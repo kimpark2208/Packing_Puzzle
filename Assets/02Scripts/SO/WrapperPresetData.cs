@@ -38,7 +38,10 @@ public class WrapperPresetData : ScriptableObject
     /// <summary>이 프리셋의 링 수(칸 수에서 계산한다).</summary>
     public int MaxRing => (cellRoles.Length - 1) / 4;
 
-    public int CountByTag(FlowerData.FlowerRole tag) => cellRoles.Count(r => r == tag);
+    /// <summary>cell번째 칸의 꽃 역할(프리셋에 적힌 그대로). 퍼즐 칸의 태그와 색, 꽃 선택의 역할별 개수, 주문의 개수 계산이 모두 이것을 쓴다.</summary>
+    public FlowerData.FlowerRole RoleAt(int cell) => cellRoles[cell];
+
+    public int CountByTag(FlowerData.FlowerRole tag) => Enumerable.Range(0, cellRoles.Length).Count(i => RoleAt(i) == tag);
 
     private void OnValidate()
     {

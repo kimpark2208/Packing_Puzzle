@@ -17,6 +17,7 @@ public class DecoratePanel : MonoBehaviour
     private static readonly Color ChipOn = new(0.45f, 0.45f, 0.45f), ChipOff = new(1f, 1f, 1f);
     private static readonly Color CardOn = new(0.6f, 0.6f, 0.6f), CardOff = new(1f, 1f, 1f);
     private static readonly Color TextDark = new(0.25f, 0.25f, 0.25f);
+    private static readonly Color RequiredGlow = new(1f, 0.85f, 0.35f); // 아직 놓지 않은 예약 필수 용품의 칩과 카드
 
     [SerializeField] private Button[] tabs;
     [SerializeField] private Button[] chips;
@@ -89,7 +90,7 @@ public class DecoratePanel : MonoBehaviour
         foreach (Transform sample in parent) Destroy(sample.gameObject); // 에디터에 배치만 해 둔 견본 카드는 실행하면 치운다
 
         DecorationCategory category = shape ? DecorationCategory.Wrapper : chipCategories[Mathf.Min(chip, chipCategories.Length - 1)];
-        foreach (DecorationData data in decorations.Where(d => d != null && d.category == category).OrderBy(d => d.id))
+        foreach (DecorationData data in decorations.Where(d => d != null && d.category == category && IsOwned(d)).OrderBy(d => d.id)) // 가지고 있는 용품만 보여 준다
         {
             DecorationData item = data;
             Button created = Instantiate(cardPrefab, parent);
@@ -114,6 +115,9 @@ public class DecoratePanel : MonoBehaviour
         Refresh();
     }
 
+    /// <summary>플레이어가 이 용품을 가지고 있는가(카탈로그에서 샀거나 선물로 받았는가). 씬 단독 실행처럼 보유 정보가 없으면 모두 가진 것으로 본다.</summary>
+    private static bool IsOwned(DecorationData data) => CurrencyManager.Instance == null || CurrencyManager.Instance.GetDecorationStock(data.id) > 0;
+
     private void Hook(Button[] buttons, System.Action<int> select)
     {
         for (int i = 0; i < buttons.Length; i++)
@@ -127,14 +131,33 @@ public class DecoratePanel : MonoBehaviour
         }
     }
 
+    /// <summary>예약 꽃다발을 만드는 중이고, 이 용품이 아직 꽃다발에 놓지 않은 예약 필수 용품인가(놓는 것을 까먹지 않게 빛나게 보여 준다).</summary>
+    private bool IsMissingRequiredSupply(DecorationData data)
+    {
+        GameManager game = GameManager.Instance;
+        if (game == null || !game.Crafting) return false;
+
+        return game.Craft.Supplies().Contains(data) && (placer == null || !placer.Contains(data));
+    }
+
+    private bool HasMissingRequiredSupply(DecorationCategory category)
+    {
+        GameManager game = GameManager.Instance;
+        return game != null && game.Crafting && game.Craft.Supplies().Any(s => s.category == category && IsMissingRequiredSupply(s));
+    }
+
     private void Refresh()
     {
         for (int i = 0; i < tabs.Length; i++) Paint(tabs[i], i == tab ? TabOn : TabOff, TextDark);
-        for (int i = 0; i < chips.Length; i++) Paint(chips[i], i == chip ? ChipOn : ChipOff, i == chip ? Color.white : TextDark);
+        for (int i = 0; i < chips.Length; i++)
+        {
+            bool glow = i != chip && HasMissingRequiredSupply(chipCategories[Mathf.Min(i, chipCategories.Length - 1)]);
+            Paint(chips[i], glow ? RequiredGlow : i == chip ? ChipOn : ChipOff, i == chip ? Color.white : TextDark);
+        }
         for (int i = 0; i < cards.Count; i++)
         {
             bool picked = placer != null && (shown[i].category == DecorationCategory.Wrapper ? placer.IsShapeSelected(shown[i]) : shown[i].category == DecorationCategory.Ribbon && placer.IsPlaced(shown[i])); // 지금 모양인 포장지와 꽃다발에 놓인 리본의 카드만 어둡게
-            Paint(cards[i], picked ? CardOn : CardOff, TextDark);
+            Paint(cards[i], IsMissingRequiredSupply(shown[i]) ? RequiredGlow : picked ? CardOn : CardOff, TextDark);
             cards[i].transform.Find("Image").GetComponent<Image>().color = picked ? CardOn : Color.white; // 그림도 같이 어둡게
             Outline border = cards[i].GetComponent<Outline>();
             if (border != null) border.effectColor = picked ? new Color(0.35f, 0.35f, 0.35f) : new Color(0.8f, 0.8f, 0.8f);

@@ -319,7 +319,7 @@ public class PetalLossPuzzlePanel : RepairPuzzlePanel
     {
         playing = false;
         message.text = solvedMessage;
-        yield return new WaitForSecondsRealtime(solvedDelay);
+        yield return GameTime.Wait(solvedDelay);
         Solve();
     }
 }

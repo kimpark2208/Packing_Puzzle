@@ -50,7 +50,7 @@ public static class DayPuzzleGenerator
         WrapperColor? hintColor = null; // 포장지 SO의 색 종류. 주문은 이 색으로 포장지를 말한다
         if (pool.Count > 0)
         {
-            var pick = pool[Random.Range(0, pool.Count)];
+            var pick = PickPreset(pool);
             hintWrapperId = pick.wrapperId;
             hintPresetIndex = pick.presetIndex;
             WrapperData hintData = DataRegistry.Instance.GetWrapper(hintWrapperId);
@@ -117,7 +117,7 @@ public static class DayPuzzleGenerator
         int hintPresetIndex = -1;
         if (pool.Count > 0)
         {
-            var pick = pool[Random.Range(0, pool.Count)];
+            var pick = PickPreset(pool);
             hintWrapperId = pick.wrapperId;
             hintPresetIndex = pick.presetIndex;
         }
@@ -133,6 +133,83 @@ public static class DayPuzzleGenerator
             orderLine = orderLine,
             reaskLines = new[] { orderLine, orderLine }, // 되묻기는 같은 대사를 다시 말한다
         };
+    }
+
+    /// <summary>
+    /// 예약 꽃다발 하나의 주문. 포장지는 예약이 정한 포장지이고(없으면 보유한 포장지), 프리셋은 남은 꽃다발을 모두 만들 만큼 보관한 필수 꽃이 들어맞는 것 중에서 무작위로 고른다.
+    /// 요구사항은 필수 꽃(두 종까지)을 그 프리셋의 해당 역할 칸 수만큼 쓰는 것이다(그 역할의 꽃은 필수 꽃만 나오므로 저절로 채워진다).
+    /// 프리셋은 미리 정해 두고(hint) 플레이어가 그 포장지를 고르면 그대로 확정된다.
+    /// </summary>
+    public static DayOrder GenerateReservationOrder(int day, ReservationCraft craft)
+    {
+        int wrapperId = craft.WrapperId;
+        var all = PlayablePresets(wrapperId > 0 ? new[] { wrapperId } : CurrencyManager.Instance.UsableWrappers).ToList();
+        var pool = all.Where(p => craft.Fits(DataRegistry.Instance.GetWrapper(p.wrapperId).presets[p.presetIndex])).ToList();
+        if (pool.Count == 0)
+        {
+            Debug.LogWarning($"[DayPuzzleGenerator] 예약 '{craft.Data.name}'의 남은 꽃다발을 모두 만들 수 있는 프리셋이 없어 아무 프리셋으로 진행합니다 (보관한 꽃이 모자랄 수 있습니다).");
+            pool = all;
+        }
+
+        int hintWrapperId = wrapperId > 0 ? wrapperId : CurrencyManager.Instance.GetRandomOwnedWrapperID();
+        int hintPresetIndex = -1;
+        WrapperPresetData preset = null;
+        if (pool.Count > 0)
+        {
+            var pick = PickPreset(pool);
+            hintWrapperId = pick.wrapperId;
+            hintPresetIndex = pick.presetIndex;
+            preset = DataRegistry.Instance.GetWrapper(hintWrapperId).presets[hintPresetIndex];
+        }
+
+        var requirement = new OrderComposer.CustomerRequirement
+        {
+            requirementId = day,
+            baseAmount = OrderComposer.BaseAmount,
+            type = OrderComposer.RequirementType.Flower,
+            flowerId = -1,
+            flowerId2 = -1,
+        };
+        var targets = new List<(int flowerId, int count)>();
+        foreach (var group in craft.RequiredFlowers().GroupBy(f => f.flowerRole))
+        {
+            int cells = preset != null ? preset.CountByTag(group.Key) : 1;
+            int each = Mathf.Max(1, Mathf.CeilToInt(cells / (float)group.Count())); // 같은 역할의 필수 꽃이 둘이면 칸을 나눠 채운다
+            foreach (FlowerData flower in group) targets.Add((flower.flowerID, each));
+        }
+        if (targets.Count > 0)
+        {
+            requirement.flowerId = targets[0].flowerId;
+            requirement.flowerCount = targets[0].count;
+            requirement.minCount = targets[0].count;
+        }
+        if (targets.Count > 1)
+        {
+            requirement.flowerId2 = targets[1].flowerId;
+            requirement.flowerCount2 = targets[1].count;
+            requirement.minCount += targets[1].count;
+        }
+
+        WrapperData hint = DataRegistry.Instance.GetWrapper(hintWrapperId);
+        return new DayOrder
+        {
+            day = day,
+            requirement = requirement,
+            hintWrapperId = hintWrapperId,
+            hintPresetIndex = hintPresetIndex,
+            hintColorName = hint != null ? hint.ColorName : "",
+            orderLine = craft.OrderSheetText(),
+            reaskLines = System.Array.Empty<string>(),
+        };
+    }
+
+    /// <summary>포장지를 먼저 같은 확률로 고르고, 그 포장지의 프리셋 중에서 무작위로 고른다(프리셋이 많은 포장지가 주문에 더 자주 나오지 않게).</summary>
+    private static (int wrapperId, int presetIndex) PickPreset(List<(int wrapperId, int presetIndex)> pool)
+    {
+        var wrappers = pool.Select(p => p.wrapperId).Distinct().ToList();
+        int wrapperId = wrappers[Random.Range(0, wrappers.Count)];
+        var ofWrapper = pool.Where(p => p.wrapperId == wrapperId).ToList();
+        return ofWrapper[Random.Range(0, ofWrapper.Count)];
     }
 
     /// <summary>플레이어가 포장지를 골랐을 때 호출. 퍼즐에 쓸 프리셋을 확정한다.</summary>

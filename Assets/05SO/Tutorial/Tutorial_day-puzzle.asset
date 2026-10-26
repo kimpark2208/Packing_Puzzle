@@ -1,0 +1,39 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 563bff9d3474c0945aa0772be79cc9f9, type: 3}
+  m_Name: Tutorial_day-puzzle
+  m_EditorClassIdentifier: Assembly-CSharp::TutorialPopupData
+  id: day-puzzle
+  title: "\uAF43\uB2E4\uBC1C \uB9CC\uB4E4\uAE30"
+  icon: {fileID: 0}
+  pages:
+  - image: {fileID: 21300000, guid: 2f03addd06cb5b44599eb475ca69435e, type: 3}
+    text: "\uC54C\uB9DE\uC740 \uC704\uCE58\uC5D0 \uAF43\uB4E4\uC744 \uACE8\uB77C
+      \uB123\uC5B4\uC57C \uD574\uC694.\n<b>\uBE68\uAC04\uC0C9</b> \uCE78\uC5D0\uB294
+      \uB77C\uC778 \uAF43, <b>\uD30C\uB780\uC0C9</b> \uCE78\uC5D0\uB294 \uB9E4\uC2A4
+      \uAF43,\n<b>\uBD84\uD64D\uC0C9</b> \uCE78\uC5D0\uB294 \uD3FC \uAF43, <b>\uB178\uB780\uC0C9</b>
+      \uCE78\uC5D0\uB294 \uD544\uB7EC \uAF43\uC744 \uB193\uC744 \uC218 \uC788\uC5B4\uC694."
+  - image: {fileID: 21300000, guid: 5382b6cb145bae144b0f202ceb86b5ad, type: 3}
+    text: "\uC120\uD0DD\uD55C \uAF43 \uC911 \uC138 \uAC1C\uAC00 \uB79C\uB364\uD558\uAC8C
+      \uBC14\uAD6C\uB2C8\uC5D0 \uB098\uC640\uC694.\n\uB193\uACE0 \uC2F6\uC740 \uAF43\uC744
+      \uAF43\uB2E4\uBC1C\uC5D0 \uB193\uAC70\uB098, \uAF43 \uD55C \uAC1C\uB97C <b>\uBCF4\uAD00</b>\uD574\uB458
+      \uC218 \uC788\uC5B4\uC694."
+  - image: {fileID: 21300000, guid: 5603cdde3d42ad6449194998544c1860, type: 3}
+    text: "\uAF43\uB2E4\uBC1C\uC740 <b>\uADE0\uD615</b>\uC774 \uC911\uC694\uD574\uC694!
+      \uD55C \uCABD\uC774 \uB2E4\uB978 \uCABD\uBCF4\uB2E4 \uAF43\uC774 \uB9CE\uC544\uC9C0\uBA74
+      \uAE30\uC6B8\uC5B4\uC694.\n\uB108\uBB34 \uAE30\uC6B4 \uC0C1\uD0DC\uC5D0\uC11C
+      \uAF43\uC744 \uB354 \uB193\uC73C\uBA74 \uAF43\uB2E4\uBC1C\uC774 \uBB34\uB108\uC9C0\uB2C8
+      \uC870\uC2EC\uD574\uC57C \uD574\uC694!"
+  - image: {fileID: 21300000, guid: 9c3d26c4f07de5f42bcada95c1ca408f, type: 3}
+    text: "\uC0C9 \uC870\uD569\uC5D0 \uB9DE\uAC8C \uAF43\uC744 \uBC30\uCE58\uD558\uBA74
+      \uAF43\uC774 \uC120\uBA85\uD574\uC9C0\uACE0 <b>\uBE5B\uC774 \uB098\uC694!</b>\n\uD6CC\uB96D\uD55C
+      \uC0C9 \uC870\uD569\uC758 \uAF43\uB2E4\uBC1C\uC744 \uB9CC\uB4E4\uC5B4\uBD10\uC694."

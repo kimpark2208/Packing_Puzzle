@@ -20,6 +20,8 @@ public class DataRegistry : Singleton<DataRegistry>
     public IReadOnlyList<FurnitureData> Furniture => furniture;
     public IReadOnlyList<DecorationData> Decorations => decorations;
 
+    public FurnitureData GetFurniture(int furnitureId) => furniture.FirstOrDefault(f => f != null && f.id == furnitureId);
+
     public DecorationData GetDecoration(int decorationId) => decorations.FirstOrDefault(d => d != null && d.id == decorationId);
     public IReadOnlyList<BlockData> Blocks => blocks;
 

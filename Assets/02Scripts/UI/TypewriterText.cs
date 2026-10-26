@@ -70,12 +70,12 @@ public class TypewriterText : MonoBehaviour
 
         if (pause > 0f)
         {
-            pause -= Time.unscaledDeltaTime;
+            pause -= GameTime.Delta;
             if (pause <= 0f && voice != null) voice.UnPause();
             return;
         }
 
-        float next = shown + charactersPerSecond * Time.unscaledDeltaTime;
+        float next = shown + charactersPerSecond * GameTime.Delta;
         if (nextPause < sentenceStarts.Count && next >= sentenceStarts[nextPause])
         {
             // 한 문장이 끝났다: 다음 문장의 첫 글자 앞에서 잠시 쉰다

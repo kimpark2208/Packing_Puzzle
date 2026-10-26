@@ -22,36 +22,41 @@ MonoBehaviour:
   specialReask2: 
   iconSprite: {fileID: 21300000, guid: 1da7a4dea9dbcec4ab378699088dc49a, type: 3}
   stemSprite: {fileID: 21300000, guid: c03d1c0726017bd4f9da8f42b24ffc7d, type: 3}
-  dayFillSprite: {fileID: -2764537206855289646, guid: ff27b819afb375b499366b7b05aa9148, type: 3}
-  stemLeafPartSprite: {fileID: 21300000, guid: f2a1a3229370889408538698b62d8e1c, type: 3}
-  centerPartSprite: {fileID: 21300000, guid: 16464dcacf6eda148a99b400d20d0c09, type: 3}
+  ringSprites:
+  - {fileID: -8763125123694568423, guid: 560daf14085f39544941438f5a5c72ae, type: 3}
+  - {fileID: -2764537206855289646, guid: ff27b819afb375b499366b7b05aa9148, type: 3}
+  - {fileID: -3480653308909891845, guid: 29875a58e269b374195376c434488224, type: 3}
+  - {fileID: 21300000, guid: c750f916bf3b2e14bb054adabd242bab, type: 3}
+  - {fileID: 0}
+  stemLeafPartSprite: {fileID: 21300000, guid: c20d2dc41c1ba6d4ca84cd89f939d919, type: 3}
+  centerPartSprite: {fileID: 21300000, guid: e8c2e63f66167d64c915777ce17a3161, type: 3}
   petalPartSprites:
-  - {fileID: 21300000, guid: 4009bd9541958064893ce94ccbaa7f3b, type: 3}
-  - {fileID: 21300000, guid: 34b552b5e6cecf24e8cbe61d53eb3d7f, type: 3}
-  - {fileID: 21300000, guid: e00fcc52afa5d2444a83bd8629a47759, type: 3}
-  - {fileID: 21300000, guid: 08e8c896dd7284f438869874848e147a, type: 3}
-  - {fileID: 21300000, guid: b00e272575965a24f921de7a19c0a12a, type: 3}
-  - {fileID: 21300000, guid: d57a451bcb2e02645b00449b02e171b3, type: 3}
+  - {fileID: 21300000, guid: 472fba80072b62146bf6d32ffe8780c1, type: 3}
+  - {fileID: 21300000, guid: 91a4c3a704f94b240ab0319483e61218, type: 3}
+  - {fileID: 21300000, guid: 7df950f54af1d7a44807c7c416d81ec7, type: 3}
+  - {fileID: 21300000, guid: 12092808ff1c9634f930ef5806c69be2, type: 3}
+  - {fileID: 21300000, guid: f8fbf26d27583c6409f802b46fd18f03, type: 3}
+  - {fileID: 21300000, guid: d77faba2565553b499ac5019020738f7, type: 3}
   partLayout: 1
   lossPetals:
-  - petalIndex: 0
-    sprite: {fileID: 21300000, guid: 339a1a90227f2a5419b388dd51638ce2, type: 3}
-  - petalIndex: 2
-    sprite: {fileID: 21300000, guid: 4590a1d3ec1789f4eb15c07f10185527, type: 3}
   - petalIndex: 5
-    sprite: {fileID: 21300000, guid: 100c14dc9dd1618438f1644ce7a85290, type: 3}
-  petalGrid: '..#..#..
+    sprite: {fileID: 21300000, guid: c2cdd7f31b6e0384cb29382955d0c750, type: 3}
+  - petalIndex: 3
+    sprite: {fileID: 21300000, guid: 9b56bfe348076fd45b471b5e5ca8f7ed, type: 3}
+  - petalIndex: 0
+    sprite: {fileID: 21300000, guid: 37133a55e91caae4fa58c2898d6c3313, type: 3}
+  petalGrid: '..####..
+
+    .######.
+
+    ..####..
+
+    ########
 
     .######.
 
     ########
 
-    ########
-
-    ########
-
-    ########
-
     .######.
 
-    ..#..#..'
+    ...##...'

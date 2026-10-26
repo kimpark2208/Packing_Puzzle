@@ -1,0 +1,26 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 563bff9d3474c0945aa0772be79cc9f9, type: 3}
+  m_Name: Tutorial_night-diagnosis
+  m_EditorClassIdentifier: Assembly-CSharp::TutorialPopupData
+  id: night-diagnosis
+  title: "\uAF43 \uC9C4\uB2E8"
+  icon: {fileID: 0}
+  pages:
+  - image: {fileID: 21300000, guid: 395fc29763438214c931f74a4f398153, type: 3}
+    text: "\uAF43\uC740 1\uAC00\uC9C0 \uC774\uC0C1\uC758 \uC99D\uC0C1\uC744 \uAC00\uC9C0\uACE0
+      \uC788\uC5B4\uC694.\n\uAF43\uC744 \uC0B4\uD3B4 <b>\uC218\uCCA9</b>\uC5D0 \uC99D\uC0C1\uC744
+      \uCCB4\uD06C\uD558\uBA74 \uADF8\uC5D0 \uB9DE\uB294 \uC9C4\uB2E8\uC744 \uC9C4\uD589\uD574\uC694."
+  - image: {fileID: 21300000, guid: a2b553206f8fae54b9a097276cd4e3f5, type: 3}
+    text: "\uC218\uCCA9\uC758 \uC99D\uC0C1\uC744 \uB20C\uB7EC, \uBC1B\uC740 \uAF43\uACFC
+      \uB300\uC870\uD574\uBCF4\uBA70 <b>\uCCB4\uD06C\uB9AC\uC2A4\uD2B8</b>\uB97C
+      \uCC44\uC6CC\uC694."

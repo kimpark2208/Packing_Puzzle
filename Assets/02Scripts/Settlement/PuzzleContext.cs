@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using UnityEngine;
 
 /// <summary>퍼즐이 어떻게 끝났는가.</summary>
 public enum PuzzleEndKind
@@ -15,8 +16,10 @@ public readonly struct PuzzleContext
 {
     public PuzzleContext(PuzzleEndKind endKind, IReadOnlyDictionary<WrapperRegionPosition, FlowerData.Color> placedCells,
         IReadOnlyDictionary<WrapperRegionPosition, SpecialCell> specialCells,
-        OrderComposer.CustomerRequirement requirement, int requirementUsed, float moodRatio, int collapseCount)
+        OrderComposer.CustomerRequirement requirement, int requirementUsed, float moodRatio, int collapseCount, bool reservation = false, int missingSupplies = 0)
     {
+        Reservation = reservation;
+        MissingSupplies = missingSupplies;
         EndKind = endKind;
         PlacedCells = placedCells;
         SpecialCells = specialCells;
@@ -67,7 +70,16 @@ public readonly struct PuzzleContext
         }
 
         float mood = GameClock.Instance != null ? GameClock.Instance.MoodRatio : 1f;
-        return new PuzzleContext(endKind, placedCells, specialCells, requirement, used, mood, collapseCount);
+
+        // 예약 꽃다발: 손님이 없어 기분 시간을 보지 않고, 필수 꾸미기 용품을 꽃다발에 놓았는지 센다
+        ReservationCraft craft = GameManager.Instance != null && GameManager.Instance.Crafting ? GameManager.Instance.Craft : null;
+        int missingSupplies = 0;
+        if (craft != null)
+        {
+            var placer = Object.FindFirstObjectByType<DecorationPlacer>();
+            foreach (DecorationData supply in craft.Supplies()) if (placer == null || !placer.Contains(supply)) missingSupplies++;
+        }
+        return new PuzzleContext(endKind, placedCells, specialCells, requirement, used, mood, collapseCount, craft != null, missingSupplies);
     }
 
     public PuzzleEndKind EndKind { get; }
@@ -88,6 +100,12 @@ public readonly struct PuzzleContext
 
     /// <summary>이 주문을 만드는 동안 꽃다발이 무너진 횟수(붕괴하면 퍼즐을 처음부터 다시 한다).</summary>
     public int CollapseCount { get; }
+
+    /// <summary>예약 꽃다발을 만드는 중인가(손님 기분이 점수에 들어가지 않는다).</summary>
+    public bool Reservation { get; }
+
+    /// <summary>꽃다발에 놓지 않은 예약 필수 꾸미기 용품의 수.</summary>
+    public int MissingSupplies { get; }
 
     public bool RequirementMet => RequirementUsed >= Requirement.minCount;
 }

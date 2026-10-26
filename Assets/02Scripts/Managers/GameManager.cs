@@ -10,7 +10,7 @@ using UnityEngine.SceneManagement;
 /// 손님을 만나는 메인 화면은 씬 하나(01DayMain)이고, 낮 손님/낮 종료/밤 손님/밤 종료 중 무엇을 보여 줄지는 MainState로 정해서 씬을 연다.
 /// 씬 이름 상수는 Assets/01Scenes 폴더 구조를 그대로 따른다.
 /// </summary>
-public class GameManager : Singleton<GameManager>
+public partial class GameManager : Singleton<GameManager>
 {
     public const string SceneDayMain = "01DayMain";
     public const string SceneDayPuzzle = "03DayPuzzle";
@@ -45,6 +45,16 @@ public class GameManager : Singleton<GameManager>
     /// <summary>방금 수리를 맡기고 간 밤 손님이 정해진 NPC였으면 그 NPC(반응 대사를 할 때 그 모습을 보인다). 아니면 null.</summary>
     public NpcData PreviousNpc { get; private set; }
 
+    /// <summary>방금 주문을 한 정해진 낮 손님의 친밀 대사 ID(꽃다발 반응 대사가 끝난 뒤에 한다). 없으면 null. 꺼내 쓰면 지워진다(ConsumeBondDialogueId).</summary>
+    public string PreviousBondDialogueId { get; private set; }
+
+    public string ConsumeBondDialogueId()
+    {
+        string id = PreviousBondDialogueId;
+        PreviousBondDialogueId = null;
+        return id;
+    }
+
     /// <summary>다음에 열리는(또는 지금 열려 있는) 메인 화면이 보여 줄 상황. 메인 화면으로 가기 전에 정한다.</summary>
     public MainState MainState { get; private set; } = MainState.DayCustomer;
 
@@ -56,9 +66,9 @@ public class GameManager : Singleton<GameManager>
 
     private const string DefaultRejectResponseLine = CustomerSpeech.DefaultForceAcceptLine;
 
-    private int reservationAfterDay; // reservationAfter를 정한 일차
-    private int reservationAfter;    // 그날 몇 번째 손님을 마친 뒤 예약 전화가 오는가(1 또는 2)
     private int reservationCallDay;  // 예약 전화를 이미 건 일차(하루에 한 번만 건다)
+    private int pickupDay;           // 예약자를 이미 만난 일차(하루에 한 번만 온다)
+    private readonly List<(int day, ReservationData data)> delayedReservationCalls = new(); // 예약을 못 지켜서 늦춰진 예약 전화(걸려 올 일차, 예약)
 
     private string pendingCustomerLine;
     private string pendingRejectResponseLine = DefaultRejectResponseLine;
@@ -116,6 +126,7 @@ public class GameManager : Singleton<GameManager>
         orderInProgress = false;
         MainState = MainState.DayCustomer;
         PreviousNpc = CurrentScriptedVisit.HasValue ? CurrentScriptedVisit.Value.npc : null; // 방금 주문을 한 손님(반응 대사 때 그 모습을 보인다)
+        PreviousBondDialogueId = CurrentScriptedVisit.HasValue ? CurrentScriptedVisit.Value.bondDialogueId : null;
 
         int day = CurrencyManager.Instance.CurrentDay;
         DayVisitIndex++;
@@ -125,22 +136,51 @@ public class GameManager : Singleton<GameManager>
         CurrencyManager.Instance.SetCurrentRequirement(CurrentDayOrder.requirement);
     }
 
-    /// <summary>손님이 떠나고 다음 손님이 오기 전, 지금 예약 전화가 걸려 올 차례인가: 오늘 시나리오에 예약 전화가 있고, 1~2번째(무작위) 손님을 마쳤고, 오늘 아직 안 걸었으면 그 예약을 돌려준다(그러면 오늘은 한 번 건 것으로 친다). 아니면 null.</summary>
+    /// <summary>손님이 떠나고 다음 손님이 오기 전, 지금 예약 전화가 걸려 올 차례인가: 오늘 시나리오에 예약 전화가 있고, 시나리오가 정한 수(reservationCallAfterCustomers)만큼 손님을 마쳤고, 오늘 아직 안 걸었으면 그 예약을 돌려준다(그러면 오늘은 한 번 건 것으로 친다). 아니면 null.</summary>
     public ReservationData TakeReservationCall()
     {
         int day = CurrencyManager.Instance.CurrentDay;
-        DayScenarioData scenario = ScenarioManager.Instance != null ? ScenarioManager.Instance.ForDay(day) : null;
-        if (scenario == null || scenario.reservationCall == null || reservationCallDay == day) return null;
+        if (reservationCallDay == day) return null;
 
-        if (reservationAfterDay != day)
+        DayScenarioData scenario = ScenarioManager.Instance != null ? ScenarioManager.Instance.ForDay(day) : null;
+        ReservationData call = scenario != null ? scenario.reservationCall : null;
+        int after = scenario != null ? scenario.reservationCallAfterCustomers : 1;
+        if (call == null) // 시나리오에 없으면, 예약일에 준비를 못 해서 늦춰진 전화가 오늘 오기로 되어 있는지 본다
         {
-            reservationAfterDay = day;
-            reservationAfter = Random.Range(1, 3);
+            int delayed = delayedReservationCalls.FindIndex(c => c.day == day);
+            if (delayed < 0) return null;
+
+            call = delayedReservationCalls[delayed].data;
+            if (DayVisitIndex - 1 < after) return null;
+
+            delayedReservationCalls.RemoveAt(delayed);
+            reservationCallDay = day;
+            return call;
         }
-        if (DayVisitIndex - 1 < reservationAfter) return null; // DayVisitIndex는 이미 다음 손님을 가리키므로, 마친 손님 수는 하나 적다
+
+        if (DayVisitIndex - 1 < after) return null; // DayVisitIndex는 이미 다음 손님을 가리키므로, 마친 손님 수는 하나 적다
 
         reservationCallDay = day;
-        return scenario.reservationCall;
+        return call;
+    }
+
+    /// <summary>예약을 못 지켜서, 같은 예약 주문 전화가 days일 뒤에 다시 걸려 오게 한다.</summary>
+    public void DelayReservationCall(ReservationData data, int days)
+    {
+        delayedReservationCalls.Add((CurrencyManager.Instance.CurrentDay + days, data));
+    }
+
+    /// <summary>오늘이 예약일인데 아직 예약자를 만나지 않았으면 그 예약을 돌려주고(오늘은 한 번 만난 것으로 친다), 아니면 null. 예약자는 하루의 첫 손님으로 온다.</summary>
+    public ReservationRecord TakePickupReservation()
+    {
+        int day = CurrencyManager.Instance.CurrentDay;
+        if (pickupDay == day) return null;
+
+        ReservationRecord due = CurrencyManager.Instance.Reservations.FirstOrDefault(r => r.DueDay == day && !r.pickedUp);
+        if (due == null) return null;
+
+        pickupDay = day;
+        return due;
     }
 
     /// <summary>정해진 방문의 대화에 주문 효과(`주문:꽃xN`, `주문:포장지N`)가 있으면 그 주문으로 낮 주문을 만든다. 주문 대사는 주문 효과가 달린 줄이다. 없거나 쓸 수 없으면 null(무작위 주문).</summary>
@@ -183,6 +223,7 @@ public class GameManager : Singleton<GameManager>
     public void ConfirmFlowerSelection(List<FlowerData> chosen)
     {
         ChosenGachaPool = new List<FlowerData>(chosen);
+        bouquetInProgress = Crafting; // 예약 꽃다발을 만드는 중에는 이 퍼즐을 마칠 때까지 하루 시간이 끝나도 기다린다
         SceneTransition.Go(SceneDayPuzzle);
     }
 
@@ -268,6 +309,11 @@ public class GameManager : Singleton<GameManager>
     /// 단, 주문을 수락해 꽃 선택/퍼즐을 하는 중(AcceptOrder 이후)이면 그 주문을 마무리한 뒤에 넘어간다(ReturnToDayMain).</summary>
     private void HandleDayTimeUp()
     {
+        if (Craft != null)
+        {
+            HandleCraftTimeUp(); // 예약일: 낮 종료가 아니라 예약자의 반응으로 간다
+            return;
+        }
         if (orderInProgress)
         {
             dayEndPending = true;
@@ -346,6 +392,8 @@ public class GameManager : Singleton<GameManager>
     /// <summary>낮 퍼즐이 끝났을 때: 쓴 포장지(소모품) 한 장을 소모한다(재고는 0 아래로 내려가지 않는다).</summary>
     public void ConsumeUsedWrapper()
     {
+        if (CurrencyManager.WrappersUnlimited) return; // 포장지 개수는 일단 따지지 않는다
+
         WrapperData wrapper = CurrentDayOrder != null ? CurrentDayOrder.wrapper : null;
         if (wrapper != null) CurrencyManager.Instance.AddWrapperStock(wrapper.wrapperId, -1);
     }
@@ -353,7 +401,11 @@ public class GameManager : Singleton<GameManager>
     /// <summary>낮 퍼즐이 끝났을 때: 실제로 칸에 놓은 꽃 한 송이마다 보유 수량을 1씩 소모한다(한 번만).</summary>
     public void ConsumeUsedFlowers(IEnumerable<FlowerData> used)
     {
-        foreach (FlowerData flower in used) CurrencyManager.Instance.AddFlowerStock(flower.flowerID, -1);
+        foreach (FlowerData flower in used)
+        {
+            if (Crafting && Craft.IsRequired(flower.flowerID)) Craft.Use(flower.flowerID, 1); // 예약 꽃다발의 필수 꽃은 보관해 둔 것에서 빠진다
+            else CurrencyManager.Instance.AddFlowerStock(flower.flowerID, -1);
+        }
         ChosenGachaPool = new List<FlowerData>();
     }
 
@@ -436,6 +488,39 @@ public class GameManager : Singleton<GameManager>
         string scene = SceneManager.GetActiveScene().name;
         if (scene == SceneNightPuzzle) FinishNightDiagnosis(CurrentNightCase.ailments);
         else if (scene == SceneDayMain) NextNightCustomer();
+    }
+
+    private bool debugSkipPending; // 디버그: 낮 퍼즐 씬이 열리면 바로 강제 제출한다
+
+    /// <summary>
+    /// 디버그용 낮 퍼즐 스킵. 퍼즐 씬이면 지금 놓인 꽃으로 강제 제출한다. 주문을 수락한 뒤(꽃 선택 화면 포함)에 메인 화면에서 누르면, 포장지를 아직 안 골랐으면 손님이 말한 포장지로 정하고
+    /// 꽃을 고르지 않은 채 퍼즐 씬으로 넘어가 열리자마자 강제 제출한다. 주문을 수락하기 전에는 퍼즐이 없으니 아무 일도 없다.
+    /// </summary>
+    public void DebugSkipDayPuzzle()
+    {
+        if (SceneTransition.Busy) return;
+
+        string scene = SceneManager.GetActiveScene().name;
+        if (scene == SceneDayPuzzle)
+        {
+            FindFirstObjectByType<DayPuzzleUI>()?.DebugForceSubmit();
+            return;
+        }
+
+        bool accepted = orderInProgress || Crafting;
+        if (scene != SceneDayMain || MainState != MainState.DayCustomer || !accepted || CurrentDayOrder == null) return;
+
+        if (CurrentDayOrder.preset == null) ChooseWrapper(CurrentDayOrder.hintWrapperId); // 포장지를 아직 안 골랐으면 손님이 말한 포장지로
+        debugSkipPending = true;
+        ConfirmFlowerSelection(new List<FlowerData>());
+    }
+
+    /// <summary>낮 퍼즐 씬이 열렸을 때 한 번: 디버그 스킵으로 넘어온 것이면 true(바로 강제 제출한다).</summary>
+    public bool ConsumeDebugSkip()
+    {
+        bool skip = debugSkipPending;
+        debugSkipPending = false;
+        return skip;
     }
 
     /// <summary>밤 시간이 끝났을 때: 메인 화면에서 마지막 손님이 외치고 떠난다(밤 종료).

@@ -16,6 +16,7 @@ MonoBehaviour:
   wrapperColor: 1
   color: {r: 0.98, g: 0.85, b: 0.2, a: 1}
   ringCount: 3
+  previewSprite: {fileID: 21300000, guid: d9ae3d7f39475234a92cb2ffa63ea7a1, type: 3}
   maxFlowerTypes: 8
   flowersPerDraw: 3
   presets:

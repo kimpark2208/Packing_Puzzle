@@ -38,9 +38,6 @@ public class DayPuzzleController : MonoBehaviour
     [SerializeField, Range(0.5f, 1f)] private float threeRingSlotScale = 0.95f;
     [SerializeField, Range(1f, 1.5f)] private float threeRingWrapperScale = 1.1f;
 
-    [Header("FlowerArea의 꽃 이미지에 채울 태그별 이미지 (FlowerRole 순서: Line, Mass, Form, Filler)")]
-    [SerializeField] private Sprite[] tagSprites;
-
     // 태그 색: 라인=빨강, 매스=파랑, 폼=핑크, 필러=노랑. 비어있음/미리보기/채움은 투명도로만 구분한다.
     private const float IdleAlpha = 0.45f;
     private const float HoverAlpha = 0.90f;
@@ -114,6 +111,7 @@ public class DayPuzzleController : MonoBehaviour
         WrapperPresetData preset = CurrentPreset();
         if (preset == null) return;
 
+        flowerArea.gameObject.SetActive(true); // 편집하느라 꺼 둔 채 저장해도 놓은 꽃이 보이게 한다(꽃 이미지는 아래에서 칸마다 켜고 끈다)
         foreach (WrapperSlot slot in slotArea.GetComponentsInChildren<WrapperSlot>(true))
         {
             Transform flowerImage = FlowerImageOf(slot);
@@ -127,10 +125,8 @@ public class DayPuzzleController : MonoBehaviour
 
             ApplyRingSkin(slot);
             slot.Clear();
-            slot.tag = preset.cellRoles[i];
+            slot.tag = preset.RoleAt(i);
             slot.SetHighlightColor(TagColor(slot.tag));
-            if (flowerImage != null) flowerImage.GetComponent<Image>().sprite = tagSprites[(int)slot.tag];
-            if (glowImage != null) glowImage.sprite = tagSprites[(int)slot.tag]; // 후광은 꽃 그림을 번지게 해서 그린다
             regions.Add(slot);
         }
 
@@ -244,11 +240,16 @@ public class DayPuzzleController : MonoBehaviour
         region.Fill(flower);
         region.SetHighlightAlpha(region.special == SpecialCell.None ? FilledAlpha : IdleAlpha); // 특수 칸은 꽃을 놓아도 칸이 남는다
         Transform flowerImage = FlowerImageOf(region);
+        Sprite art = flower.RingSprite(region.ringIndex + 1); // 칸의 링에 맞는 그 꽃의 그림(중앙 = 0)
         if (flowerImage != null)
         {
-            flowerImage.GetComponent<Image>().color = ColorPalette.ToUnityColor(flower.color); // 칸 이미지가 흰색이라 놓은 꽃의 색으로 물들인다
+            var image = flowerImage.GetComponent<Image>();
+            if (art != null) image.sprite = art;
+            image.color = ColorPalette.ToUnityColor(flower.color); // 칸 이미지가 흰색이라 놓은 꽃의 색으로 물들인다
             flowerImage.gameObject.SetActive(true);
         }
+        Image glowImage = GlowImageOf(region);
+        if (glowImage != null && art != null) glowImage.sprite = art; // 후광은 꽃 그림을 번지게 해서 그린다(빛날 때만 켜진다)
         region.SetHover(false);
         if (region == hoveredRegion) hoveredRegion = null;
 
@@ -431,11 +432,12 @@ public class DayPuzzleController : MonoBehaviour
 #if UNITY_EDITOR
     /// <summary>Play 없이 포장지 보드의 모습을 확인하는 에디터 미리보기(Tools/Day/Ring Preview). 프리셋의 칸만 켜서 태그 색으로 칠하고, 링 수에 맞는 크기와 칸 그림을 적용한다.
     /// ringSprites는 중앙, 1링, 2링, 3링 순서로 칸 그림을 바꿔 본다(null이면 씬의 그림 그대로). 저장하지 않는 미리보기라서 씬을 저장하면 안 된다.</summary>
-    public void EditorPreview(WrapperData data, WrapperPresetData preset, Sprite[] ringSprites, bool showFlowers)
+    public void EditorPreview(WrapperData data, WrapperPresetData preset, Sprite[] ringSprites, bool showFlowers, System.Func<FlowerData.FlowerRole, FlowerData> sampleFlower)
     {
         activeRings = Mathf.Min(preset.MaxRing, SupportedRings);
         TintWrapper(data);
         ApplyBoardScale();
+        flowerArea.gameObject.SetActive(showFlowers);
 
         foreach (WrapperSlot slot in slotArea.GetComponentsInChildren<WrapperSlot>(true))
         {
@@ -457,13 +459,15 @@ public class DayPuzzleController : MonoBehaviour
                 ((RectTransform)slot.transform).sizeDelta = ringSprites[ring].rect.size * CellUnitsPerPixel;
             }
 
-            FlowerData.FlowerRole role = preset.cellRoles[i];
+            FlowerData.FlowerRole role = preset.RoleAt(i);
             image.color = TagColor(role);
-            if (flowerImage != null && showFlowers && tagSprites != null && (int)role < tagSprites.Length)
+            FlowerData sample = sampleFlower != null ? sampleFlower(role) : null; // 이 역할의 꽃 하나를 골라 그 꽃의 링별 그림을 보여 준다
+            Sprite art = sample != null ? sample.RingSprite(ring) : null;
+            if (flowerImage != null && showFlowers && art != null)
             {
                 var flower = flowerImage.GetComponent<Image>();
-                flower.sprite = tagSprites[(int)role];
-                flower.color = Color.white;
+                flower.sprite = art;
+                flower.color = ColorPalette.ToUnityColor(sample.color);
             }
         }
     }

@@ -22,7 +22,12 @@ MonoBehaviour:
   specialReask2: 
   iconSprite: {fileID: 21300000, guid: b4b06602f59e89c4ab89333d11d00094, type: 3}
   stemSprite: {fileID: 21300000, guid: c804e51a51233ab4faf983700e7f620f, type: 3}
-  dayFillSprite: {fileID: -2764537206855289646, guid: ff27b819afb375b499366b7b05aa9148, type: 3}
+  ringSprites:
+  - {fileID: -8763125123694568423, guid: 560daf14085f39544941438f5a5c72ae, type: 3}
+  - {fileID: -2764537206855289646, guid: ff27b819afb375b499366b7b05aa9148, type: 3}
+  - {fileID: -3480653308909891845, guid: 29875a58e269b374195376c434488224, type: 3}
+  - {fileID: 21300000, guid: c750f916bf3b2e14bb054adabd242bab, type: 3}
+  - {fileID: 0}
   stemLeafPartSprite: {fileID: 21300000, guid: c20d2dc41c1ba6d4ca84cd89f939d919, type: 3}
   centerPartSprite: {fileID: 21300000, guid: e8c2e63f66167d64c915777ce17a3161, type: 3}
   petalPartSprites:

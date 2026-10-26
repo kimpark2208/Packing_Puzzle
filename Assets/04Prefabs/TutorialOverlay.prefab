@@ -1079,3 +1079,16 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TutorialDirector
   checkInterval: 0.1
+  popups:
+  - {fileID: 11400000, guid: c9f037632815469449abd52e82093f5c, type: 2}
+  - {fileID: 11400000, guid: 07c93618c8610e947a3eb55a80786d94, type: 2}
+  - {fileID: 11400000, guid: f55fc452d035a8e408e207d90d06caae, type: 2}
+  - {fileID: 11400000, guid: 7213870bdfa83ad428cc1e1f602b0166, type: 2}
+  - {fileID: 11400000, guid: 648ee0e3a4007094d8d593183d3f781b, type: 2}
+  - {fileID: 11400000, guid: a6621ce1181afc44ba942f9fc8b25fb0, type: 2}
+  - {fileID: 11400000, guid: 46fc6f4c11e1adf43b5ca2f06d067d4a, type: 2}
+  - {fileID: 11400000, guid: 23431edd71289384f971c3091df617eb, type: 2}
+  - {fileID: 11400000, guid: 1c5e2bb0b0d2a9046870568255f0a129, type: 2}
+  - {fileID: 11400000, guid: cb10304431fbf7741b78447de8884f91, type: 2}
+  - {fileID: 11400000, guid: a3f6a34a1c1bc634f8e63f2b4b0e3b67, type: 2}
+  - {fileID: 11400000, guid: bb1b6cad3aa60a64b98d6054dfc9805c, type: 2}

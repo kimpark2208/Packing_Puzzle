@@ -43,12 +43,14 @@ public class ReservationCall : MonoBehaviour
 
     private State state;
     private ReservationData current; // 지금 걸려 온 예약
+    private ReservationCalendar calendar; // 수락한 뒤 예약일을 보여 주는 달력(꺼져 있다가 연출 때 켜진다)
     private Coroutine ringRoutine;
     private Coroutine blinkRoutine;
 
     private void Awake()
     {
         Instance = this;
+        calendar = FindFirstObjectByType<ReservationCalendar>(FindObjectsInactive.Include); // 꺼져 있는 달력도 찾는다(수락 연출에 쓴다)
         bubble.gameObject.SetActive(false);
         ringing1.gameObject.SetActive(false);
         ringing2.gameObject.SetActive(false);
@@ -77,11 +79,18 @@ public class ReservationCall : MonoBehaviour
 
     private IEnumerator Ring()
     {
-        float end = Time.unscaledTime + ringSeconds;
-        while (Time.unscaledTime < end)
+        float elapsed = 0f; // 튜토리얼이 떠 있는 동안은 세지 않는다(제한 시간, 진동, 벨소리가 모두 멈춘다)
+        bool paused = false;
+        while (elapsed < ringSeconds)
         {
-            float angle = Mathf.Sin(Time.unscaledTime * Mathf.PI * 2f / shakePeriodSeconds) * shakeDegrees;
-            phoneTilt.Angle = angle;
+            bool held = GameTime.Held;
+            if (held != paused)
+            {
+                paused = held;
+                if (paused) audioSource.Pause(); else audioSource.UnPause();
+            }
+            elapsed += GameTime.Delta;
+            phoneTilt.Angle = Mathf.Sin(elapsed * Mathf.PI * 2f / shakePeriodSeconds) * shakeDegrees;
             yield return null;
         }
 
@@ -135,7 +144,7 @@ public class ReservationCall : MonoBehaviour
         bubble.Alpha = 0f;
         bubble.gameObject.SetActive(true);
         yield return bubble.FadeIn();
-        yield return new WaitForSecondsRealtime(popupDelaySeconds);
+        yield return GameTime.Wait(popupDelaySeconds);
         showCard.Show(current, accepted => Hangup(accepted));
         yield return bubble.FadeOut(); // 팝업이 뜨면 말풍선은 사라진다
         bubble.gameObject.SetActive(false);
@@ -143,7 +152,15 @@ public class ReservationCall : MonoBehaviour
 
     private void Hangup(bool accepted)
     {
-        if (accepted && CurrencyManager.Instance != null) CurrencyManager.Instance.AcceptReservation(current); // 예약금을 받고 예약이 접수된다
+        ReservationRecord record = accepted && CurrencyManager.Instance != null ? CurrencyManager.Instance.AcceptReservation(current) : null; // 예약금을 받고 예약이 접수된다
+        StartCoroutine(Finish(record));
+    }
+
+    /// <summary>수락했으면 달력이 잠깐 열려 예약일을 보여 준 뒤(ReservationCalendar.PlayAcceptedPreview) 통화가 끝난다: 그때까지 시간이 멈춘 채 손님이 오지 않는다.</summary>
+    private IEnumerator Finish(ReservationRecord record)
+    {
+        if (record != null && calendar != null) yield return calendar.PlayAcceptedPreview(record);
+
         GameClock.Instance?.SetPaused(false);
         state = State.Idle;
     }

@@ -18,6 +18,8 @@ public class WrapperData : ScriptableObject
     [Header("포장지 크기 (동심원 개수)")]
     [Range(1, 4)] public int ringCount = 3;
 
+    [Tooltip("포장지 선택 화면에서 이 포장지를 눌렀을 때 뜨는 미리보기 그림. 비우면 화면에 놓인 기본 그림을 쓴다.")] public Sprite previewSprite;
+
     [Header("꽃 선택에서 고를 수 있는 꽃 종류의 전체 개수 (2링 6 / 3링 8 / 4링 10). 역할별로는 그 프리셋에서 그 역할의 칸 수까지다")]
     [Min(4)] public int maxFlowerTypes = 6;
 

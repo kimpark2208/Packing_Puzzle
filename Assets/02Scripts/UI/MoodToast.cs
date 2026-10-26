@@ -73,6 +73,7 @@ public class MoodToast : MonoBehaviour
 
         background = GetComponent<Image>();
         if (background != null) baseColor = background.color;
+        if (label == null) label = GetComponentInChildren<TMP_Text>(true); // 연결이 빠져도 토스트 안의 글씨를 쓴다(안 그러면 에디터에 적어 둔 글씨가 계속 보인다)
         if (label != null) baseTextColor = label.color;
     }
 

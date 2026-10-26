@@ -68,6 +68,7 @@ public class FlowerSelectUI : MonoBehaviour
     private FlowerSelection selection; // 포장지를 고른 뒤에 만든다(역할별 한도와 전체 한도가 포장지와 프리셋에서 나온다)
     private bool wrapperChosen;
     private int selectedWrapperId = -1;
+    private Sprite defaultPreviewSprite;
     private readonly Dictionary<Shelf, List<RectTransform>> spots = new(); // 선반마다 에디터에 놓아 둔 슬롯 자리(위치는 에디터에서 정한 그대로 쓴다)
 
     private void Start()
@@ -97,7 +98,11 @@ public class FlowerSelectUI : MonoBehaviour
             if (!owned) continue;
 
             box.rollsBasePosition = box.rolls.rectTransform.anchoredPosition;
-            if (box.stock != null) box.stock.text = $"x{(CurrencyManager.Instance != null ? CurrencyManager.Instance.GetWrapperStock(box.wrapperId) : 0)}"; // 재고(0이어도 그대로 보여 준다)
+            if (box.stock != null)
+            {
+                box.stock.transform.parent.gameObject.SetActive(!CurrencyManager.WrappersUnlimited); // 포장지 개수를 따지지 않는 동안은 재고 배지를 숨긴다(CountBadge는 글씨의 부모)
+                box.stock.text = $"x{(CurrencyManager.Instance != null ? CurrencyManager.Instance.GetWrapperStock(box.wrapperId) : 0)}"; // 재고(0이어도 그대로 보여 준다)
+            }
             bool usable = IsWrapperUsable(box.wrapperId);
             box.button.interactable = usable;
             box.rolls.gameObject.SetActive(usable);
@@ -108,6 +113,7 @@ public class FlowerSelectUI : MonoBehaviour
                 box.button.onClick.AddListener(() => SelectWrapper(id));
             }
         }
+        if (Craft != null && Craft.WrapperId > 0 && IsWrapperUsable(Craft.WrapperId)) SelectWrapper(Craft.WrapperId); // 예약 꽃다발은 쓸 포장지가 정해져 있어 미리 골라 둔다(선택 완료만 누르면 된다)
         RefreshWrapperBoxes();
     }
 
@@ -116,7 +122,9 @@ public class FlowerSelectUI : MonoBehaviour
     {
         if (CurrencyManager.Instance == null || DataRegistry.Instance == null) return false;
         WrapperData data = DataRegistry.Instance.GetWrapper(wrapperId);
-        return data != null && CurrencyManager.Instance.UsableWrappers.Contains(wrapperId)
+        ReservationCraft craft = Craft; // 예약 꽃다발은 예약이 정한 포장지만 쓴다
+        bool allowed = craft == null || craft.WrapperId <= 0 || craft.WrapperId == wrapperId;
+        return data != null && allowed && CurrencyManager.Instance.UsableWrappers.Contains(wrapperId)
             && data.presets.Count > 0 && data.ringCount <= DayPuzzleController.SupportedRings;
     }
 
@@ -126,7 +134,13 @@ public class FlowerSelectUI : MonoBehaviour
         if (wrapperPreview != null)
         {
             wrapperPreview.SetActive(true);
-            if (wrapperPreview.TryGetComponent(out Image previewImage)) previewImage.color = DataRegistry.Instance.GetWrapper(wrapperId).color; // 프리셋 그림도 고른 포장지 색으로
+            if (wrapperPreview.TryGetComponent(out Image previewImage))
+            {
+                WrapperData data = DataRegistry.Instance.GetWrapper(wrapperId);
+                defaultPreviewSprite ??= previewImage.sprite; // 씬에 놓인 기본 그림을 기억해 둔다
+                previewImage.sprite = data.previewSprite != null ? data.previewSprite : defaultPreviewSprite;
+                previewImage.color = data.color; // 프리셋 그림도 고른 포장지 색으로
+            }
         }
         if (wrapperConfirmButton != null) wrapperConfirmButton.interactable = true;
         RefreshWrapperBoxes();
@@ -164,6 +178,7 @@ public class FlowerSelectUI : MonoBehaviour
         if (flowerPopup != null) flowerPopup.SetActive(true);
 
         CreateSelection(order);
+        if (Craft != null) foreach (FlowerData required in Craft.RequiredFlowers()) selection.Toggle(required); // 예약 필수 꽃은 보관해 둔 만큼 저절로 담긴다
         if (flowerConfirmButton != null)
         {
             flowerConfirmButton.gameObject.SetActive(true); // 꽃 선반은 부적 화면과 같은 덩어리라, 선택 완료 버튼은 이 단계에서만 켠다
@@ -181,9 +196,22 @@ public class FlowerSelectUI : MonoBehaviour
         selection = new FlowerSelection(roleLimits, StockOf);
     }
 
+    /// <summary>예약 꽃다발을 만드는 중이면 그 제작(없으면 null).</summary>
+    private static ReservationCraft Craft => GameManager.Instance != null && GameManager.Instance.Crafting ? GameManager.Instance.Craft : null;
+
+    /// <summary>쓸 수 있는 꽃 수. 예약 꽃다발의 필수 꽃은 보관해 둔 것만 센다.</summary>
     private static int StockOf(FlowerData flower)
     {
+        if (GameManager.Instance != null) return GameManager.Instance.CraftFlowerStock(flower.flowerID);
+
         return CurrencyManager.Instance != null ? CurrencyManager.Instance.GetFlowerStock(flower.flowerID) : 0;
+    }
+
+    /// <summary>예약 꽃다발에서 직접 고를 수 없는 꽃인가: 필수 꽃과 같은 역할의 꽃(필수 꽃은 제작을 시작하면 저절로 담긴다).</summary>
+    private static bool IsLockedByReservation(FlowerData flower)
+    {
+        ReservationCraft craft = Craft;
+        return craft != null && craft.BlocksRole(flower.flowerRole);
     }
 
     /// <summary>포장지 단계/보유 여부와 상관없이 등록된 모든 꽃을 후보로 보여준다.</summary>
@@ -265,7 +293,7 @@ public class FlowerSelectUI : MonoBehaviour
     /// <summary>꽃을 누르면 선택 규칙(FlowerSelection)에 따라 담거나 비우거나 바꿔 담는다. 선택이 바뀌면 모든 꽃의 표시를 다시 그린다.</summary>
     private void OnSlotClicked(FlowerData block)
     {
-        if (selection == null || !selection.Toggle(block)) return;
+        if (selection == null || IsLockedByReservation(block) || !selection.Toggle(block)) return;
 
         RefreshAllSlots(); // 같은 역할에서 바꿔 담으면 다른 꽃의 체크도 풀리므로 전부 다시 그린다
         RefreshLabels();
@@ -285,8 +313,8 @@ public class FlowerSelectUI : MonoBehaviour
 
         bool picked = selection != null && selection.Contains(block);
 
-        // 재고가 없는 꽃은 어둡게 한다(담을 수 없다).
-        Color shade = StockOf(block) <= 0 ? OutOfStockShade : Color.white;
+        // 재고가 없는 꽃과 예약 꽃다발에서 고를 수 없는 꽃(필수 꽃과 같은 역할)은 어둡게 한다(담을 수 없다).
+        Color shade = StockOf(block) <= 0 || (!picked && IsLockedByReservation(block)) ? OutOfStockShade : Color.white;
         view.piece.SetIconColor(ColorPalette.ToUnityColor(block.color) * shade);
         foreach (var (graphic, baseColor) in view.shaded) graphic.color = baseColor * shade;
         view.piece.LiftTarget.anchoredPosition = view.liftBasePosition + new Vector2(0f, picked ? selectedLift : 0f);
@@ -295,7 +323,7 @@ public class FlowerSelectUI : MonoBehaviour
         if (view.badge != null)
         {
             // 보유 수량은 퍼즐이 끝난 뒤에 소모된다(선택 중에는 그대로). 마이너스는 임시로 0으로 표시한다.
-            int owned = Mathf.Max(0, CurrencyManager.Instance != null ? CurrencyManager.Instance.GetFlowerStock(block.flowerID) : 0);
+            int owned = Mathf.Max(0, StockOf(block));
             view.badge.text = $"x{owned}"; // 담은 꽃은 위로 올라오는 것으로만 보여 준다
         }
     }

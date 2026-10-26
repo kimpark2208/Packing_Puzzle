@@ -104,7 +104,7 @@ public class TutorialOverlay : MonoBehaviour
     /// <summary>같은 id는 한 번만 보여 준다. 다른 안내가 떠 있으면 아무것도 하지 않는다(id도 쓴 것으로 치지 않으니 나중에 다시 부르면 된다).</summary>
     public static void Play(string id, params Step[] steps)
     {
-        if (Instance == null || steps.Length == 0 || IsShowing || !seen.Add(id)) return;
+        if (Instance == null || steps.Length == 0 || IsShowing || TutorialPopup.IsShowing || !seen.Add(id)) return;
 
         Instance.StartCoroutine(Instance.Run(steps));
     }
