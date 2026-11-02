@@ -32,6 +32,7 @@ public partial class GameManager : Singleton<GameManager>
 
     /// <summary>지금 주문을 한 낮 손님의 모습. 퍼즐을 마치고 메인 화면이 다시 열려도 반응 대사와 낮 종료 대사를 같은 손님이 하도록 기억해 둔다(메인 화면은 열릴 때마다 새로 만들어진다).</summary>
     public CharacterAppearance? CustomerLook { get; set; }
+    public bool CustomerUnhappy { get; set; } // 방금 주문을 한 손님이 결과(실수·실패)에 기분이 나빠졌다. 새 손님이 오면 MainUI가 끈다
 
     /// <summary>지금 만나는 밤 손님의 진단 문제(꽃과 아픔). 밤 손님이 없거나 대화만 하는 방문이면 null.</summary>
     public NightDiagnosisCase CurrentNightCase { get; private set; }
@@ -272,6 +273,8 @@ public partial class GameManager : Singleton<GameManager>
             BeginDayEnding();
             return;
         }
+
+        CustomerUnhappy = tier == ReactionTier.Mistake || tier == ReactionTier.Fail;
 
         // 시나리오에 정해진 NPC(아직 다음 방문자로 넘어가기 전이라 CurrentScriptedVisit이 방금 주문한 손님이다)는 CSV의 반응 대사를 하고, 아니면 평소 반응 대사를 한다
         pendingCustomerLine = ScriptedReaction(CurrentScriptedVisit?.reactionPrefix, tier.ToString().ToLowerInvariant()) ?? customerLine;

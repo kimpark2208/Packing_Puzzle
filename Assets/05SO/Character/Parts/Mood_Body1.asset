@@ -1,0 +1,25 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c26d30ee8ab69bb43ac5cd3df393b963, type: 3}
+  m_Name: Mood_Body1
+  m_EditorClassIdentifier: Assembly-CSharp::CharacterMoodData
+  bodyType: 1
+  badMouths:
+  - {fileID: 21300000, guid: 1182081de37da684daa03d3346627a85, type: 3}
+  - {fileID: 21300000, guid: 1c29c566bd819a84694a193ac8513811, type: 3}
+  blushes:
+  - skin: {fileID: 21300000, guid: 2150a9553d116934ba73002312fdb75a, type: 3}
+    blush: {fileID: 21300000, guid: 849ca0353a841794a83efc088b00a810, type: 3}
+  - skin: {fileID: 21300000, guid: 00a235d98c9e1574893d15a0a035e9dd, type: 3}
+    blush: {fileID: 21300000, guid: 873acbdeda39f5d45a8fb3ab97ead3d6, type: 3}
+  - skin: {fileID: 21300000, guid: 643adb209167dea4c8c895bf23027ae8, type: 3}
+    blush: {fileID: 21300000, guid: 9aaf947ed30b68b40817496ce3f39130, type: 3}

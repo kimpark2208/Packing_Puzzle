@@ -1,10 +1,19 @@
 fileFormatVersion: 2
-guid: ad45df74ea8a72a489f4d57ea688888e
+guid: 05708eca583d13c479f18b181f0a9be4
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: 558845844923408044
-    second: Char_Hair_Back_Brown_04_0
+      213: -2417682971727284863
+    second: Char_Eyes_09_0
+  - first:
+      213: -3454713260813095605
+    second: Char_Eyes_09_1
+  - first:
+      213: 3352070859031183507
+    second: Char_Eyes_09_2
+  - first:
+      213: 7704826977599157553
+    second: Char_Eyes_09_3
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -110,7 +119,33 @@ TextureImporter:
     androidETC2FallbackOverride: 0
     forceMaximumCompressionQuality_BC6H_BC7: 0
   - serializedVersion: 4
+    buildTarget: WebGL
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
     buildTarget: WindowsStoreApps
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: iOS
     maxTextureSize: 2048
     resizeAlgorithm: 0
     textureFormat: -1
@@ -126,13 +161,13 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: Char_Hair_Back_Brown_04_0
+      name: Char_Eyes_09_0
       rect:
         serializedVersion: 2
-        x: 246
-        y: 532
-        width: 476
-        height: 516
+        x: 353
+        y: 723
+        width: 91
+        height: 41
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -141,8 +176,74 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: caedcd6c55b61c700800000000000000
-      internalID: 558845844923408044
+      spriteID: 1853faa852aa27ed0800000000000000
+      internalID: -2417682971727284863
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Char_Eyes_09_1
+      rect:
+        serializedVersion: 2
+        x: 377
+        y: 753
+        width: 62
+        height: 17
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: b4d6768d7946e00d0800000000000000
+      internalID: -3454713260813095605
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Char_Eyes_09_2
+      rect:
+        serializedVersion: 2
+        x: 528
+        y: 724
+        width: 92
+        height: 40
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 3900e7eafa2f48e20800000000000000
+      internalID: 3352070859031183507
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Char_Eyes_09_3
+      rect:
+        serializedVersion: 2
+        x: 532
+        y: 753
+        width: 63
+        height: 18
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 135f4af605b0dea60800000000000000
+      internalID: 7704826977599157553
       vertices: []
       indices: 
       edges: []
@@ -161,7 +262,10 @@ TextureImporter:
     spriteCustomMetadata:
       entries: []
     nameFileIdTable:
-      Char_Hair_Back_Brown_04_0: 558845844923408044
+      Char_Eyes_09_0: -2417682971727284863
+      Char_Eyes_09_1: -3454713260813095605
+      Char_Eyes_09_2: 3352070859031183507
+      Char_Eyes_09_3: 7704826977599157553
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

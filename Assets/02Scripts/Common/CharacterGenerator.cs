@@ -22,6 +22,7 @@ public class CharacterGenerator : MonoBehaviour
     [Header("SO 에셋 (파츠 5종 + 머리카락 색 5개)")]
     [SerializeField] private CharacterPartData[] partAssets;
     [SerializeField] private CharacterHairData[] hairAssets;
+    [SerializeField, Tooltip("기분이 나쁠 때의 입과 홍조(체형마다 하나)")] private CharacterMoodData[] moodAssets;
 
     [Header("피부")]
     [SerializeField, Tooltip("밤 손님(귀신)의 피부. 밤 손님은 이 피부 중에서만, 낮 손님은 이 피부를 뺀 나머지에서 고른다.")] private Sprite[] nightSkins;
@@ -37,6 +38,7 @@ public class CharacterGenerator : MonoBehaviour
     [SerializeField] private Image eyes;
     [SerializeField] private Image mouth;
     [SerializeField] private Image skin;
+    [SerializeField, Tooltip("피부 바로 위에 겹쳐 두는 홍조. 기분이 나쁠 때만 켜진다.")] private Image blush;
     [SerializeField] private Image hairBack;
     [SerializeField] private Image hairFront;
     [SerializeField] private Image hairSide;
@@ -100,11 +102,31 @@ public class CharacterGenerator : MonoBehaviour
         Show(eyes, appearance.eyes);
         Show(mouth, appearance.mouth);
         Show(skin, appearance.skin);
+        Show(blush, null); // 홍조는 기분이 나쁠 때만(SetUnhappy)
         Show(hairBack, appearance.hairBack);
         Show(hairFront, appearance.hairFront);
         Show(hairSide, appearance.hairSide);
         Show(tieR, appearance.tieR);
         Show(tieL, appearance.tieL);
+    }
+
+    /// <summary>기분이 나쁜 얼굴로 바꾼다: 입을 기분 나쁜 입으로, 피부 위에 홍조를 띄운다(눈썹·눈은 그대로). false면 Current의 평소 입으로 되돌리고 홍조를 끈다.</summary>
+    public void SetUnhappy(bool unhappy)
+    {
+        CharacterAppearance look = Current;
+        CharacterMoodData mood = unhappy ? FindMood(look.bodyType) : null;
+        Show(mouth, mood != null && mood.badMouths.Count > 0 ? Pick(mood.badMouths) : look.mouth);
+        Show(blush, mood != null ? mood.BlushOf(look.skin) : null);
+    }
+
+    private CharacterMoodData FindMood(int bodyType)
+    {
+        if (moodAssets == null) return null;
+        foreach (CharacterMoodData asset in moodAssets)
+        {
+            if (asset != null && asset.bodyType == bodyType) return asset;
+        }
+        return null;
     }
 
     private Sprite PickPart(int bodyType, CharacterPartData.PartType part)

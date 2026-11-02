@@ -317,6 +317,7 @@ public class MainUI : MonoBehaviour
         if (showingReaction)
         {
             ShowPreviousNpcOrCustomer(); // 반응 대사는 방금 주문을 한 그 손님이 한다
+            ShowReactionFace();
             if (Game != null && Game.PreviousNpc != null) PauseForNpc(true); // NPC의 반응 대사(와 이어지는 친밀 대사)를 듣는 동안은 시간이 가지 않는다
             SayAfterReveal(() => speech.Show(angryLine));
             forceAcceptLine = GameManager.Instance != null
@@ -487,11 +488,24 @@ public class MainUI : MonoBehaviour
 
         ShowCharacterStyle(null, null); // 무작위 손님은 부위를 조합한 캐릭터(NomalChar)다
         character.Randomize(IsNight); // 밤 손님은 피부가 파란 귀신, 낮 손님은 그 피부를 뺀 사람이다
-        if (Game != null) Game.CustomerLook = character.Current;
+        if (Game != null)
+        {
+            Game.CustomerLook = character.Current;
+            Game.CustomerUnhappy = false;
+        }
         if (!arrive) return;
 
         character.gameObject.SetActive(true); // 나갔던 손님 자리를 다시 켠다
         if (character.TryGetComponent(out PanelMotion motion)) motion.PlayShow(); // 새 손님은 아래에서 올라오며 들어온다
+    }
+
+    /// <summary>반응 대사를 하는 손님의 얼굴: 결과가 실수·실패였거나 기분 시간이 바닥이었으면 기분 나쁜 입과 홍조를 띄운다.</summary>
+    private void ShowReactionFace()
+    {
+        if (character == null) return;
+
+        bool moodBad = GameClock.Instance != null && GameClock.Instance.Mood == MoodLevel.Bad;
+        character.SetUnhappy(moodBad || (Game != null && Game.CustomerUnhappy));
     }
 
     /// <summary>다음 손님이 오는 순서: (이전 손님이 있으면) 말풍선이 사라진다 -> 이전 손님이 나간다 -> 새 손님이 들어온다 -> 말풍선과 주문이 뜬다.</summary>

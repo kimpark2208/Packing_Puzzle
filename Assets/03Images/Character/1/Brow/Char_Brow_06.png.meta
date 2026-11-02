@@ -1,10 +1,13 @@
 fileFormatVersion: 2
-guid: a9c4b0a280ffd06489ead102b755967c
+guid: d0171e42a1ae6074c80125cecd7adafe
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: 383941864761215846
-    second: Char_Hair_Back_Red_04_0
+      213: -5218521231141363859
+    second: Char_Brow_06_0
+  - first:
+      213: -3418552363944171687
+    second: Char_Brow_06_1
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -110,7 +113,33 @@ TextureImporter:
     androidETC2FallbackOverride: 0
     forceMaximumCompressionQuality_BC6H_BC7: 0
   - serializedVersion: 4
+    buildTarget: WebGL
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
     buildTarget: WindowsStoreApps
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: iOS
     maxTextureSize: 2048
     resizeAlgorithm: 0
     textureFormat: -1
@@ -126,13 +155,13 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: Char_Hair_Back_Red_04_0
+      name: Char_Brow_06_0
       rect:
         serializedVersion: 2
-        x: 263
-        y: 533
-        width: 447
-        height: 523
+        x: 346
+        y: 798
+        width: 115
+        height: 24
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -141,8 +170,30 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 66b4e7f7719045500800000000000000
-      internalID: 383941864761215846
+      spriteID: d6f1cf4d6961497b0800000000000000
+      internalID: -5218521231141363859
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Char_Brow_06_1
+      rect:
+        serializedVersion: 2
+        x: 507
+        y: 797
+        width: 120
+        height: 24
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 957290dbcbcde80d0800000000000000
+      internalID: -3418552363944171687
       vertices: []
       indices: 
       edges: []
@@ -161,7 +212,8 @@ TextureImporter:
     spriteCustomMetadata:
       entries: []
     nameFileIdTable:
-      Char_Hair_Back_Red_04_0: 383941864761215846
+      Char_Brow_06_0: -5218521231141363859
+      Char_Brow_06_1: -3418552363944171687
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

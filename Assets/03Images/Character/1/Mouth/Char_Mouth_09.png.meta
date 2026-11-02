@@ -1,10 +1,10 @@
 fileFormatVersion: 2
-guid: 181be14149ce9d741bdc8ca43c2ed22a
+guid: a73a07df4c7e41441a818690abba3825
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: 2542645043394491006
-    second: Char_Hair_Back_Silver_04_0
+      213: -8958788578378243627
+    second: Char_Mouth_09_0
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -110,7 +110,33 @@ TextureImporter:
     androidETC2FallbackOverride: 0
     forceMaximumCompressionQuality_BC6H_BC7: 0
   - serializedVersion: 4
+    buildTarget: WebGL
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
     buildTarget: WindowsStoreApps
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: iOS
     maxTextureSize: 2048
     resizeAlgorithm: 0
     textureFormat: -1
@@ -126,13 +152,13 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: Char_Hair_Back_Silver_04_0
+      name: Char_Mouth_09_0
       rect:
         serializedVersion: 2
-        x: 259
-        y: 727
-        width: 451
-        height: 338
+        x: 440
+        y: 622
+        width: 105
+        height: 48
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -141,8 +167,8 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: e72bf69023a494320800000000000000
-      internalID: 2542645043394491006
+      spriteID: 5d120ffe04dfba380800000000000000
+      internalID: -8958788578378243627
       vertices: []
       indices: 
       edges: []
@@ -161,7 +187,7 @@ TextureImporter:
     spriteCustomMetadata:
       entries: []
     nameFileIdTable:
-      Char_Hair_Back_Silver_04_0: 2542645043394491006
+      Char_Mouth_09_0: -8958788578378243627
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

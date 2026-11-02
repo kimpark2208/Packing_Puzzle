@@ -1,10 +1,13 @@
 fileFormatVersion: 2
-guid: 1182081de37da684daa03d3346627a85
+guid: 873acbdeda39f5d45a8fb3ab97ead3d6
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: 7756260389572080993
-    second: Char_Mouth_06_0
+      213: 5309374301354785740
+    second: Char_Skin_Blush_02_0
+  - first:
+      213: -6742551123684421136
+    second: Char_Skin_Blush_02_1
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -110,7 +113,33 @@ TextureImporter:
     androidETC2FallbackOverride: 0
     forceMaximumCompressionQuality_BC6H_BC7: 0
   - serializedVersion: 4
+    buildTarget: WebGL
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
     buildTarget: WindowsStoreApps
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: iOS
     maxTextureSize: 2048
     resizeAlgorithm: 0
     textureFormat: -1
@@ -126,13 +155,13 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: Char_Mouth_06_0
+      name: Char_Skin_Blush_02_0
       rect:
         serializedVersion: 2
-        x: 452
-        y: 623
-        width: 74
-        height: 31
+        x: 314
+        y: 663
+        width: 346
+        height: 351
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -141,8 +170,30 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 16570e9dab5c3ab60800000000000000
-      internalID: 7756260389572080993
+      spriteID: ccbf6dbfbcfaea940800000000000000
+      internalID: 5309374301354785740
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Char_Skin_Blush_02_1
+      rect:
+        serializedVersion: 2
+        x: 647
+        y: 733
+        width: 12
+        height: 33
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 0f111e00a75ad62a0800000000000000
+      internalID: -6742551123684421136
       vertices: []
       indices: 
       edges: []
@@ -161,7 +212,8 @@ TextureImporter:
     spriteCustomMetadata:
       entries: []
     nameFileIdTable:
-      Char_Mouth_06_0: 7756260389572080993
+      Char_Skin_Blush_02_0: 5309374301354785740
+      Char_Skin_Blush_02_1: -6742551123684421136
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 
