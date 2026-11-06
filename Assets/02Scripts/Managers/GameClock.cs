@@ -2,10 +2,9 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 
 /// <summary>
-/// 시간 시계. 하루 남은 시간, 현재 손님의 기분(인내심) 남은 시간, 밤 남은 시간을 실제 시간으로 깎는다.
-/// 하루/기분 시간은 낮 씬(메인 화면의 낮 손님 상황/꽃 선택/낮 퍼즐)에서만 흐른다. 밤 시간은 밤이 시작된 뒤(BeginNight) 메인 화면의 밤 상황/밤 퍼즐 씬에서만 흐른다.
-/// 밤 시간이 0이 되면 EventBus.OnNightTimeUp을 한 번 발행한다.
-/// 하루 시간은 날이 바뀔 때(EventBus.OnDayAdvanced) 가득 찬다.
+/// 시간 시계. 영업 시간(하루 남은 시간)과 현재 손님의 기분(인내심) 남은 시간을 실제 시간으로 깎는다.
+/// 하루는 낮 → 노을 → 밤으로 이어지는 하나의 영업 시간이다: 하루 시간이 지난 정도(0~1)가 nightStartElapsed를 넘으면 밤이고, 밤에는 파란 피부 손님이 온다.
+/// 하루/기분 시간은 낮 씬(메인 화면의 손님 상황/꽃 선택/낮 퍼즐)에서만 흐른다. 하루 시간은 날이 바뀔 때(EventBus.OnDayAdvanced) 가득 찬다.
 /// 기분 시간은 새 손님이 오면 가득 찬 채 멈춰 있다가(ResetMood), 플레이어가 주문을 수락할 때(StartMood) 가득 차서 흐르기 시작하고,
 /// 퍼즐이 끝나면(StopMood) 멈춘다.
 /// 설정 창이 열려 있거나 정산 결과 화면이 떠 있는 동안(SetPaused)은 하루/기분 시간이 모두 멈춘다.
@@ -15,18 +14,26 @@ public class GameClock : Singleton<GameClock>
 {
     [SerializeField] private float dayDurationSeconds = 300f;
     [SerializeField] private float moodDurationSeconds = 60f;
-    [SerializeField] private float nightDurationSeconds = 180f; // 밤 길이(초)
+    [SerializeField, Range(0f, 1f), Tooltip("하루가 이만큼 지나면(0~1) 노을이 시작된다. 화면이 노을로 섞이기 시작하고, 이때부터 파란 피부 손님이 나올 수 있다(밤 시작까지 확률이 0에서 100%로 늘어난다).")] private float sunsetStartElapsed = 0.5f;
+    [SerializeField, Range(0f, 1f), Tooltip("하루가 이만큼 지나면(0~1) 밤이다. 밤에는 파란 피부 손님만 오고 시계와 화면이 밤 모습이 된다.")] private float nightStartElapsed = 0.75f;
 
     public float DayRemaining { get; private set; }
     public float MoodRemaining { get; private set; }
-    public float NightRemaining { get; private set; }
 
-    /// <summary>시계 UI가 밤 모습으로 보여야 하는 화면인가: 밤 시간이 흐르는 화면(메인 화면의 밤 손님/밤 종료, 밤 퍼즐)과, 밤이 시작되기 직전의 낮 종료 화면(카운터와 부적 선반. 밤 시간은 아직 흐르지 않고 가득 차 있다).</summary>
-    public bool IsNightMode => nightLook;
+    /// <summary>하루가 이만큼 지나면(0~1) 노을이 시작된다.</summary>
+    public float SunsetStartElapsed => sunsetStartElapsed;
+
+    /// <summary>하루가 이만큼 지나면(0~1) 밤이다.</summary>
+    public float NightStartElapsed => nightStartElapsed;
+
+    /// <summary>지금이 밤인가(하루 시간이 nightStartElapsed만큼 지났다). 시계 UI와 화면 모습, 파란 피부 손님이 이것을 따른다.</summary>
+    public bool IsNightMode => 1f - DayRatio >= nightStartElapsed;
+
+    /// <summary>다음 손님이 파란 피부(귀신)일 확률: 노을이 시작될 때 0, 밤이 시작될 때 100%로 늘어난다(밤에는 파란 피부만 온다).</summary>
+    public float GhostCustomerChance => Mathf.Clamp01(Mathf.InverseLerp(sunsetStartElapsed, nightStartElapsed, 1f - DayRatio));
 
     public float DayRatio => dayDurationSeconds > 0f ? Mathf.Clamp01(DayRemaining / dayDurationSeconds) : 0f;
     public float MoodRatio => moodDurationSeconds > 0f ? Mathf.Clamp01(MoodRemaining / moodDurationSeconds) : 0f;
-    public float NightRatio => nightDurationSeconds > 0f ? Mathf.Clamp01(NightRemaining / nightDurationSeconds) : 0f;
 
     // 기분 단계의 경계(남은 기분 시간의 비율)
     private const float HappyAbove = 0.65f;
@@ -38,22 +45,18 @@ public class GameClock : Singleton<GameClock>
     /// <summary>기분 시간이 지금 실제로 줄고 있는가(주문을 수락했고, 낮 화면이고, 설정/결과로 멈춰 있지 않다).</summary>
     public bool MoodFlowing => moodActive && running && !Paused && !TutorialHold;
 
-    /// <summary>튜토리얼 안내가 떠 있는 동안 true: 하루/기분/밤 시간이 모두 멈춘다(설정 창의 멈춤과 따로 센다).</summary>
+    /// <summary>튜토리얼 안내가 떠 있는 동안 true: 하루/기분 시간이 모두 멈춘다(설정 창의 멈춤과 따로 센다).</summary>
     public bool TutorialHold { get; set; }
 
     private bool running;
     private bool moodActive; // 현재 주문이 진행 중이라 기분 시간이 흐르는가
     private int pauseCount; // 멈춤을 건 곳의 수(설정 창, NPC 대화, 정산 결과, 예약 전화 …): 모두 풀어야 시간이 흐른다
-    private bool nightScene;  // 지금 메인 화면의 밤 상황(밤 손님/밤 종료)이거나 밤 퍼즐 씬인가
-    private bool nightLook;   // 시계를 밤 모습으로 보여 주는 화면인가(nightScene이거나 부적 화면)
-    private bool nightActive; // 밤이 시작됐고 아직 끝나지 않았는가
     private bool dayTimeUpRaised; // 오늘 하루 시간이 끝났다는 이벤트를 이미 발행했는가
 
     protected override void OnAwake()
     {
         ResetDay();
         ResetMood();
-        NightRemaining = nightDurationSeconds;
         SceneManager.sceneLoaded += OnSceneLoaded;
         EventBus.OnDayAdvanced += OnDayAdvanced;
     }
@@ -69,27 +72,18 @@ public class GameClock : Singleton<GameClock>
     {
         pauseCount = 0; // 씬이 바뀌면 멈춤은 모두 풀린 채로 시작한다
         MorningFill = -1f; // 밤 → 낮 연출은 메인 화면이 열릴 때 다시 시작한다
-        // 메인 화면은 하나(낮 메인)라서, 낮 시간이 흐르는지 밤 시간이 흐르는지는 메인 화면의 상황(MainState)으로 정한다.
-        MainState main = GameManager.Instance != null ? GameManager.Instance.MainState : MainState.DayCustomer;
-        bool mainScene = scene.name == GameManager.SceneDayMain;
-        running = (mainScene && main == MainState.DayCustomer) // 낮 종료 상황에서는 하루 시간이 이미 끝났으므로 흐르지 않는다(꽃 선택은 이 메인 씬의 옆 페이지다)
-               || scene.name == GameManager.SceneDayPuzzle;
-        nightScene = (mainScene && (main == MainState.NightCustomer || main == MainState.NightEnding))
-                  || scene.name == GameManager.SceneNightPuzzle;
-        nightLook = nightScene || (mainScene && main == MainState.DayEnding);
+        running = scene.name == GameManager.SceneDayMain || scene.name == GameManager.SceneDayPuzzle; // 꽃 선택은 메인 씬의 옆 페이지다
     }
 
     private void OnDayAdvanced(int newDay)
     {
         ResetDay();
-        nightActive = false; // 날이 바뀌면 지난 밤은 끝난 것
     }
 
     private void Update()
     {
         if (Paused || TutorialHold) return;
         if (running) Tick(Time.deltaTime);
-        if (nightScene && nightActive) TickNight(Time.deltaTime);
     }
 
     private void Tick(float seconds)
@@ -99,41 +93,14 @@ public class GameClock : Singleton<GameClock>
         if (DayRemaining <= 0f) TimeUp();
     }
 
-    /// <summary>밤 남은 시간을 비율(0~1)로 정한다(밤 시간이 없는 날 시계를 손님마다 줄일 때).</summary>
-    public void SetNightRatio(float ratio)
-    {
-        NightRemaining = nightDurationSeconds * Mathf.Clamp01(ratio);
-    }
-
     /// <summary>새 날 밤 → 낮 연출 중이면 낮 시계가 채워진 정도(0~1), 아니면 -1. 시계 게이지는 이 동안 비워진 밤 시계에서 낮 시계를 채워 보인다.</summary>
     public float MorningFill { get; set; } = -1f;
-
-    /// <summary>true면 밤 시간이 줄지 않는다(밤 시간이 없는 날. 1일차).</summary>
-    public bool NightFrozen { get; set; }
-
-    private void TickNight(float seconds)
-    {
-        if (NightFrozen) return;
-
-        NightRemaining = Mathf.Max(0f, NightRemaining - seconds);
-        if (NightRemaining > 0f) return;
-
-        nightActive = false; // 한 번만 발행
-        EventBus.RaiseNightTimeUp();
-    }
 
     private void TimeUp()
     {
         if (dayTimeUpRaised) return; // 한 번만 발행(주문을 마무리하는 동안에는 시간이 0인 채로 계속 흐른다)
         dayTimeUpRaised = true;
         EventBus.RaiseDayTimeUp();
-    }
-
-    /// <summary>밤이 시작될 때(낮을 마치고 밤으로 넘어갈 때): 밤 시간을 가득 채우고 흐르게 한다.</summary>
-    public void BeginNight()
-    {
-        NightRemaining = nightDurationSeconds;
-        nightActive = true;
     }
 
     public void ResetDay()
@@ -168,8 +135,8 @@ public class GameClock : Singleton<GameClock>
 
     private bool Paused => pauseCount > 0;
 
-    /// <summary>시나리오에서 낮을 건너뛸 때: 하루 남은 시간을 seconds 동안 시계가 빠르게 감기듯이 0까지 줄인다(시계 게이지와 낮 → 노을 모습이 따라 움직인다).
-    /// 낮이 끝났다는 이벤트(OnDayTimeUp)는 내지 않는다. 이 뒤의 흐름(전등, 밤 시작)은 부른 쪽이 직접 이어 간다.</summary>
+    /// <summary>예약 반응이 끝난 뒤: 하루 남은 시간을 seconds 동안 시계가 빠르게 감기듯이 0까지 줄인다(시계 게이지와 낮 → 노을 → 밤 모습이 따라 움직인다).
+    /// 하루가 끝났다는 이벤트(OnDayTimeUp)는 내지 않는다. 이 뒤의 흐름은 부른 쪽이 직접 이어 간다.</summary>
     public System.Collections.IEnumerator FastForwardDay(float seconds)
     {
         dayTimeUpRaised = true;
@@ -182,22 +149,17 @@ public class GameClock : Singleton<GameClock>
         DayRemaining = 0f;
     }
 
-    /// <summary>시계(와 시계 옆 전등 영역)를 밤 모습으로 보이게 한다. 낮 건너뛰기에서 낮이 다 감긴 뒤, 전등이 나타나 켜지기 전에 부른다(평소에는 낮 종료 화면이 이 모습을 정한다).</summary>
-    public void ShowNightLook()
-    {
-        nightLook = true;
-    }
-
     /// <summary>디버그용: 하루 남은 시간만 앞당긴다(손님 기분은 그대로).</summary>
     public void SkipDayTime(float seconds)
     {
         DayRemaining = Mathf.Max(0f, DayRemaining - seconds);
     }
 
-    /// <summary>디버그용: 밤 남은 시간을 앞당긴다.</summary>
-    public void SkipNightTime(float seconds)
+    /// <summary>디버그용: 밤이 막 시작되는 때로 건너뛴다(이미 밤이면 그대로).</summary>
+    public void SkipToNight()
     {
-        NightRemaining = Mathf.Max(0f, NightRemaining - seconds);
+        float nightRemaining = dayDurationSeconds * (1f - nightStartElapsed);
+        if (DayRemaining > nightRemaining) DayRemaining = nightRemaining;
     }
 
     /// <summary>디버그용: 손님 기분을 최대치의 ratio만큼 깎는다(하루 시간은 그대로).</summary>

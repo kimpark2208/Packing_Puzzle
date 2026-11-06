@@ -19,5 +19,7 @@ MonoBehaviour:
   description: "\uCCA0\uC0AC\uB85C \uB9CC\uB4E0 \uB098\uBE44 \uD540"
   inCatalog: 1
   availableFromDay: 5
+  orderMetaphors:
+  - "\uC544, \uADF8\uB9AC\uACE0 \uC791\uC740 \uB098\uBE44\uD540\uB3C4 \uAF2D \uAF42\uC544\uC8FC\uC138\uC694!"
   sprite: {fileID: 8196531519459296852, guid: 3aa01898f31fd5c47a95dfd7a63db8ad, type: 3}
   sizeScale: 1

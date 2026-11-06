@@ -13,9 +13,8 @@ MonoBehaviour:
   m_Name: Day_10
   m_EditorClassIdentifier: Assembly-CSharp::DayScenarioData
   day: 10
-  skipDayBusiness: 0
   dayVisits: []
-  nightVisits: []
+  reservationCall: {fileID: 0}
+  reservationCallAfterCustomers: 1
   unlocksPhone: 0
   unlocksCalendar: 0
-  dayToNightSound: {fileID: 0}

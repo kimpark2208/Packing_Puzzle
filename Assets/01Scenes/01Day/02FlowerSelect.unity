@@ -607,33 +607,41 @@ MonoBehaviour:
     button: {fileID: 500852898}
     box: {fileID: 1092785981}
     rolls: {fileID: 1519523328}
+    stock: {fileID: 0}
   - wrapperId: 2
     button: {fileID: 204034595}
     box: {fileID: 1878952631}
     rolls: {fileID: 1207051251}
+    stock: {fileID: 0}
   - wrapperId: 3
     button: {fileID: 997762136}
     box: {fileID: 1196289329}
     rolls: {fileID: 1145505344}
+    stock: {fileID: 0}
   - wrapperId: 4
     button: {fileID: 860904824}
     box: {fileID: 1889428197}
     rolls: {fileID: 365708705}
+    stock: {fileID: 0}
   - wrapperId: 5
     button: {fileID: 510356778}
     box: {fileID: 1214626377}
     rolls: {fileID: 878178175}
+    stock: {fileID: 0}
   - wrapperId: 6
     button: {fileID: 1331399252}
     box: {fileID: 1130886447}
     rolls: {fileID: 879354849}
+    stock: {fileID: 0}
   - wrapperId: 7
     button: {fileID: 1290112123}
     box: {fileID: 1563777432}
     rolls: {fileID: 1449509434}
+    stock: {fileID: 0}
   wrapperConfirmButton: {fileID: 1435125141}
   wrapperPreview: {fileID: 0}
   flowerPopup: {fileID: 2080710008}
+  flowerEnterDelay: 0
   shelves:
   - role: 0
     label: {fileID: 761973454}

@@ -31,6 +31,8 @@ public class OrderTemplateData : ScriptableObject
     [Range(0f, 1f), Tooltip("꽃 부분, 포장지 부분이 각각 은유형으로 나올 확률(반반이면 0.5). 꽃은 직설인데 포장지는 은유인 식으로 섞일 수 있다.")] public float metaphorChance = 0.5f;
     [Range(0f, 1f), Tooltip("꽃 은유형 중에서 꽃의 특수주문(말장난 주문)으로 말할 확률. 나머지는 색 은유로 말한다. 특수주문이 있는 꽃이 없으면 색 은유로 간다.")] public float flowerSpecialOrderChance = 0.1f;
 
+    [Range(0f, 1f), Tooltip("주문에 꾸미기 용품 부분이 붙을 확률(게임 개편 2 기획서: 50%). 꾸미기 용품은 얻은 용품만 지정된다.")] public float decorationChance = 0.5f;
+
     [Header("주문 전체 템플릿: [꽃템플릿] 자리에 꽃 부분 대사가, [포장지템플릿] 자리에 포장지 부분 대사가 들어간다(둘 다 있어야 쓴다). 비어 있으면 꽃 부분 뒤에 포장지 부분을 이어 붙인다")]
     [TextArea] public List<string> fullOrder = new();
 
@@ -46,6 +48,16 @@ public class OrderTemplateData : ScriptableObject
 
     [Header("포장지 직설형 템플릿: [포장지]")]
     [TextArea] public List<string> wrapperDirect = new();
+
+    [Header("꾸미기 용품 직설형 템플릿: [꾸미기용품]. 주문의 꽃·포장지 부분 뒤에 이어 붙는다. 비어 있으면 기본 문장을 쓴다")]
+    [TextArea] public List<string> decorationDirect = new();
+
+    /// <summary>decorationDirect가 비어 있을 때 쓰는 기본 꾸미기 용품 문장.</summary>
+    public static readonly string[] DefaultDecorationDirect =
+    {
+        "아, 그리고 [꾸미기용품]도 꼭 넣어주세요!",
+        "[꾸미기용품]도 있으면 좋겠어요.",
+    };
 
     [Header("꽃 색 은유: 색별 문구(색 직설형 템플릿의 [색] 자리에 들어간다)")]
     public ColorPhrases[] colorMetaphors = NewColorPhrases();
@@ -108,6 +120,8 @@ public class OrderTemplateData : ScriptableObject
     {
         metaphorChance = 0.5f;
         flowerSpecialOrderChance = 0.1f;
+        decorationChance = 0.5f;
+        decorationDirect = new List<string>(DefaultDecorationDirect);
 
         reaskAfterDirect = new[] { "제 주문이 어렵나요?", "이게 어려운 주문은 아니잖아요?" };
         reaskAfterMetaphor = new[] { "", "제가 말을 어렵게하나요?" };

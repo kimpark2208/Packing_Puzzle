@@ -11,9 +11,6 @@ public partial class CurrencyManager : Singleton<CurrencyManager>
 {
     [SerializeField] private int initialMoney = 0;
 
-    [SerializeField] private int initialCharms = 20; // 시작 부적 수량(저장 시스템이 생기기 전까지는 매번 이 값으로 시작한다)
-    [SerializeField] private int maxCharms = 30;     // 부적 보유 한도
-
     // ========== 기본 상태 ==========
     private int currentMoney;
     private int currentDay;
@@ -32,8 +29,6 @@ public partial class CurrencyManager : Singleton<CurrencyManager>
     // ========== 프로퍼티 (읽기 전용) ==========
     public int CurrentMoney => currentMoney;
     public int CurrentDay => currentDay;
-    public int Charms { get; private set; }
-    public int MaxCharms => maxCharms;
     public int TodayEarned { get; private set; } // 오늘 번 돈 합계(날짜가 넘어가면 0으로 돌아간다)
     public int TodaySpent { get; private set; }  // 오늘 가구·유물·꾸미기 용품 등을 주문하며 쓴 돈 합계(날짜가 넘어가면 0으로 돌아간다)
 
@@ -80,13 +75,11 @@ public partial class CurrencyManager : Singleton<CurrencyManager>
     {
         currentMoney = initialMoney;
         currentDay = 1;
-        Charms = Mathf.Min(initialCharms, maxCharms);
 
-        // 초기 포장지: 기획서(포장지 프리셋 PDF)의 프리셋이 들어 있는 1번(전의 2번과 번호를 맞바꿨다)만 보유한 것으로 친다.
-        // 3번(3링) 프리셋은 보드가 아직 지원하지 않는다(DayPuzzleController.SupportedRings 참고).
+        // 초기 포장지: 1번(흰색)만 보유한 것으로 친다. 나머지는 기획서의 해금 조건으로 열린다(GameManager.ApplyDailyProgression).
         ownedWrappers.Add(1);
 
-        // 꽃은 하나도 갖고 시작하지 않는다: 밤 손님을 고쳐 받는 복제품(AddFlowerStock)으로만 얻고, 얻은 꽃만 주문에서 부탁받을 수 있다.
+        // 꽃은 하나도 갖고 시작하지 않는다: 시작 꽃(획득 일차 0)은 첫날을 시작할 때 GameManager가 지급하고, 얻은 꽃만 주문에서 부탁받을 수 있다.
 
         Debug.Log($"[CurrencyManager] 초기화 완료 - 금액: {currentMoney}, 일수: {currentDay}");
     }
@@ -120,31 +113,6 @@ public partial class CurrencyManager : Singleton<CurrencyManager>
 
         Debug.LogWarning($"[CurrencyManager] 금액 부족 (필요: {amount}, 보유: {currentMoney})");
         return false;
-    }
-
-    // ========== 부적 관리 ==========
-
-    /// <summary>부적 한 개를 쓴다(꽃에 붙인다). 보유한 부적이 없으면 false.</summary>
-    public bool TryUseCharm()
-    {
-        if (Charms <= 0) return false;
-        Charms--;
-        EventBus.RaiseCharmsChanged(Charms);
-        return true;
-    }
-
-    /// <summary>부적을 amount개 받는다(보유 한도까지).</summary>
-    public void AddCharms(int amount)
-    {
-        Charms = Mathf.Min(maxCharms, Charms + amount);
-        EventBus.RaiseCharmsChanged(Charms);
-    }
-
-    /// <summary>붙였던 부적을 되돌려 받는다(보유 한도까지).</summary>
-    public void RefundCharm()
-    {
-        Charms = Mathf.Min(maxCharms, Charms + 1);
-        EventBus.RaiseCharmsChanged(Charms);
     }
 
     // ========== 포장지 (Wrapper) 관리 ==========

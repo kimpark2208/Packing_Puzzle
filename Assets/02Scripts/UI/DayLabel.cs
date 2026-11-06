@@ -18,11 +18,9 @@ public class DayLabel : MonoBehaviour
     [SerializeField, Tooltip("세 글씨를 한꺼번에 서서히 보이고 숨기는 UIFader(DayLabel 오브젝트에 둔다). \"N년차 계절\"이 Fade In으로 나타나 Hold 동안 떠 있다가 Fade Out으로 사라지고, \"N일\"이 Fade In으로 나타난다.")] private UIFader fader;
 
     [Header("글씨 색")]
-    [SerializeField, Tooltip("시계가 낮 모습일 때.")] private Color dayColor = new(0.353f, 0.231f, 0.141f, 1f);
-    [SerializeField, Tooltip("시계가 밤 모습일 때(밤 시계 바탕이 어두워서 밝은 색을 쓴다).")] private Color nightColor = new(1f, 0.965f, 0.89f, 1f);
+    [SerializeField, Tooltip("글씨 색(낮과 밤 모두).")] private Color dayColor = new(0.353f, 0.231f, 0.141f, 1f);
 
     private int shownDay = -1;
-    private bool shownNight;
 
     private void Start()
     {
@@ -45,11 +43,9 @@ public class DayLabel : MonoBehaviour
             dayText.text = $"{day}일차";
         }
 
-        bool night = GameClock.Instance != null && GameClock.Instance.IsNightMode;
-        if (night != shownNight || dayText.color != (night ? nightColor : dayColor))
+        if (dayText.color != dayColor) // 밤이 되어도 글씨 색은 그대로다
         {
-            shownNight = night;
-            foreach (TMP_Text text in new[] { yearText, seasonText, dayText }) text.color = night ? nightColor : dayColor;
+            foreach (TMP_Text text in new[] { yearText, seasonText, dayText }) text.color = dayColor;
         }
     }
 

@@ -58,11 +58,6 @@ public static class ScenarioValidator
                 CheckDialogueId(database, visit.bondDialogueId, where, problems);
                 CheckReaction(database, visit.reactionPrefix, where, problems);
             }
-            foreach (NightVisit visit in scenario.nightVisits)
-            {
-                CheckDialogueId(database, visit.dialogueId, where, problems);
-                CheckReaction(database, visit.reactionPrefix, where, problems);
-            }
         }
 
         if (problems.Count == 0) Debug.Log($"[Scenario] 문제 없음 — 대화 {database.All.Count()}개, 줄 {database.All.Sum(d => d.lines.Count)}개");

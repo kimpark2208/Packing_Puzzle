@@ -5,6 +5,7 @@ using UnityEngine;
 /// <summary>
 /// 손님의 주문을 만든다: 요구사항(퍼즐 조건)과 그것을 말하는 대사, 되묻기 대사.
 /// 주문은 꽃 부분과 포장지 부분으로 나뉘고, 각각 직설형(템플릿에 이름을 넣어 말한다)이나 은유형(비유로 말한다)으로 정해진다(OrderTemplateData.metaphorChance).
+/// 확률(OrderTemplateData.decorationChance, 50%)로 꾸미기 용품 부분이 뒤에 붙는다(얻은 용품 중 하나. 직설형 템플릿이나 그 용품의 은유 문장).
 /// - 꽃 직설형: 꽃 한 종이나 두 종을 말하는 템플릿, 또는 색만 말하는 템플릿.
 /// - 꽃 은유형: 꽃의 특수주문(말장난, 확률은 flowerSpecialOrderChance)이나 색 은유("동백 같은 꽃").
 /// - 포장지 직설형: 템플릿에 포장지 색 이름. 포장지 은유형: 그 색의 은유 문장(없으면 직설형).
@@ -32,6 +33,7 @@ public static class OrderComposer
         public int flowerCount2;         // 꽃 기반: 두 번째 꽃의 요구 송이 수(0이면 한 송이)
         public int minCount;             // 색상 기반: 최소 개수. 꽃 기반: 말한 꽃들의 요구 송이 수 합(고정 주문이 아니면 종류마다 한 송이)
         public int baseAmount;           // 이 퍼즐의 기본 금액(정산 점수 구간의 배율이 곱해진다)
+        public int decorationId;         // 손님이 말한 꾸미기 용품(DecorationData.id). 말하지 않았으면 0(꾸미기 용품 번호는 1부터)
 
         /// <summary>꽃 기반에서 요구한 꽃과 송이 수(한 종이면 하나, 두 종이면 둘).</summary>
         public IEnumerable<(int flowerId, int count)> FlowerTargets()
@@ -58,7 +60,8 @@ public static class OrderComposer
     /// <param name="wrapperColor">손님이 말할 포장지의 색 종류(WrapperData.wrapperColor). 모르면 null(은유 없이 fallbackColorName으로 직설형만).</param>
     /// <param name="fallbackColorName">wrapperColor가 없을 때 쓰는 포장지 색 이름.</param>
     /// <param name="templates">null이면 기본 템플릿을 쓴다.</param>
-    public static Result Compose(int day, WrapperPresetData preset, WrapperColor? wrapperColor, string fallbackColorName, OrderTemplateData templates)
+    /// <param name="decorations">꾸미기 용품 주문 후보(얻은 용품). null이거나 비어 있으면 꾸미기 용품은 말하지 않는다.</param>
+    public static Result Compose(int day, WrapperPresetData preset, WrapperColor? wrapperColor, string fallbackColorName, OrderTemplateData templates, IReadOnlyList<DecorationData> decorations = null)
     {
         if (templates == null)
         {
@@ -85,16 +88,56 @@ public static class OrderComposer
         bool wrapperMetaphor = wrapperPart != null;
         if (wrapperPart == null) wrapperPart = WrapperDirect(wrapperName, templates);
 
-        // 꽃의 특수주문과 되묻기는 주문 전체 템플릿 없이 두 부분을 붙여서 말한다. 되묻기에서는 꽃의 색 은유와 포장지 은유를 은유 없이 바로 말한다.
-        string joined = $"{flowerPart} {wrapperPart}";
+        // 꾸미기 용품 부분(확률로 붙는다): 꽃 부분과 포장지 부분 뒤에 이어 붙는다
+        string decorationPart = null;
+        string decorationDirectPart = null; // 은유였으면 은유 없이 바로 말한 것(되묻기용)
+        bool decorationMetaphor = false;
+        DecorationData decoration = PickDecoration(decorations, templates);
+        if (decoration != null)
+        {
+            requirement.decorationId = decoration.id;
+            decorationDirectPart = DecorationDirect(decoration, templates);
+            decorationPart = Random.value < templates.metaphorChance ? TryDecorationMetaphor(decoration) : null;
+            decorationMetaphor = decorationPart != null;
+            if (decorationPart == null) decorationPart = decorationDirectPart;
+        }
+        string decorationTail = decorationPart != null ? $" {decorationPart}" : "";
+        string decorationDirectTail = decorationDirectPart != null ? $" {decorationDirectPart}" : "";
+
+        // 꽃의 특수주문과 되묻기는 주문 전체 템플릿 없이 두 부분을 붙여서 말한다. 되묻기에서는 꽃의 색 은유와 포장지 은유, 꾸미기 용품 은유를 은유 없이 바로 말한다.
+        string joined = $"{flowerPart} {wrapperPart}{decorationTail}";
         string wrapperDirectPart = wrapperMetaphor ? WrapperDirect(wrapperName, templates) : wrapperPart;
-        string restated = $"{flowerDirectPart ?? flowerPart} {wrapperDirectPart}";
+        string restated = $"{flowerDirectPart ?? flowerPart} {wrapperDirectPart}{decorationDirectTail}";
         string[] reask = special != null
-            ? SpecialReasks(special, restated, wrapperDirectPart, templates)
-            : PlainReasks(restated, !flowerMetaphor && !wrapperMetaphor, templates);
+            ? SpecialReasks(special, restated, wrapperDirectPart + decorationDirectTail, templates)
+            : PlainReasks(restated, !flowerMetaphor && !wrapperMetaphor && !decorationMetaphor, templates);
 
         Debug.Log($"[OrderComposer] Day {day} 주문: {joined}");
-        return new Result { requirement = requirement, line = special != null ? joined : Frame(flowerPart, wrapperPart, templates), reaskLines = reask };
+        return new Result { requirement = requirement, line = special != null ? joined : Frame(flowerPart, wrapperPart, templates) + decorationTail, reaskLines = reask };
+    }
+
+    // ── 꾸미기 용품 부분 ─────────────────────────────────────────────────────
+
+    /// <summary>꾸미기 용품 주문이 붙을지 정하고(decorationChance), 붙으면 후보 중 하나를 고른다. 안 붙으면 null.</summary>
+    private static DecorationData PickDecoration(IReadOnlyList<DecorationData> candidates, OrderTemplateData t)
+    {
+        if (candidates == null || candidates.Count == 0 || Random.value >= t.decorationChance) return null;
+
+        return candidates[Random.Range(0, candidates.Count)];
+    }
+
+    /// <summary>그 용품의 은유 문장 중 하나(없으면 null).</summary>
+    private static string TryDecorationMetaphor(DecorationData decoration)
+    {
+        var sentences = (decoration.orderMetaphors ?? new List<string>()).Where(s => !string.IsNullOrWhiteSpace(s)).Select(s => s.Trim()).ToList();
+        return sentences.Count > 0 ? sentences[Random.Range(0, sentences.Count)] : null;
+    }
+
+    private static string DecorationDirect(DecorationData decoration, OrderTemplateData t)
+    {
+        var templates = (t.decorationDirect ?? new List<string>()).Where(s => !string.IsNullOrWhiteSpace(s)).ToList();
+        string template = templates.Count > 0 ? templates[Random.Range(0, templates.Count)] : OrderTemplateData.DefaultDecorationDirect[0];
+        return KoreanParticle.Replace(template, "꾸미기용품", decoration.displayName, $"<b>{decoration.displayName}</b>");
     }
 
     /// <summary>주문 전체 템플릿(꽃·포장지 자리가 모두 있는 것) 중 하나에 두 부분을 끼운다. 쓸 만한 템플릿이 없으면 두 부분을 붙여서 말한다.</summary>

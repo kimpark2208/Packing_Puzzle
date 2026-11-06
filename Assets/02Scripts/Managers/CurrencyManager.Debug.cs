@@ -15,7 +15,7 @@ public partial class CurrencyManager
         if (GUILayout.Button("Debug: +1000 금액"))
             AddMoney(1000);
 
-        if (GUILayout.Button("Debug: 일수 +1(하루 정산 없이 다음 날 낮으로, 그날 밤 새 꽃 지급)") && GameManager.Instance != null)
+        if (GUILayout.Button("Debug: 일수 +1(하루 정산 없이 다음 날로, 새 꽃과 포장지 해금도 그날 기준으로)") && GameManager.Instance != null)
             GameManager.Instance.DebugAdvanceDay();
 
         if (GUILayout.Button("Debug: 예약 전화 걸기(메인 화면에서)"))
@@ -24,11 +24,8 @@ public partial class CurrencyManager
         if (GUILayout.Button("Debug: 하루 시간 -1분") && GameClock.Instance != null)
             GameClock.Instance.SkipDayTime(60f);
 
-        if (GUILayout.Button("Debug: 현재 밤 손님 스킵(진단 씬이면 정답 처리)") && GameManager.Instance != null)
-            GameManager.Instance.DebugSkipNightPuzzle();
-
-        if (GUILayout.Button("Debug: 밤 시간 -1분") && GameClock.Instance != null)
-            GameClock.Instance.SkipNightTime(60f);
+        if (GUILayout.Button("Debug: 밤으로 건너뛰기") && GameClock.Instance != null)
+            GameClock.Instance.SkipToNight();
 
         if (GUILayout.Button("Debug: 손님 기분 -20%") && GameClock.Instance != null)
             GameClock.Instance.DrainMood(0.2f);
@@ -38,8 +35,8 @@ public partial class CurrencyManager
 
         if (GUILayout.Button("Debug: 캐릭터 새로 뽑기(밤이면 파란 피부 귀신)"))
         {
-            MainState? state = GameManager.Instance != null ? GameManager.Instance.MainState : null;
-            bool night = state == MainState.NightCustomer || state == MainState.NightEnding;
+
+            bool night = GameClock.Instance != null && GameClock.Instance.IsNightMode;
             FindFirstObjectByType<CharacterGenerator>()?.Randomize(night);
         }
 

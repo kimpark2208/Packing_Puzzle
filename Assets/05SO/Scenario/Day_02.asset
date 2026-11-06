@@ -13,7 +13,6 @@ MonoBehaviour:
   m_Name: Day_02
   m_EditorClassIdentifier: Assembly-CSharp::DayScenarioData
   day: 2
-  skipDayBusiness: 0
   dayVisits:
   - orderIndex: 1
     npc: {fileID: 11400000, guid: 394bdd7e9c8bbd74899054078853d1d8, type: 2}
@@ -25,34 +24,7 @@ MonoBehaviour:
     dialogueId: jaemin_d2_intro
     bondDialogueId: 
     reactionPrefix: jaemin_react
-  freeNight: 0
-  nightVisits:
-  - npc: {fileID: 0}
-    dialogueId: 
-    dialogueOnly: 0
-    flower: {fileID: 11400000, guid: 2cee97a2a4448bd77c8c6e5b0b02d02a, type: 2}
-    fixedReplicas: 20
-    reactionPrefix: 
-  - npc: {fileID: 0}
-    dialogueId: 
-    dialogueOnly: 0
-    flower: {fileID: 11400000, guid: 227b50a9f7749eaf0641d2896bf87bca, type: 2}
-    fixedReplicas: 20
-    reactionPrefix: 
-  - npc: {fileID: 0}
-    dialogueId: 
-    dialogueOnly: 0
-    flower: {fileID: 11400000, guid: 54be2c2f4f04102a72cff051f9762d00, type: 2}
-    fixedReplicas: 20
-    reactionPrefix: 
-  - npc: {fileID: 0}
-    dialogueId: 
-    dialogueOnly: 0
-    flower: {fileID: 11400000, guid: a073a0c6e0d556d17e0414d9b6148fb0, type: 2}
-    fixedReplicas: 20
-    reactionPrefix: 
   reservationCall: {fileID: 0}
   reservationCallAfterCustomers: 1
   unlocksPhone: 1
   unlocksCalendar: 0
-  dayToNightSound: {fileID: 0}

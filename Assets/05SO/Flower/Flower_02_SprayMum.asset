@@ -17,6 +17,8 @@ MonoBehaviour:
   color: 2
   flowerRole: 3
   acquireDay: 0
+  shopPrice: 200
+  shopBundle: 15
   specialOrder: "\uD070 \uB098\uB77C\uB97C \uB300\uAD6D\uC774\uB77C\uACE0 \uD558\uC8E0.
     \uADF8\uB7FC \uC791\uC740 \uB098\uB77C\uB294 \uBB50\uB77C\uACE0 \uD560\uAE4C\uC694?"
   specialReask1: "\uB10C\uC13C\uC2A4 \uD034\uC988\uC608\uC694! \uB300\uAD6D, \uC911\uAD6D
@@ -31,29 +33,3 @@ MonoBehaviour:
   - {fileID: -3480653308909891845, guid: 29875a58e269b374195376c434488224, type: 3}
   - {fileID: 21300000, guid: c750f916bf3b2e14bb054adabd242bab, type: 3}
   - {fileID: 0}
-  stemLeafPartSprite: {fileID: 0}
-  centerPartSprite: {fileID: 0}
-  petalPartSprites:
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  partLayout: 0
-  lossPetals: []
-  petalGrid: '..#..#..
-
-    .######.
-
-    ########
-
-    ########
-
-    ########
-
-    ########
-
-    .######.
-
-    ..#..#..'

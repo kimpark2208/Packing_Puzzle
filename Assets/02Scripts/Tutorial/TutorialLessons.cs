@@ -9,7 +9,7 @@ using static TutorialOverlay.Step;
 
 /// <summary>
 /// 튜토리얼 내용 전부. 대상은 타이쿤 게임의 문법(손님, 주문, 돈, 시계, 카탈로그 같은 것)은 아는 게이머라서,
-/// 화면의 UI를 하나하나 설명하지 않고 이 게임만의 규칙(역할 칸, 균형, 꽃의 빛, 부적과 밤 퍼즐)만 첫날 흐름을 따라 짚는다.
+/// 화면의 UI를 하나하나 설명하지 않고 이 게임만의 규칙(역할 칸, 균형, 꽃의 빛)만 첫날 흐름을 따라 짚는다.
 /// 안내를 더하거나 빼려면 All 목록의 항목(id, 언제 보여 줄지, 어떤 장면들인지)만 고친다. 다른 화면의 코드는 건드리지 않는다.
 /// - when: 그 안내를 보여 줄 때가 됐는지(화면이 자리 잡을 때까지 TutorialDirector가 잠시 기다린 뒤 보여 준다). 같은 id는 한 번만 보인다.
 /// - steps: 배너 하나가 한 장면이다. On(문구, 대상)은 그 대상만 밝게 살리고, Banner(문구)는 배너만 보여 준다.
@@ -19,7 +19,6 @@ public static class TutorialLessons
 {
     // ── 하이라키 경로(씬 루트부터) ──────────────────────────────────────────────
     private const string Global = "GlobalUICanvas/GlobalUI/";
-    private const string Lantern = Global + "Clock/LanternArea/LanternToggle";
 
     private const string MainRoot = "Canvas/DayMainRoot/";
     private const string SpeechBubble = MainRoot + "BubbleContainer/SpeechBubble";
@@ -32,7 +31,6 @@ public static class TutorialLessons
     private const string FlowerArea = "Canvas/ShelfRoot/FlowerArea/";
     private const string FlowerShelves = FlowerArea + "FlowerPopupBack";
     private const string FlowerConfirm = FlowerArea + "ConfirmBTN"; // 꽃 선택 페이지가 화면에 와 있는지 보는 기준
-    private const string CharmUse = FlowerArea + "CharmUse";       // 부적 선반이 화면에 와 있는지 보는 기준
 
     private const string Puzzle = "Canvas/PuzzleRoot/";
     private const string Board = Puzzle + "WrapperImage";
@@ -54,20 +52,11 @@ public static class TutorialLessons
     public static readonly (string id, Func<bool> when)[] PopupTriggers =
     {
         // 낮
-        ("day-flower", () => In(GameManager.SceneDayMain) && Main == MainState.DayCustomer && Visible(FlowerConfirm)),                       // 꽃 선택 페이지에 처음 오면
+        ("day-flower", () => In(GameManager.SceneDayMain) && Visible(FlowerConfirm)),                       // 꽃 선택 페이지에 처음 오면
         ("day-puzzle", () => In(GameManager.SceneDayPuzzle) && Active(FlowerBucket)),                                                        // 낮 퍼즐에 처음 들어오면
-        ("charm", () => In(GameManager.SceneDayMain) && Main == MainState.DayEnding),                                                        // 낮 장사가 끝나면(낮 종료에는 수락 버튼이 없다)
-        ("furniture", () => In(GameManager.SceneDayMain) && Main == MainState.DayCustomer && PhoneUnlocked() && !MerchantTalking() && !Crafting && Visible(AcceptButton)), // 2일차 가구 상인이 떠난 뒤(다음 손님이 말할 때)
-        ("reservation-prep", () => In(GameManager.SceneDayMain) && Main == MainState.DayCustomer && !Crafting && HasReservation() && !ReservationCall.Busy && Visible(AcceptButton)), // 예약을 수락한 뒤 다음 손님이 오면
+        ("furniture", () => In(GameManager.SceneDayMain) && PhoneUnlocked() && !MerchantTalking() && !Crafting && Visible(AcceptButton)), // 2일차 가구 상인이 떠난 뒤(다음 손님이 말할 때)
+        ("reservation-prep", () => In(GameManager.SceneDayMain) && !Crafting && HasReservation() && !ReservationCall.Busy && Visible(AcceptButton)), // 예약을 수락한 뒤 다음 손님이 오면
         ("reservation-craft", () => In(GameManager.SceneDayMain) && Crafting && Visible(FlowerConfirm)),                                      // 예약일에 꽃 선택 페이지로 넘어가면
-
-        // 밤
-        ("night-diagnosis", () => In(GameManager.SceneNightPuzzle) && !SceneTransition.Busy && Game != null && Game.CurrentNightCase != null && UnityEngine.Object.FindFirstObjectByType<NightDiagnosisUI>() != null), // 진단 화면에서 꽃을 받으면
-        ("night-loss", () => RepairOpen(FlowerData.Ailment.PetalLoss)),
-        ("night-stem", () => RepairOpen(FlowerData.Ailment.StemBend)),
-        ("night-scatter", () => RepairOpen(FlowerData.Ailment.PetalScatter)),
-        ("night-wilt", () => RepairOpen(FlowerData.Ailment.Wilt)),
-        ("night-faded", () => RepairOpen(FlowerData.Ailment.FadedMemory)),
     };
 
     // ── 배너형 안내 목록(보여 주는 순서) ────────────────────────────────────────
@@ -81,7 +70,7 @@ public static class TutorialLessons
         }),
 
         // 꽃 선택 페이지(주문을 받으면 자동으로 넘어온다)
-        ("wrapper", () => In(GameManager.SceneDayMain) && Main == MainState.DayCustomer && Visible(WrapperConfirm), () => new[]
+        ("wrapper", () => In(GameManager.SceneDayMain) && Visible(WrapperConfirm), () => new[]
         {
             On($"주문의 {Em("포장지")}를 골라요.\n포장지마다 필요한 꽃의 수가 달라요.", () => Children(WrapperBoxes)),
         }),
@@ -120,24 +109,10 @@ public static class TutorialLessons
             On($"{Em("꽃다발 점수")}가 하나씩 나오며 게이지가 움직여요.\n화면을 누르면 빨리 넘어가요.", () => Rt(ResultGauge)),
         }),
 
-        // 낮이 끝난 뒤: 부적과 전등
-        // (낮 영업이 끝났다는 안내와 부적 소개는 팝업형 charm이 맡는다)
-        ("charm", () => In(GameManager.SceneDayMain) && Main == MainState.DayEnding && Visible(CharmUse), () => new[]
-        {
-            On($"{Em("얻고 싶은 꽃")}에 {Em("부적")}을 붙여요. 최대 {Em("6개")}지만, 다 붙이지 않아도 돼요.\n그 꽃을 만들어줄 {Em("손님")}이 밤에 와요. 끝나면 밀어서 다시 카운터로 돌아와요.", () => Rt(FlowerShelves)),
-        }),
-        ("lantern", () => In(GameManager.SceneDayMain) && Main == MainState.DayEnding && HasSeen("charm") && LanternReady(), () => new[] // 선반에서 부적을 붙여 본 뒤에
-        {
-            On($"{Em("전등")}을 켜면 {Em("밤 영업")}이 시작돼요.", () => Rt(Lantern)),
-        }),
-
-        // (밤 안내는 팝업형 night-*이 맡는다. 첫 주문·밤 손님 소개 배너와 옛 밤 퍼즐 씬의 그림 그리기 안내는 시나리오 대사와 겹쳐서 뺐다)
     };
 
     // ── 찾기 도우미 ─────────────────────────────────────────────────────────────
     private static bool In(string scene) => SceneManager.GetActiveScene().name == scene;
-
-    private static MainState Main => GameManager.Instance != null ? GameManager.Instance.MainState : MainState.DayCustomer;
 
     private static GameManager Game => GameManager.Instance;
 
@@ -155,12 +130,6 @@ public static class TutorialLessons
     {
         DayVisit? visit = Game != null ? Game.CurrentScriptedVisit : null;
         return visit.HasValue && visit.Value.dialogueId != null && visit.Value.dialogueId.StartsWith("merchant");
-    }
-
-    /// <summary>밤 수리 퍼즐에서 그 아픔의 퍼즐이 지금 열려 있는가.</summary>
-    private static bool RepairOpen(FlowerData.Ailment ailment)
-    {
-        return In(GameManager.SceneNightPuzzle) && UnityEngine.Object.FindObjectsByType<RepairPuzzlePanel>(FindObjectsSortMode.None).Any(p => p.Ailment == ailment && p.gameObject.activeInHierarchy);
     }
 
     /// <summary>경로의 오브젝트(켜져 있을 때만. GameObject.Find는 경로로 찾으면 꺼진 것도 돌려주므로 직접 거른다).</summary>
@@ -198,12 +167,6 @@ public static class TutorialLessons
 
     /// <summary>낮 퍼즐 안내(별·그늘·다시 뽑기)를 보여 줄 때가 됐는가: 팝업형 day-puzzle을 본 뒤.</summary>
     private static bool PuzzleTipReady() => In(GameManager.SceneDayPuzzle) && Active(FlowerBucket) && TutorialPopup.HasSeen("day-puzzle");
-
-    private static bool LanternReady()
-    {
-        Toggle lantern = Rt(Lantern)?.GetComponent<Toggle>();
-        return lantern != null && lantern.interactable;
-    }
 
     /// <summary>이 퍼즐에서 그 종류의 특수 칸(없으면 null).</summary>
     private static RectTransform SpecialSlot(SpecialCell kind)

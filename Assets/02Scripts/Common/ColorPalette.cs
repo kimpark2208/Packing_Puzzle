@@ -45,6 +45,8 @@ public static class ColorPalette
             case WrapperColor.Purple: return "보라";
             case WrapperColor.Pink: return "분홍";
             case WrapperColor.White: return "흰";
+            case WrapperColor.Orange: return "주황";
+            case WrapperColor.Black: return "검은";
             default: return "알 수 없는";
         }
     }

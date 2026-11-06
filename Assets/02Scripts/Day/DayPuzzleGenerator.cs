@@ -64,7 +64,9 @@ public static class DayPuzzleGenerator
             hintColorName = ShopManager.Instance.GetColorHintName(hintWrapperId);
         }
 
-        OrderComposer.Result composed = OrderComposer.Compose(day, preset, hintColor, hintColorName, templates);
+        // 꾸미기 용품은 얻은 용품(기본 지급, 카탈로그 주문, 선물)만 주문에 나온다
+        var decorations = DataRegistry.Instance.Decorations.Where(d => d != null && CurrencyManager.Instance.HasObtainedDecoration(d.id)).ToList();
+        OrderComposer.Result composed = OrderComposer.Compose(day, preset, hintColor, hintColorName, templates, decorations);
         return new DayOrder
         {
             day = day,

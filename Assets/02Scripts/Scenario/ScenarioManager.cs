@@ -12,6 +12,8 @@ public class ScenarioManager : Singleton<ScenarioManager>
     [SerializeField, Tooltip("대사 CSV(Assets/05SO/Dialogue/Dialogue.csv).")] private TextAsset dialogueCsv;
     [SerializeField, Tooltip("일차별 시나리오(1~10일차).")] private List<DayScenarioData> days = new();
 
+    [SerializeField, Tooltip("꺼 두면 시나리오(정해진 손님, 예약 전화, 전화기·달력 해금)가 모두 없는 것처럼 동작해, 1일차부터 무작위 손님과 퍼즐만 나온다.")] private bool scenarioEnabled;
+
     private DialogueDatabase dialogue;
 
     /// <summary>대사 데이터베이스(처음 쓸 때 CSV를 읽는다). CSV를 고쳤으면 에디터에서 Play를 다시 시작해야 반영된다.</summary>
@@ -29,7 +31,7 @@ public class ScenarioManager : Singleton<ScenarioManager>
     }
 
     /// <summary>그 일차의 시나리오. 없으면 null(평소처럼 무작위로 진행).</summary>
-    public DayScenarioData ForDay(int day) => days.FirstOrDefault(d => d != null && d.day == day);
+    public DayScenarioData ForDay(int day) => scenarioEnabled ? days.FirstOrDefault(d => d != null && d.day == day) : null;
 
     /// <summary>그날 낮의 index번째 손님(1부터)이 정해진 NPC면 그 방문, 아니면 null(무작위 손님).</summary>
     public DayVisit? DayVisitAt(int day, int index)
@@ -45,8 +47,8 @@ public class ScenarioManager : Singleton<ScenarioManager>
     }
 
     /// <summary>전화기를 쓸 수 있는가(전화기가 해금된 일차부터).</summary>
-    public bool IsPhoneUnlocked(int day) => days.Any(d => d != null && d.day <= day && d.unlocksPhone);
+    public bool IsPhoneUnlocked(int day) => scenarioEnabled && days.Any(d => d != null && d.day <= day && d.unlocksPhone);
 
     /// <summary>달력을 쓸 수 있는가(달력이 해금된 일차부터).</summary>
-    public bool IsCalendarUnlocked(int day) => days.Any(d => d != null && d.day <= day && d.unlocksCalendar);
+    public bool IsCalendarUnlocked(int day) => scenarioEnabled && days.Any(d => d != null && d.day <= day && d.unlocksCalendar);
 }

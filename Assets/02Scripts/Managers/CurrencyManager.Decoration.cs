@@ -8,6 +8,9 @@ public partial class CurrencyManager
 
     public int GetDecorationStock(int decorationId) => decorationStock.TryGetValue(decorationId, out int count) ? count : 0;
 
+    /// <summary>이 꾸미기 용품을 한 번이라도 얻었는가(기본 지급, 카탈로그 주문, 선물). 재고가 다 떨어져도 얻은 것으로 친다. 손님은 얻은 용품만 주문한다.</summary>
+    public bool HasObtainedDecoration(int decorationId) => decorationStock.ContainsKey(decorationId);
+
     /// <summary>꾸미기 용품 재고를 늘린다(줄일 때는 음수). 재고가 0 아래로 내려가지 않는다.</summary>
     public void AddDecorationStock(int decorationId, int amount)
     {

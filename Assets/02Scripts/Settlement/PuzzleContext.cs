@@ -16,10 +16,11 @@ public readonly struct PuzzleContext
 {
     public PuzzleContext(PuzzleEndKind endKind, IReadOnlyDictionary<WrapperRegionPosition, FlowerData.Color> placedCells,
         IReadOnlyDictionary<WrapperRegionPosition, SpecialCell> specialCells,
-        OrderComposer.CustomerRequirement requirement, int requirementUsed, float moodRatio, int collapseCount, bool reservation = false, int missingSupplies = 0)
+        OrderComposer.CustomerRequirement requirement, int requirementUsed, float moodRatio, int collapseCount, bool reservation = false, int missingSupplies = 0, bool orderedDecorationMissing = false)
     {
         Reservation = reservation;
         MissingSupplies = missingSupplies;
+        OrderedDecorationMissing = orderedDecorationMissing;
         EndKind = endKind;
         PlacedCells = placedCells;
         SpecialCells = specialCells;
@@ -71,15 +72,22 @@ public readonly struct PuzzleContext
 
         float mood = GameClock.Instance != null ? GameClock.Instance.MoodRatio : 1f;
 
-        // 예약 꽃다발: 손님이 없어 기분 시간을 보지 않고, 필수 꾸미기 용품을 꽃다발에 놓았는지 센다
+        // 예약 꽃다발: 손님이 없어 기분 시간을 보지 않고, 필수 꾸미기 용품을 꽃다발에 썼는지 센다
+        // 일반 주문: 손님이 주문에서 말한 꾸미기 용품을 썼는지 본다(안 썼으면 주문 미이행)
         ReservationCraft craft = GameManager.Instance != null && GameManager.Instance.Crafting ? GameManager.Instance.Craft : null;
         int missingSupplies = 0;
+        bool orderedDecorationMissing = false;
+        var placer = Object.FindFirstObjectByType<DecorationPlacer>();
         if (craft != null)
         {
-            var placer = Object.FindFirstObjectByType<DecorationPlacer>();
-            foreach (DecorationData supply in craft.Supplies()) if (placer == null || !placer.Contains(supply)) missingSupplies++;
+            foreach (DecorationData supply in craft.Supplies()) if (placer == null || !placer.IsUsed(supply)) missingSupplies++;
         }
-        return new PuzzleContext(endKind, placedCells, specialCells, requirement, used, mood, collapseCount, craft != null, missingSupplies);
+        else if (requirement.decorationId > 0 && DataRegistry.Instance != null)
+        {
+            DecorationData ordered = DataRegistry.Instance.GetDecoration(requirement.decorationId);
+            orderedDecorationMissing = ordered != null && (placer == null || !placer.IsUsed(ordered));
+        }
+        return new PuzzleContext(endKind, placedCells, specialCells, requirement, used, mood, collapseCount, craft != null, missingSupplies, orderedDecorationMissing);
     }
 
     public PuzzleEndKind EndKind { get; }
@@ -104,8 +112,12 @@ public readonly struct PuzzleContext
     /// <summary>예약 꽃다발을 만드는 중인가(손님 기분이 점수에 들어가지 않는다).</summary>
     public bool Reservation { get; }
 
+    /// <summary>손님이 주문에서 말한 꾸미기 용품을 꽃다발에 쓰지 않았는가(일반 주문). 쓰지 않았으면 주문을 이행하지 못한 것이다(RequirementMet).</summary>
+    public bool OrderedDecorationMissing { get; }
+
     /// <summary>꽃다발에 놓지 않은 예약 필수 꾸미기 용품의 수.</summary>
     public int MissingSupplies { get; }
 
-    public bool RequirementMet => RequirementUsed >= Requirement.minCount;
+    /// <summary>주문을 이행했는가: 요구한 꽃(색)을 채웠고, 손님이 말한 꾸미기 용품도 썼다.</summary>
+    public bool RequirementMet => RequirementUsed >= Requirement.minCount && !OrderedDecorationMissing;
 }

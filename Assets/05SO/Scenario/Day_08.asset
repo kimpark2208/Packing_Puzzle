@@ -13,7 +13,6 @@ MonoBehaviour:
   m_Name: Day_08
   m_EditorClassIdentifier: Assembly-CSharp::DayScenarioData
   day: 8
-  skipDayBusiness: 0
   dayVisits:
   - orderIndex: 1
     npc: {fileID: 11400000, guid: 09a6c8a80a44ee84780de94d006b69cf, type: 2}
@@ -25,7 +24,7 @@ MonoBehaviour:
     dialogueId: hero_d8_intro
     bondDialogueId: hero_bond
     reactionPrefix: hero_react
-  nightVisits: []
+  reservationCall: {fileID: 0}
+  reservationCallAfterCustomers: 1
   unlocksPhone: 0
   unlocksCalendar: 0
-  dayToNightSound: {fileID: 0}

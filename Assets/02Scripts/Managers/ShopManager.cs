@@ -36,7 +36,7 @@ public class ShopManager : Singleton<ShopManager>
     // TODO: 아이템 정의를 코드에서 빼서 ScriptableObject로 옮긴다(지금은 InitializeItems에 박혀 있다).
     private void InitializeItems()
     {
-        // ========== 포장지 (Wrapper) ==========
+        // ========== 포장지 (Wrapper): 5종(게임 개편 2 기획서). 사는 것이 아니라 GameManager.ApplyDailyProgression가 조건에 맞춰 해금한다. 여기서는 손님이 힌트로 말하는 색 이름만 쓴다 ==========
         allItems.Add(new ShopItem
         {
             itemId = 1,
@@ -44,7 +44,7 @@ public class ShopManager : Singleton<ShopManager>
             price = 0,
             category = ShopCategory.Wrapper,
             description = "기본 포장지",
-            colorHintName = "핑크"
+            colorHintName = "흰"
         });
 
         allItems.Add(new ShopItem
@@ -54,7 +54,7 @@ public class ShopManager : Singleton<ShopManager>
             price = 1000,
             category = ShopCategory.Wrapper,
             description = "더 큰 포장지",
-            colorHintName = "노란"
+            colorHintName = "분홍"
         });
 
         allItems.Add(new ShopItem
@@ -64,7 +64,7 @@ public class ShopManager : Singleton<ShopManager>
             price = 2500,
             category = ShopCategory.Wrapper,
             description = "매우 큰 포장지",
-            colorHintName = "보라"
+            colorHintName = "주황"
         });
 
         allItems.Add(new ShopItem
@@ -74,7 +74,7 @@ public class ShopManager : Singleton<ShopManager>
             price = 4000,
             category = ShopCategory.Wrapper,
             description = "라인/매스/필러 요구 개수가 늘어난 포장지",
-            colorHintName = "초록"
+            colorHintName = "파란"
         });
 
         allItems.Add(new ShopItem
@@ -84,27 +84,7 @@ public class ShopManager : Singleton<ShopManager>
             price = 6000,
             category = ShopCategory.Wrapper,
             description = "라인/매스/품/필러를 모두 요구하는 포장지",
-            colorHintName = "주황"
-        });
-
-        allItems.Add(new ShopItem
-        {
-            itemId = 6,
-            itemName = "포장지",
-            price = 8500,
-            category = ShopCategory.Wrapper,
-            description = "요구 개수가 더 늘어난 고난도 포장지",
-            colorHintName = "청록"
-        });
-
-        allItems.Add(new ShopItem
-        {
-            itemId = 7,
-            itemName = "포장지",
-            price = 12000,
-            category = ShopCategory.Wrapper,
-            description = "가장 많은 꽃을 요구하는 최종 단계 포장지",
-            colorHintName = "금빛"
+            colorHintName = "검은"
         });
 
         // 가구(Furniture)는 FurnitureData(DataRegistry)에서 읽는다 — 카탈로그가 직접 보여 준다

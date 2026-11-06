@@ -32,6 +32,6 @@ public class ScoreRuleSettings : ScriptableObject
     public int collapsePenalty = 15;
 
     [Header("예약 꽃다발")]
-    [Tooltip("예약이 요구한 꾸미기 용품을 꽃다발에 놓지 않았을 때 감산 점수(기획서: -30)")]
+    [Tooltip("예약이 요구한 꾸미기 용품을 꽃다발에 놓지 않았을 때 감산 점수(기획서: -30). 일반 주문에서 손님이 말한 용품을 안 쓴 것은 이것이 아니라 주문 미이행(요구 미충족 감산)이다.")]
     public int supplyMissingPenalty = 30;
 }

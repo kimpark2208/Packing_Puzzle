@@ -7,5 +7,7 @@ public enum WrapperColor
     Blue,
     Purple,
     Pink,
-    White
+    White,
+    Orange,
+    Black
 }

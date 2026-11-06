@@ -13,10 +13,13 @@ MonoBehaviour:
   m_Name: Wrapper_5
   m_EditorClassIdentifier: Assembly-CSharp::WrapperData
   wrapperId: 5
-  wrapperColor: 3
-  color: {r: 0.25, g: 0.5, b: 0.95, a: 1}
-  ringCount: 3
-  previewSprite: {fileID: 21300000, guid: d9ae3d7f39475234a92cb2ffa63ea7a1, type: 3}
-  maxFlowerTypes: 8
+  wrapperColor: 8
+  color: {r: 0.18, g: 0.18, b: 0.2, a: 1}
+  ringCount: 4
+  previewSprite: {fileID: 0}
+  maxFlowerTypes: 10
   flowersPerDraw: 3
-  presets: []
+  presets:
+  - {fileID: 11400000, guid: 1c8ebd93303811f49a7c8c8074346b77, type: 2}
+  - {fileID: 11400000, guid: 3ab48f14b7f0e4b4baadf91c71b8da15, type: 2}
+  - {fileID: 11400000, guid: 0d5205bf56e0b62468d40192ae7dfe76, type: 2}

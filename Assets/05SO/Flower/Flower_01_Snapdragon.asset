@@ -16,7 +16,9 @@ MonoBehaviour:
   flowerName: "\uAE08\uC5B4\uCD08"
   color: 0
   flowerRole: 0
-  acquireDay: 0
+  acquireDay: 6
+  shopPrice: 200
+  shopBundle: 15
   specialOrder: "\uC694\uC998 \uAE08\uC804\uC6B4\uC774 \uBD80\uC871\uD55C \uAC83
     \uAC19\uC544\uC694."
   specialReask1: "\uAE08 \uC790\uAC00 \uB4E4\uC5B4\uAC04 \uAF43\uC774\uC694. \uC5C6\uB098\uC694?"
@@ -29,35 +31,3 @@ MonoBehaviour:
   - {fileID: -3480653308909891845, guid: 29875a58e269b374195376c434488224, type: 3}
   - {fileID: 21300000, guid: c750f916bf3b2e14bb054adabd242bab, type: 3}
   - {fileID: 0}
-  stemLeafPartSprite: {fileID: 21300000, guid: 0aa1b6f90d35cb1479747461df3eee9a, type: 3}
-  centerPartSprite: {fileID: 21300000, guid: 1a8fd9de75cde0e4bab2c5bc64ac4a45, type: 3}
-  petalPartSprites:
-  - {fileID: 21300000, guid: 947d0553ba473aa44a238df56326f32e, type: 3}
-  - {fileID: 21300000, guid: e49ddfd869341d7469f7130b71ff8919, type: 3}
-  - {fileID: 21300000, guid: c7344e4a45dc69b4089dfa79113f595d, type: 3}
-  - {fileID: 21300000, guid: 37839b555d6beeb43ab9fb6aaf713302, type: 3}
-  - {fileID: 21300000, guid: 4d040b41f65d4164e9bf6bca31cc3fb9, type: 3}
-  - {fileID: 21300000, guid: dd893176cafc3f14e828a1ac944c6589, type: 3}
-  partLayout: 1
-  lossPetals:
-  - petalIndex: 5
-    sprite: {fileID: 21300000, guid: 0ad613d0efca5014e9b6662aeddf2f50, type: 3}
-  - petalIndex: 2
-    sprite: {fileID: 21300000, guid: d84c5790dfbed854d95b4740e3047a31, type: 3}
-  - petalIndex: 0
-    sprite: {fileID: 21300000, guid: 45861593426458e46af07b78d3cc32e2, type: 3}
-  petalGrid: '..###...
-
-    .#####..
-
-    ..######
-
-    ######..
-
-    .#######
-
-    #######.
-
-    ..######
-
-    ...##...'

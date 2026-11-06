@@ -60,7 +60,13 @@ public class DecorationPlacer : MonoBehaviour
         return false;
     }
 
-    /// <summary>카드를 눌렀다: 용품을 기본 자리에 놓는다. 리본/풀은 같은 것이 놓여 있으면 빼고, 아니면 그 자리의 것을 바꿔 놓는다.</summary>
+    /// <summary>이 용품을 꽃다발에 썼는가: 꽃다발 모양(포장지 항목)은 그 포장지 그림을 골랐는지, 나머지는 꽃다발 위에 놓았는지(Contains). 주문이나 예약이 요구한 용품을 썼는지 볼 때 쓴다.</summary>
+    public bool IsUsed(DecorationData data)
+    {
+        return data.category == DecorationCategory.Wrapper ? IsShapeSelected(data) : Contains(data);
+    }
+
+    /// <summary>카드를 눌렀다: 용품을 기본 자리에 놓는다.</summary> 리본/풀은 같은 것이 놓여 있으면 빼고, 아니면 그 자리의 것을 바꿔 놓는다.</summary>
     public void Place(DecorationData data)
     {
         Vector2 maxSize = maxSizeByCategory[(int)data.category];

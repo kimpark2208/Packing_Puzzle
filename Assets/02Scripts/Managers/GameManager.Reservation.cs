@@ -4,7 +4,7 @@ using UnityEngine;
 /// <summary>
 /// GameManager의 예약 꽃다발 제작 부분. 예약일에 예약자가 준비됐는지 묻고 "네"를 받으면 하루 종일 예약 꽃다발만 만든다(손님은 더 오지 않는다).
 /// 꽃다발 하나 = 포장지 선택 → 꽃 선택 → 퍼즐 → 결과 화면이고, 결과 화면이 끝나면 다시 포장지 선택으로 돌아온다(메인 화면의 옆 페이지).
-/// 모두 만들거나 하루 시간이 끝나면 메인 화면에서 예약자가 평균 점수 등급에 맞는 말을 하고(Reacting), 보상을 받은 뒤 남은 시간이 빠르게 흘러 낮 종료로 간다.
+/// 모두 만들거나 하루 시간이 끝나면 메인 화면에서 예약자가 평균 점수 등급에 맞는 말을 하고(Reacting), 보상을 받은 뒤 남은 시간이 빠르게 흘러 하루 결산으로 간다.
 /// </summary>
 public partial class GameManager
 {
@@ -25,7 +25,6 @@ public partial class GameManager
 
     private bool bouquetInProgress;   // 꽃다발 하나의 퍼즐을 하는 중
     private bool craftTimeUpPending;  // 퍼즐을 하는 중에 하루 시간이 끝나, 그 꽃다발을 마치면 반응으로 가야 한다
-    private bool skipEndingCustomer;  // 예약 반응 뒤의 낮 종료는 마무리 손님이 없다
 
     /// <summary>예약자가 "준비됐다"는 답을 받았다: 오늘은 예약 꽃다발만 만든다. 포장지 선택 화면부터 시작한다.</summary>
     public void BeginReservationCraft(ReservationRecord record)
@@ -44,7 +43,6 @@ public partial class GameManager
     {
         orderInProgress = false;
         dayEndPending = false;
-        MainState = MainState.DayCustomer;
         pendingCustomerLine = null;
         pendingRejectResponseLine = DefaultRejectResponseLine;
         PreviousNpc = null;
@@ -91,7 +89,6 @@ public partial class GameManager
         craftTimeUpPending = false;
         orderInProgress = false;
         dayEndPending = false;
-        MainState = MainState.DayCustomer;
         SceneTransition.Go(SceneDayMain);
     }
 
@@ -103,20 +100,11 @@ public partial class GameManager
         return payout;
     }
 
-    /// <summary>예약 반응이 끝나고 남은 시간이 다 흘렀다: 예약을 마무리하고 낮 종료(부적 화면)로 간다.</summary>
+    /// <summary>예약 반응이 끝나고 남은 시간이 다 흘렀다: 예약을 마무리하고 하루 결산으로 간다.</summary>
     public void EndReservationDay()
     {
         Craft = null;
         Phase = ReservationPhase.None;
-        skipEndingCustomer = true;
         BeginDayEnding();
-    }
-
-    /// <summary>예약일이 끝나고 열린 낮 종료면 한 번 true(마무리 손님 없이 바로 부적 화면). 꺼내 쓰면 지운다.</summary>
-    public bool ConsumeSkipEndingCustomer()
-    {
-        bool skip = skipEndingCustomer;
-        skipEndingCustomer = false;
-        return skip;
     }
 }
