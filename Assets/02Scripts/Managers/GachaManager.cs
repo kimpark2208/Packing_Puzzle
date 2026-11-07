@@ -7,7 +7,7 @@ using Random = UnityEngine.Random;
 
 /// <summary>
 /// 낮 퍼즐의 "꽃 가챠". FlowerBucket 안에 미리 배치해 둔 자리(자식 FlowerTemplate)만큼 꽃을 뽑아 보여준다.
-/// - 풀(FlowerPool): 플레이어가 꽃 선택 화면에서 고른 꽃 종류들. 뽑는 규칙(프리셋의 역할 비율, 재고 한도)은 FlowerPool이 정한다.
+/// - 풀(FlowerPool): 플레이어가 꽃 선정 화면에서 포장지 칸마다 채운 꽃들(송이 수까지). 뽑는 규칙(고른 송이 수까지만)은 FlowerPool이 정한다.
 /// - 꽃 하나를 놓으면 버켓의 나머지는 사라지고 풀에서 새로 뽑는다.
 /// - 뽑힌 꽃은 wiltChance 확률로 시든 꽃(회색)이 되어 놓을 수 없다. 시든 꽃은 리롤하거나 다른 꽃을 놓아 새로 뽑으면 사라진다.
 /// - 보관 칸: 바구니의 꽃 하나를 보관 칸에 맡기면(보드에 놓은 것과 같은 한 차례) 바구니는 새로 뽑힌다. 맡긴 꽃은 나중에 보드로 끌어와 놓을 수 있고,
@@ -34,6 +34,9 @@ public class GachaManager : MonoBehaviour
 
     public int RerollsLeft => Mathf.Max(0, maxRerolls - rerollCount);
 
+    /// <summary>고른 꽃을 모두 놓아서 더 놓을 꽃이 없는가(바구니도 보관 칸도 비었다). 칸을 다 채우지 않고 꽃 선정을 마쳤을 때 퍼즐이 끝나는 조건이다.</summary>
+    public bool SupplyExhausted => pool != null && !pool.IsEmpty && !pool.HasRemaining && shown.All(b => b == null) && (storageSlot == null || storageSlot.IsEmpty);
+
     /// <summary>디버그용: 이번 퍼즐의 리롤 가능 횟수를 늘린다.</summary>
     public void AddRerolls(int amount)
     {
@@ -43,16 +46,13 @@ public class GachaManager : MonoBehaviour
 
     private void Awake()
     {
-        pool = NewPool(initialPool);
+        pool = NewPool(initialPool, exact: false);
     }
 
-    /// <summary>역할 비율은 오늘 확정된 프리셋을, 재고는 보유 수량을 따른다(씬 단독 실행 등으로 없으면 제한 없이).</summary>
-    private static FlowerPool NewPool(IEnumerable<FlowerData> flowers)
+    /// <summary>꽃 선정 화면에서 고른 꽃 목록(송이 수만큼 반복)이 그대로 꽃 공급이다. 씬 단독 실행의 시험용 풀(initialPool)은 수량 제한 없이 쓴다.</summary>
+    private static FlowerPool NewPool(IEnumerable<FlowerData> flowers, bool exact = true)
     {
-        var order = GameManager.Instance != null ? GameManager.Instance.CurrentDayOrder : null;
-        System.Func<FlowerData, int> stockOf = GameManager.Instance != null ? f => GameManager.Instance.CraftFlowerStock(f.flowerID) // 예약 꽃다발의 필수 꽃은 보관해 둔 것만 나온다
-            : CurrencyManager.Instance != null ? f => CurrencyManager.Instance.GetFlowerStock(f.flowerID) : null;
-        return new FlowerPool(flowers, order != null ? order.preset : null, stockOf);
+        return new FlowerPool(flowers, exact);
     }
 
     private void Start()

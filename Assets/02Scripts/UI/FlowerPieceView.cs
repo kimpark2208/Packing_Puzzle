@@ -49,13 +49,17 @@ public class FlowerPieceView : MonoBehaviour
     /// </summary>
     public static void AttachClick(RectTransform slot, UnityAction onClick)
     {
-        foreach (Button inner in slot.GetComponentsInChildren<Button>(true)) inner.enabled = false;
+        foreach (Button inner in slot.GetComponentsInChildren<Button>(true))
+        {
+            if (inner.gameObject != slot.gameObject) inner.enabled = false; // 슬롯 자신의 클릭 버튼은 끄지 않는다(슬롯을 다른 꽃으로 다시 연결할 때 이미 붙어 있다)
+        }
         Button click = slot.GetComponent<Button>();
         if (click == null)
         {
             click = slot.gameObject.AddComponent<Button>();
             click.transition = Selectable.Transition.None;
         }
+        click.enabled = true;
         click.onClick.AddListener(onClick);
     }
 

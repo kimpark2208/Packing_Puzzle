@@ -20,7 +20,7 @@ public partial class GameManager : Singleton<GameManager>
     [SerializeField] private OrderTemplateData orderTemplates;
 
     public DayPuzzleGenerator.DayOrder CurrentDayOrder { get; private set; }
-    public List<FlowerData> ChosenGachaPool { get; private set; } = new();
+    public List<FlowerData> ChosenGachaPool { get; private set; } = new(); // 꽃 선정에서 칸마다 채운 꽃(송이 수만큼 같은 꽃이 반복된다)
 
     /// <summary>지금 주문을 한 낮 손님의 모습. 퍼즐을 마치고 메인 화면이 다시 열려도 반응 대사를 같은 손님이 하도록 기억해 둔다(메인 화면은 열릴 때마다 새로 만들어진다).</summary>
     public CharacterAppearance? CustomerLook { get; set; }

@@ -126,10 +126,7 @@ public class DayPuzzleUI : MonoBehaviour
 
         if (board.IsComplete)
         {
-            roundEnded = true;
-            GameClock.Instance?.StopMood(); // 완성한 순간 손님 기분 시간은 멈춘다(정산은 작업 완료를 누를 때)
-            board.RefreshGlow(showDim: false); // 완성한 꽃다발은 흐림 꽃도 선명하게 보여 준다(빛남 후광과 특수 칸은 그대로)
-            SetDecorating(true);
+            BeginDecorating();
             return;
         }
 
@@ -141,6 +138,24 @@ public class DayPuzzleUI : MonoBehaviour
             ShowCollapsePopup();
             return;
         }
+
+        StartCoroutine(FinishIfSupplyRunsOut());
+    }
+
+    /// <summary>꽃 선정에서 칸을 다 채우지 않았으면 고른 꽃을 다 놓은 순간 퍼즐이 끝난다(더 놓을 꽃이 없다). 꽃을 놓는 처리가 끝난 다음 프레임에 확인한다.</summary>
+    private System.Collections.IEnumerator FinishIfSupplyRunsOut()
+    {
+        yield return null;
+        if (!roundEnded && gacha != null && gacha.SupplyExhausted) BeginDecorating();
+    }
+
+    /// <summary>꽃을 다 놓았다(보드를 완성했거나 고른 꽃을 모두 놓았다): 꾸미기 단계로 넘어간다. 정산은 작업 완료를 누를 때 한다.</summary>
+    private void BeginDecorating()
+    {
+        roundEnded = true;
+        GameClock.Instance?.StopMood(); // 끝낸 순간 손님 기분 시간은 멈춘다
+        board.RefreshGlow(showDim: false); // 완성한 꽃다발은 흐림 꽃도 선명하게 보여 준다(빛남 후광과 특수 칸은 그대로)
+        SetDecorating(true);
     }
 
     /// <summary>디버그용(CurrencyManager의 디버그 버튼): 완성 여부와 상관없이 지금까지 놓인 꽃으로 강제 제출한다.</summary>

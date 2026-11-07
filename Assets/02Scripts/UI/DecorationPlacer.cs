@@ -36,8 +36,16 @@ public class DecorationPlacer : MonoBehaviour
     {
         layer = (RectTransform)transform;
         canvas = GetComponentInParent<Canvas>();
+        // 꽃다발 모양을 바꿀 그림: 보이는 포장지 그림. 영역 자신의 Image가 꺼져 있으면(퍼즐 씬은 보이는 포장지를 자식 WrapperImage로 둔다) 그 자식을 쓴다
         bouquetImage = bouquetArea.GetComponent<Image>();
+        if (bouquetImage == null || !bouquetImage.enabled)
+        {
+            Transform art = bouquetArea.Find(VisibleWrapperName);
+            if (art != null && art.TryGetComponent(out Image visible)) bouquetImage = visible;
+        }
     }
+
+    private const string VisibleWrapperName = "WrapperImage";
 
     /// <summary>한 종류에 하나만 놓이는가(리본/풀). 카드/장식은 여러 개 놓을 수 있다.</summary>
     private static bool IsSingle(DecorationCategory category) => category == DecorationCategory.Ribbon || category == DecorationCategory.Leaf;
