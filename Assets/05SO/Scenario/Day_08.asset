@@ -15,15 +15,25 @@ MonoBehaviour:
   day: 8
   dayVisits:
   - orderIndex: 1
+    npc: {fileID: 11400000, guid: 0ff7cfa45c88d2a40a2ac9b447d2e1b7, type: 2}
+    dialogueId: supplies_d8_unlock
+    introDialogueId: 
+    outroDialogueId: 
+    reactionPrefix: 
+  - orderIndex: 2
     npc: {fileID: 11400000, guid: 09a6c8a80a44ee84780de94d006b69cf, type: 2}
     dialogueId: jaemin_d8_order
-    bondDialogueId: jaemin_bond
+    introDialogueId: 
+    outroDialogueId: jaemin_d8_outro
     reactionPrefix: jaemin_react
-  - orderIndex: 2
+  - orderIndex: 3
     npc: {fileID: 11400000, guid: d734a82091fa18f4d90377c73c236414, type: 2}
     dialogueId: hero_d8_intro
-    bondDialogueId: hero_bond
+    introDialogueId: 
+    outroDialogueId: hero_d8_outro
     reactionPrefix: hero_react
+  nightNpc: {fileID: 0}
+  nightDialogueId: 
   reservationCall: {fileID: 0}
   reservationCallAfterCustomers: 1
   unlocksPhone: 0

@@ -46,7 +46,7 @@ public partial class GameManager
         pendingCustomerLine = null;
         pendingRejectResponseLine = DefaultRejectResponseLine;
         PreviousNpc = null;
-        PreviousBondDialogueId = null;
+        PreviousOutroDialogueId = null;
 
         CurrentDayOrder = DayPuzzleGenerator.GenerateReservationOrder(CurrencyManager.Instance.CurrentDay, Craft);
         CurrencyManager.Instance.SetCurrentRequirement(CurrentDayOrder.requirement);

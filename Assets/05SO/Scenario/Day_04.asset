@@ -17,8 +17,11 @@ MonoBehaviour:
   - orderIndex: 2
     npc: {fileID: 11400000, guid: 87d25e5237cd6a04b926170044059797, type: 2}
     dialogueId: santa_d4_intro
-    bondDialogueId: santa_bond
+    introDialogueId: 
+    outroDialogueId: santa_d4_outro
     reactionPrefix: santa_react
+  nightNpc: {fileID: 0}
+  nightDialogueId: 
   reservationCall: {fileID: 0}
   reservationCallAfterCustomers: 1
   unlocksPhone: 0

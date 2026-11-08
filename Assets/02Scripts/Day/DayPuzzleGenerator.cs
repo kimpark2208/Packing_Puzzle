@@ -61,7 +61,8 @@ public static class DayPuzzleGenerator
         else
         {
             hintWrapperId = CurrencyManager.Instance.GetRandomOwnedWrapperID(); // 프리셋 데이터가 없으면 예전처럼 제한 없이
-            hintColorName = ShopManager.Instance.GetColorHintName(hintWrapperId);
+            WrapperData fallback = DataRegistry.Instance.GetWrapper(hintWrapperId);
+            hintColorName = fallback != null ? fallback.ColorName : "특별한";
         }
 
         // 꾸미기 용품은 얻은 용품(기본 지급, 카탈로그 주문, 선물)만 주문에 나온다

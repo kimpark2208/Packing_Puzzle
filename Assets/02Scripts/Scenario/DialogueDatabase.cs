@@ -51,7 +51,9 @@ public readonly struct DialogueEffect
 /// <summary>말풍선 한 번에 나오는 대사. answers가 비어 있으면 말풍선의 아무 곳이나 눌러 넘기고, 있으면 그 버튼 문구(1~2개)로 답한다.</summary>
 public class DialogueLine
 {
+    public string speaker; // CSV의 화자 열(NpcData.displayName과 같으면 그 NPC의 그림을 보인다). 비어 있을 수 있다
     public string text;
+    public int condition; // 0이면 언제나 나오고, 1·2면 직전 선택에서 그 번호의 응답을 눌렀을 때만 나온다(CSV의 조건 열: 응답1/응답2)
     public string[] answers = Array.Empty<string>();
     public DialogueEffect[] effects = Array.Empty<DialogueEffect>();
 }
@@ -78,6 +80,16 @@ public class DialogueDatabase
     /// <summary>대화ID의 대화. 없으면 null.</summary>
     public Dialogue Get(string id) => !string.IsNullOrEmpty(id) && byId.TryGetValue(id, out Dialogue dialogue) ? dialogue : null;
 
+    /// <summary>다른 CSV(반응 대사 등)에서 읽은 대화를 이 데이터베이스에 더한다. 대화ID가 겹치면 errors에 적고 앞의 것을 둔다.</summary>
+    public void AddFrom(DialogueDatabase other, List<string> errors = null)
+    {
+        foreach (Dialogue dialogue in other.All)
+        {
+            if (byId.ContainsKey(dialogue.id)) errors?.Add($"대화ID '{dialogue.id}'가 두 CSV에 모두 있습니다(앞의 것을 씁니다).");
+            else byId[dialogue.id] = dialogue;
+        }
+    }
+
     /// <summary>CSV 글을 읽는다. 문제가 있는 줄은 errors에 적고 건너뛴다.</summary>
     public static DialogueDatabase Parse(string csv, List<string> errors = null)
     {
@@ -88,7 +100,7 @@ public class DialogueDatabase
         string[] header = rows[0].Select(h => h.Trim()).ToArray();
         int Column(string name) => Array.IndexOf(header, name);
         int idCol = Column("대화ID"), orderCol = Column("순번"), textCol = Column("대사");
-        int answer1Col = Column("응답1"), answer2Col = Column("응답2"), effectCol = Column("효과");
+        int answer1Col = Column("응답1"), answer2Col = Column("응답2"), effectCol = Column("효과"), conditionCol = Column("조건"), speakerCol = Column("화자");
         if (idCol < 0 || orderCol < 0 || textCol < 0)
         {
             errors?.Add("머리줄에 대화ID, 순번, 대사 열이 없습니다.");
@@ -110,9 +122,14 @@ public class DialogueDatabase
                 continue;
             }
 
+            string condition = Cell(row, conditionCol);
+            if (condition.Length > 0 && condition != "응답1" && condition != "응답2") errors?.Add($"{r + 1}행({id}): 조건은 비우거나 응답1/응답2여야 합니다('{condition}').");
+
             var line = new DialogueLine
             {
+                speaker = Cell(row, speakerCol),
                 text = Cell(row, textCol),
+                condition = condition == "응답1" ? 1 : condition == "응답2" ? 2 : 0,
                 answers = new[] { Cell(row, answer1Col), Cell(row, answer2Col) }.Where(a => a.Length > 0).ToArray(),
                 effects = Cell(row, effectCol).Split(new[] { ';' }, StringSplitOptions.RemoveEmptyEntries).Select(DialogueEffect.Parse).ToArray(),
             };

@@ -5,7 +5,7 @@ using UnityEngine;
 [CreateAssetMenu(fileName = "WrapperData", menuName = "Puzzle/WrapperData", order = 2)]
 public class WrapperData : ScriptableObject
 {
-    [Header("상점/보유 목록의 포장지 번호 (ShopManager의 포장지 itemId와 같음)")]
+    [Header("보유 목록의 포장지 번호")]
     public int wrapperId;
 
     [Header("포장지 색: 색 종류(손님이 \"○○색 포장지\"라고 말할 때의 이름과 주문 은유의 기준) + 화면에 보이는 색(RGB)")]

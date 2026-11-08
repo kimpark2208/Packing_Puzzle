@@ -343,6 +343,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::GameFlowController
   dontDestroyOnLoad: 1
+  startingFlowerStock: 50
   orderTemplates: {fileID: 11400000, guid: 2ae78ed91dcbc6b40a3ef90af7a34901, type: 2}
 --- !u!114 &438470795
 MonoBehaviour:
@@ -1560,6 +1561,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ScenarioManager
   dontDestroyOnLoad: 1
   dialogueCsv: {fileID: 4900000, guid: 7f3f082aa12937a44b8a61b4f6382a6f, type: 3}
+  reactionCsv: {fileID: 4900000, guid: 5365f336a064c624ea30fbdf6a5a9319, type: 3}
   days:
   - {fileID: 11400000, guid: 8f695a3d704675e4681957a7d9751cde, type: 2}
   - {fileID: 11400000, guid: dbeaccfe3013e4444823e9a4a849ffcc, type: 2}
@@ -1571,6 +1573,7 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 616696018e8b894459b71e50ff6a8c4c, type: 2}
   - {fileID: 11400000, guid: 4faa5574be6c5b54a815f0ab1d82f4de, type: 2}
   - {fileID: 11400000, guid: d257dcf839f025d4eb0dd177d1ced559, type: 2}
+  scenarioEnabled: 1
 --- !u!4 &1097356995
 Transform:
   m_ObjectHideFlags: 0
@@ -2015,6 +2018,7 @@ MonoBehaviour:
   dontDestroyOnLoad: 1
   dayDurationSeconds: 300
   moodDurationSeconds: 120
+  sunsetStartElapsed: 0.5
   nightStartElapsed: 0.75
 --- !u!4 &1513376232
 Transform:

@@ -46,6 +46,7 @@ public class MainUI : MonoBehaviour
     private GameObject rejectButton;
     private GameObject acceptButton;
     private MainLook mainLook;       // 화면 모습(낮/노을/밤)과 섞기
+    private NpcData shownNpc;        // 지금 정해진 대화에서 캐릭터 자리에 보이는 NPC(말하는 캐릭터가 바뀌면 그림을 바꾼다: SwapSpeaker)
     private bool npcPaused;          // NPC와 대화하느라 시간을 멈춰 두었는가(PauseForNpc)
     private bool changingCustomer;   // 손님이 바뀌는 중(말풍선 -> 나가는 모션 -> 들어오는 모션 -> 말풍선). 그동안은 응답 버튼을 무시한다
     private bool nightBgmPlaying;    // 밤 배경음악으로 바꿨는가
@@ -61,7 +62,7 @@ public class MainUI : MonoBehaviour
         PauseForNpc(false);
     }
 
-    /// <summary>NPC와 대화하는 동안(들어온 뒤 대사, 주문을 수락하기 전, 꽃다발 반응 대사와 친밀 대사) 하루 시간과 손님 기분 시간이 가지 않게 한다. 켜진 채 다시 켜도 한 번만 센다.</summary>
+    /// <summary>NPC와 대화하는 동안(들어온 뒤 대사, 주문을 수락하기 전, 꽃다발 반응 대사와 아웃트로 대사) 하루 시간과 손님 기분 시간이 가지 않게 한다. 켜진 채 다시 켜도 한 번만 센다.</summary>
     private void PauseForNpc(bool on)
     {
         if (on == npcPaused) return;
@@ -103,11 +104,18 @@ public class MainUI : MonoBehaviour
         else BeginDayCustomer();
     }
 
-    /// <summary>밤 상점: 손님 대신 상점(ShopUI)이 열린다. 하루 시간은 이미 끝나 화면은 밤 모습이고, 상점을 마치면 다음 날이 시작된다.</summary>
+    /// <summary>밤 상점: 손님 대신 상점(ShopUI)이 열린다. 하루 시간은 이미 끝나 화면은 밤 모습이고, 상점을 마치면 다음 날이 시작된다.
+    /// 시나리오가 그날 밤 대화(꽃다발 용품 상인의 말 등)를 정해 두었으면 그 대화가 끝난 뒤에 상점이 열린다.</summary>
     private void BeginShop()
     {
         SetBubble(false);
         if (character != null) character.gameObject.SetActive(false);
+        StartCoroutine(NightDialogueThenShop());
+    }
+
+    private System.Collections.IEnumerator NightDialogueThenShop()
+    {
+        if (Game.ConsumeNightDialogue(out NpcData npc, out Dialogue night)) yield return TalkScripted(npc, night, previousLeaves: false, leaveAfter: true);
 
         ShopUI shop = FindShop();
         if (shop != null) shop.Open(Game.Shop, Game.CloseShop);
@@ -323,12 +331,17 @@ public class MainUI : MonoBehaviour
             }
         }
         if (!showingReaction && TryBeginScriptedVisit()) return;
+        if (!showingReaction && Game != null && Game.TimeIsUp) // 하루 시간이 끝났는데 아직 안 일어난 예약 전화가 남았다: 손님 없이 전화부터 받는다
+        {
+            StartCoroutine(TimeUpCallRoutine());
+            return;
+        }
 
         if (showingReaction)
         {
             ShowPreviousNpcOrCustomer(); // 반응 대사는 방금 주문을 한 그 손님이 한다
             ShowReactionFace();
-            if (Game != null && Game.PreviousNpc != null) PauseForNpc(true); // NPC의 반응 대사(와 이어지는 친밀 대사)를 듣는 동안은 시간이 가지 않는다
+            if (Game != null && Game.PreviousNpc != null) PauseForNpc(true); // NPC의 반응 대사(와 이어지는 아웃트로 대사)를 듣는 동안은 시간이 가지 않는다
             SayAfterReveal(() => speech.Show(angryLine));
             forceAcceptLine = GameManager.Instance != null
                 ? GameManager.Instance.ConsumePendingRejectResponseLine()
@@ -359,6 +372,8 @@ public class MainUI : MonoBehaviour
             Debug.LogWarning($"[MainUI] 대화 '{visit.Value.dialogueId}'가 CSV에 없어 무작위 손님으로 진행합니다.");
             return false;
         }
+        Dialogue intro = ScenarioManager.Instance.Dialogue.Get(visit.Value.introDialogueId);
+        if (intro != null) dialogue = new Dialogue { id = dialogue.id, lines = intro.lines.Concat(dialogue.lines).ToList() }; // 앞 대화(마주침 등)를 먼저 재생한다. 주문 줄은 합친 대화의 마지막 주문 줄이다
         StartCoroutine(ScriptedDayVisitRoutine(visit.Value.npc, dialogue, previousLeaves));
         return true;
     }
@@ -391,7 +406,9 @@ public class MainUI : MonoBehaviour
     private System.Collections.IEnumerator TalkScripted(NpcData npc, Dialogue dialogue, bool previousLeaves, bool leaveAfter)
     {
         changingCustomer = true;
+        PauseForNpc(true); // NPC가 들어오는 모션부터 대화가 끝날 때까지 시간이 가지 않는다
         SetBubble(false);
+        if (!previousLeaves && character != null) character.gameObject.SetActive(false); // 씬에 켜져 있던 무작위 손님이 NPC보다 먼저 잠깐 보이지 않게, NPC가 들어올 때까지 숨긴다
         if (SceneTransition.Busy)
         {
             if (character != null) character.gameObject.SetActive(false); // 페이드가 걷히는 동안은 숨겼다가, 다 걷히면 들어오는 모션과 함께 나타낸다
@@ -418,7 +435,10 @@ public class MainUI : MonoBehaviour
         SetBubble(true);
         changingCustomer = false;
         PauseForNpc(true);
+        shownNpc = npc != null && npc.portrait != null ? npc : null;
+        dialoguePlayer.SpeakerChanged = SwapSpeaker;
         yield return dialoguePlayer.Play(dialogue);
+        dialoguePlayer.SpeakerChanged = null;
         if (!leaveAfter) yield break; // 주문을 말하러 이어지는 방문은 주문을 수락할 때까지 시간이 멈춘 채로 있다(OnAcceptClicked)
 
         PauseForNpc(false);
@@ -427,6 +447,26 @@ public class MainUI : MonoBehaviour
         SetBubble(false);
         if (character != null) PanelMotion.Close(character.gameObject);
         yield return GameTime.Wait(seconds + customerSwapDelay);
+    }
+
+    /// <summary>두 캐릭터가 대화하는 장면: 말하는 캐릭터가 바뀌면 지금 캐릭터가 나가고 새 캐릭터가 들어오는 모션과 함께 그림을 바꾼다(이미 보이는 캐릭터면 그대로).</summary>
+    private System.Collections.IEnumerator SwapSpeaker(string speakerName)
+    {
+        NpcData speaker = ScenarioManager.Instance != null ? ScenarioManager.Instance.NpcByName(speakerName) : null;
+        if (speaker == null || speaker.portrait == null || speaker == shownNpc || character == null) yield break;
+
+        PanelMotion motion = character.GetComponent<PanelMotion>();
+        float seconds = motion != null ? motion.Seconds : 0f;
+        SetBubble(false);
+        PanelMotion.Close(character.gameObject);
+        yield return GameTime.Wait(seconds + customerSwapDelay);
+
+        shownNpc = speaker;
+        ShowNpc(speaker);
+        character.gameObject.SetActive(true);
+        motion?.PlayShow();
+        yield return GameTime.Wait(seconds + 0.1f);
+        SetBubble(true);
     }
 
     /// <summary>
@@ -550,7 +590,7 @@ public class MainUI : MonoBehaviour
 
     private void OnRejectClicked()
     {
-        if (dialoguePlayer != null && dialoguePlayer.Playing) { dialoguePlayer.Answer(); return; }
+        if (dialoguePlayer != null && dialoguePlayer.Playing) { dialoguePlayer.Answer(rejectButton); return; }
         if (changingCustomer) return;
         if (showingReaction) speech.Show(forceAcceptLine);
         else speech.ShowReask(order);
@@ -558,7 +598,7 @@ public class MainUI : MonoBehaviour
 
     private void OnAcceptClicked()
     {
-        if (dialoguePlayer != null && dialoguePlayer.Playing) { dialoguePlayer.Answer(); return; }
+        if (dialoguePlayer != null && dialoguePlayer.Playing) { dialoguePlayer.Answer(acceptButton); return; }
         if (changingCustomer) return;
         if (showingReaction)
         {
@@ -706,14 +746,15 @@ public class MainUI : MonoBehaviour
     /// </summary>
     private System.Collections.IEnumerator NextVisitRoutine()
     {
-        string bondId = Game != null ? Game.ConsumeBondDialogueId() : null; // 정해진 손님의 친밀 대사는 꽃다발 반응 대사 바로 뒤에 한다
-        Dialogue bond = !string.IsNullOrEmpty(bondId) && ScenarioManager.Instance != null ? ScenarioManager.Instance.Dialogue.Get(bondId) : null;
-        if (bond != null)
+        string outroId = Game != null ? Game.ConsumeOutroDialogueId() : null; // 정해진 손님의 아웃트로 대사는 꽃다발 반응 대사 바로 뒤에 한다
+        Dialogue outroLine = !string.IsNullOrEmpty(outroId) && ScenarioManager.Instance != null ? ScenarioManager.Instance.Dialogue.Get(outroId) : null;
+        if (outroLine != null)
         {
             PauseForNpc(true);
-            yield return dialoguePlayer.Play(bond);
+            yield return dialoguePlayer.Play(outroLine);
         }
-        PauseForNpc(false); // 반응 대사와 친밀 대사가 끝났다
+        bool nextScripted = Game != null && Game.CurrentScriptedVisit != null;
+        if (!nextScripted) PauseForNpc(false); // 반응 대사와 아웃트로 대사가 끝났다. 다음이 정해진 NPC 방문이면 그 대화가 끝날 때까지 멈춘 채로 둔다(NPC가 오가는 동안에도 시간이 가지 않게)
 
         ReservationData reservation = ReservationCall.Instance != null && Game != null ? Game.TakeReservationCall() : null;
         bool called = reservation != null;
@@ -731,7 +772,35 @@ public class MainUI : MonoBehaviour
             yield return GameTime.Wait(customerSwapDelay);
         }
 
-        if (!TryBeginScriptedVisit(previousLeaves: !called)) StartCoroutine(NextCustomerRoutine(!called));
+        if (!TryBeginScriptedVisit(previousLeaves: !called))
+        {
+            PauseForNpc(false);
+            if (Game != null && Game.TimeIsUp) // 하루 시간이 끝났고 남은 이벤트도 다 했다: 새 손님 없이 하루를 마친다
+            {
+                Game.EndDayNow();
+                yield break;
+            }
+            StartCoroutine(NextCustomerRoutine(!called));
+        }
+    }
+
+    /// <summary>하루 시간이 끝난 뒤 남은 예약 전화를 받게 한다(손님은 오지 않는다). 전화가 끝나면 하루를 마친다.</summary>
+    private System.Collections.IEnumerator TimeUpCallRoutine()
+    {
+        changingCustomer = true;
+        SetBubble(false);
+        if (character != null) character.gameObject.SetActive(false);
+        while (SceneTransition.Busy) yield return null;
+
+        ReservationData reservation = ReservationCall.Instance != null ? Game.TakeReservationCall() : null;
+        if (reservation != null)
+        {
+            ReservationCall.Instance.Begin(reservation);
+            yield return null;
+            while (ReservationCall.Busy) yield return null;
+            yield return GameTime.Wait(customerSwapDelay);
+        }
+        Game.EndDayNow();
     }
 
     /// <summary>수락한 뒤 잠시 있다가 꽃 선택 페이지로 넘어간다(도착하면 돌아올 수 없다: OnSwipeArrived).</summary>

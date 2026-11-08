@@ -18,7 +18,7 @@ MonoBehaviour:
   flowerRole: 1
   acquireDay: 16
   shopPrice: 200
-  shopBundle: 15
+  shopBundle: 50
   specialOrder: 
   specialReask1: 
   specialReask2: 

@@ -1,9 +1,9 @@
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 
 /// <summary>
-/// 상점 데이터 관리 (싱글톤)
-/// 포장지, 가구, 장식, 예술품 등 모든 아이템 정의
+/// 카탈로그 탭 종류(ShopCategory)와 예술품 목록(싱글톤). 포장지·가구·꾸미기 용품은 각자의 데이터(DataRegistry)에서 읽는다.
 /// </summary>
 public class ShopManager : Singleton<ShopManager>
 {
@@ -22,7 +22,6 @@ public class ShopManager : Singleton<ShopManager>
         public int price;               // 가격
         public ShopCategory category;   // 카테고리
         public string description;      // 설명
-        public string colorHintName;    // 포장지만: 명확한 힌트용 색깔 이름 (예: "핑크")
     }
 
     // 모든 상점 아이템
@@ -36,57 +35,6 @@ public class ShopManager : Singleton<ShopManager>
     // TODO: 아이템 정의를 코드에서 빼서 ScriptableObject로 옮긴다(지금은 InitializeItems에 박혀 있다).
     private void InitializeItems()
     {
-        // ========== 포장지 (Wrapper): 5종(게임 개편 2 기획서). 사는 것이 아니라 GameManager.ApplyDailyProgression가 조건에 맞춰 해금한다. 여기서는 손님이 힌트로 말하는 색 이름만 쓴다 ==========
-        allItems.Add(new ShopItem
-        {
-            itemId = 1,
-            itemName = "포장지",
-            price = 0,
-            category = ShopCategory.Wrapper,
-            description = "기본 포장지",
-            colorHintName = "흰"
-        });
-
-        allItems.Add(new ShopItem
-        {
-            itemId = 2,
-            itemName = "포장지",
-            price = 1000,
-            category = ShopCategory.Wrapper,
-            description = "더 큰 포장지",
-            colorHintName = "분홍"
-        });
-
-        allItems.Add(new ShopItem
-        {
-            itemId = 3,
-            itemName = "포장지",
-            price = 2500,
-            category = ShopCategory.Wrapper,
-            description = "매우 큰 포장지",
-            colorHintName = "주황"
-        });
-
-        allItems.Add(new ShopItem
-        {
-            itemId = 4,
-            itemName = "포장지",
-            price = 4000,
-            category = ShopCategory.Wrapper,
-            description = "라인/매스/필러 요구 개수가 늘어난 포장지",
-            colorHintName = "파란"
-        });
-
-        allItems.Add(new ShopItem
-        {
-            itemId = 5,
-            itemName = "포장지",
-            price = 6000,
-            category = ShopCategory.Wrapper,
-            description = "라인/매스/품/필러를 모두 요구하는 포장지",
-            colorHintName = "검은"
-        });
-
         // 가구(Furniture)는 FurnitureData(DataRegistry)에서 읽는다 — 카탈로그가 직접 보여 준다
 
         // 꾸미기 용품(Deco)은 DecorationData(DataRegistry)에서 읽는다 — 카탈로그가 직접 보여 준다
@@ -125,34 +73,5 @@ public class ShopManager : Singleton<ShopManager>
     /// <summary>
     /// 특정 카테고리의 아이템 반환
     /// </summary>
-    public List<ShopItem> GetItemsByCategory(ShopCategory category)
-    {
-        var result = new List<ShopItem>();
-        foreach (var item in allItems)
-        {
-            if (item.category == category)
-                result.Add(item);
-        }
-        return result;
-    }
-
-    /// <summary>
-    /// 아이템 ID로 찾기
-    /// </summary>
-    public ShopItem? GetItemById(int itemId)
-    {
-        foreach (var item in allItems)
-        {
-            if (item.itemId == itemId)
-                return item;
-        }
-        return null;
-    }
-
-    /// <summary>손님이 "명확한" 힌트를 줄 때 사용하는 포장지 색깔 이름.</summary>
-    public string GetColorHintName(int wrapperId)
-    {
-        var item = GetItemById(wrapperId);
-        return item.HasValue && !string.IsNullOrEmpty(item.Value.colorHintName) ? item.Value.colorHintName : "특별한";
-    }
+    public List<ShopItem> GetItemsByCategory(ShopCategory category) => allItems.Where(i => i.category == category).ToList();
 }

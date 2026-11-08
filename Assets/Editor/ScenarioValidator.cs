@@ -10,6 +10,7 @@ using UnityEngine;
 public static class ScenarioValidator
 {
     private const string CsvPath = "Assets/05SO/Dialogue/Dialogue.csv";
+    private const string ReactionCsvPath = "Assets/05SO/Dialogue/Reaction.csv";
     private static readonly string[] CatalogTargets = { "가구", "용품" };
     private static readonly string[] UnlockTargets = { "전화기", "달력" };
     private static readonly string[] ReactionSuffixes = { "perfect", "success", "mistake", "fail" };
@@ -28,6 +29,9 @@ public static class ScenarioValidator
 
         var parseErrors = new List<string>();
         DialogueDatabase database = DialogueDatabase.Parse(csv.text, parseErrors);
+        var reactionCsv = AssetDatabase.LoadAssetAtPath<TextAsset>(ReactionCsvPath);
+        if (reactionCsv != null) database.AddFrom(DialogueDatabase.Parse(reactionCsv.text, parseErrors), parseErrors);
+        else problems.Add($"반응 대사 CSV가 없습니다: {ReactionCsvPath}");
         problems.AddRange(parseErrors);
 
         HashSet<string> flowerNames = AssetDatabase.FindAssets("t:FlowerData")
@@ -55,9 +59,12 @@ public static class ScenarioValidator
             foreach (DayVisit visit in scenario.dayVisits)
             {
                 CheckDialogueId(database, visit.dialogueId, where, problems, required: true);
-                CheckDialogueId(database, visit.bondDialogueId, where, problems);
+                CheckDialogueId(database, visit.outroDialogueId, where, problems);
+                CheckDialogueId(database, visit.introDialogueId, where, problems);
                 CheckReaction(database, visit.reactionPrefix, where, problems);
             }
+            CheckDialogueId(database, scenario.nightDialogueId, where, problems);
+            if (!string.IsNullOrEmpty(scenario.nightDialogueId) && scenario.nightNpc == null) problems.Add($"{where}: 밤 대화ID가 있는데 밤 NPC가 비어 있습니다.");
         }
 
         if (problems.Count == 0) Debug.Log($"[Scenario] 문제 없음 — 대화 {database.All.Count()}개, 줄 {database.All.Sum(d => d.lines.Count)}개");
@@ -75,7 +82,8 @@ public static class ScenarioValidator
         switch (effect.kind)
         {
             case DialogueEffect.Gift:
-                if (!wrapperIds.Contains(effect.WrapperNumber)) problems.Add($"{where}: 선물 대상 '{effect.target}'은 포장지N 형식이거나 없는 번호입니다.");
+                bool isDecoration = AssetDatabase.FindAssets("t:DecorationData").Any(g => AssetDatabase.LoadAssetAtPath<DecorationData>(AssetDatabase.GUIDToAssetPath(g)).displayName == effect.target);
+                if (!wrapperIds.Contains(effect.WrapperNumber) && !isDecoration) problems.Add($"{where}: 선물 대상 '{effect.target}'은 없는 포장지 번호이거나 꾸미기 용품 이름이 아닙니다.");
                 break;
             case DialogueEffect.Order:
                 if (effect.target.StartsWith("포장지")) { if (!wrapperIds.Contains(effect.WrapperNumber)) problems.Add($"{where}: 주문 포장지 '{effect.target}'이 없습니다."); }

@@ -28,6 +28,7 @@ public class DayPuzzleUI : MonoBehaviour
     private const string FinishLabel = "작업 완료";
 
     private const float CollapseAutoProceedDelay = 1.2f;
+    private const float UprightTimeout = 2f;
     private const string RequirementNotMetLine = "주문이랑 다른데요. 유명한 곳이라고 들었는데… 실망이네요.";
     private const string RequirementNotMetRejectResponse = "알긴 아시나보죠?";
     private const string GoodResultLine = "우와, 좋네요! 친구가 분명 좋아할 거예요.";
@@ -108,6 +109,7 @@ public class DayPuzzleUI : MonoBehaviour
 
     private void SetDecorating(bool on)
     {
+        if (on) ColorWheelHud.Hide(); // 꾸미기 창이 뜨면 컬러휠은 필요 없다
         if (flowerBucket != null) flowerBucket.SetActive(!on);
         foreach (GameObject target in decorateObjects) if (target != null) target.SetActive(on);
     }
@@ -155,6 +157,14 @@ public class DayPuzzleUI : MonoBehaviour
         roundEnded = true;
         GameClock.Instance?.StopMood(); // 끝낸 순간 손님 기분 시간은 멈춘다
         board.RefreshGlow(showDim: false); // 완성한 꽃다발은 흐림 꽃도 선명하게 보여 준다(빛남 후광과 특수 칸은 그대로)
+        StartCoroutine(DecorateAfterUpright());
+    }
+
+    /// <summary>기울어 있던 꽃다발이 원래대로 돌아온 다음에 꾸미기 창을 연다(너무 오래 걸려도 UprightTimeout초 뒤에는 연다).</summary>
+    private System.Collections.IEnumerator DecorateAfterUpright()
+    {
+        board.StraightenTilt();
+        for (float waited = 0f; !board.IsUpright && waited < UprightTimeout; waited += Time.deltaTime) yield return null;
         SetDecorating(true);
     }
 

@@ -29,6 +29,13 @@ public class ColorWheelHud : MonoBehaviour
         if (hud != null) hud.area.SetActive(true);
     }
 
+    /// <summary>컬러휠을 끈다(꾸미기 단계처럼 색 궁합 안내가 필요 없을 때). 컬러휠이 없는 씬이면 아무 일도 없다.</summary>
+    public static void Hide()
+    {
+        ColorWheelHud hud = Find();
+        if (hud != null) hud.area.SetActive(false);
+    }
+
     /// <summary>핀을 켠다(컬러휠도 같이 켜진다).</summary>
     public static void ActivatePin()
     {

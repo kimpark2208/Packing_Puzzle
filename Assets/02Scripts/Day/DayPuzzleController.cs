@@ -91,6 +91,12 @@ public class DayPuzzleController : MonoBehaviour
         wrapperImage.localRotation = Quaternion.Euler(0f, 0f, Mathf.Lerp(current, baseAngle + tiltTarget, (collapsing ? collapseLerpSpeed : tiltLerpSpeed) * Time.deltaTime));
     }
 
+    /// <summary>기울기를 풀어 원래 각도로 서서히 돌아가게 한다(꽃다발을 완성했을 때).</summary>
+    public void StraightenTilt() => tiltTarget = 0f;
+
+    /// <summary>포장지가 원래 각도로 거의 돌아왔는가.</summary>
+    public bool IsUpright => wrapperImage == null || Mathf.Abs(Mathf.DeltaAngle(wrapperImage.localEulerAngles.z, baseAngle)) < 0.3f;
+
     /// <summary>붕괴: 꽃이 더 많은 쪽(더 무거운 쪽)으로 collapseAngle만큼 빠르게 쓰러진다. 다음 BuildLevel에서 원래대로 돌아온다.</summary>
     public void PlayCollapse()
     {

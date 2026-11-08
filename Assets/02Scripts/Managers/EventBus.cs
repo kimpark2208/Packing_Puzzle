@@ -6,9 +6,6 @@ using System;
 /// </summary>
 public static class EventBus
 {
-    /// <summary>손님이 성불하는 연출 타이밍 (표시할 문구)</summary>
-    public static event Action<string> OnAscensionMoment;
-
     /// <summary>금액 변경 (변경된 금액)</summary>
     public static event Action<int> OnMoneyChanged;
 
@@ -18,7 +15,6 @@ public static class EventBus
     /// <summary>하루 시간이 모두 소진됨</summary>
     public static event Action OnDayTimeUp;
 
-    public static void RaiseAscensionMoment(string description) => OnAscensionMoment?.Invoke(description);
     public static void RaiseMoneyChanged(int newAmount) => OnMoneyChanged?.Invoke(newAmount);
     public static void RaiseDayAdvanced(int newDay) => OnDayAdvanced?.Invoke(newDay);
     public static void RaiseDayTimeUp() => OnDayTimeUp?.Invoke();

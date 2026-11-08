@@ -65,7 +65,7 @@ public class ShopUI : MonoBehaviour
 
         if (rerollButton != null)
         {
-            rerollButton.gameObject.SetActive(shop.RerollAvailable);
+            rerollButton.gameObject.SetActive(true);
             rerollButton.interactable = shop.RerollsLeft > 0;
         }
         if (rerollCountText != null) rerollCountText.text = shop.RerollsLeft.ToString();

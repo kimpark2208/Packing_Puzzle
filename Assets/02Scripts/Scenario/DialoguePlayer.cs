@@ -18,6 +18,9 @@ public class DialoguePlayer
 
     public bool Playing { get; private set; }
 
+    /// <summary>줄의 화자가 바뀌어 새 줄을 보이기 직전에 화자 이름(CSV 화자 열)과 함께 불린다. 화면 스크립트가 말하는 캐릭터 그림으로 바꾸는 데 쓰고, 돌려준 코루틴이 끝나면 대사가 나온다(바뀌는 모션을 기다린다).</summary>
+    public System.Func<string, IEnumerator> SpeakerChanged;
+
     public DialoguePlayer(CustomerSpeech speech, GameObject buttonA, GameObject buttonB)
     {
         this.speech = speech;
@@ -28,10 +31,16 @@ public class DialoguePlayer
         rightLabel = rightButton != null ? rightButton.GetComponentInChildren<TMP_Text>(true) : null;
     }
 
-    /// <summary>응답 버튼이 눌렸다(재생 중일 때만 뜻이 있다).</summary>
-    public void Answer()
+    private int shownAnswerCount; // 지금 보이는 응답 버튼 수(응답이 하나면 오른쪽 버튼 하나뿐이다)
+    private int choice;           // 가장 최근 선택에서 누른 응답 번호(1: 왼쪽 버튼=응답1, 2: 오른쪽 버튼=응답2). 선택이 없었으면 0
+
+    /// <summary>응답 버튼이 눌렸다(재생 중일 때만 뜻이 있다). 어느 버튼인지로 응답 번호를 기억해 조건이 붙은 다음 줄을 고른다.</summary>
+    public void Answer(GameObject button)
     {
-        if (Playing) answered = true;
+        if (!Playing) return;
+
+        choice = shownAnswerCount >= 2 && button == rightButton ? 2 : 1;
+        answered = true;
     }
 
     public IEnumerator Play(Dialogue dialogue)
@@ -39,9 +48,19 @@ public class DialoguePlayer
         string leftOriginal = leftLabel != null ? leftLabel.text : null;
         string rightOriginal = rightLabel != null ? rightLabel.text : null;
         Playing = true;
+        choice = 0;
+        string speaker = null;
 
         foreach (DialogueLine line in dialogue.lines)
         {
+            if (line.condition != 0 && line.condition != choice) continue; // 고르지 않은 응답에 붙은 줄은 건너뛴다
+
+            if (!string.IsNullOrEmpty(line.speaker) && line.speaker != speaker)
+            {
+                speaker = line.speaker;
+                if (SpeakerChanged != null) yield return SpeakerChanged(speaker);
+            }
+
             ShowAnswers(System.Array.Empty<string>()); // 대사가 다 나올 때까지는 버튼을 숨긴다
             speech.Show(line.text);
             answered = false;
@@ -64,6 +83,7 @@ public class DialoguePlayer
 
     private void ShowAnswers(string[] answers)
     {
+        shownAnswerCount = answers.Length;
         if (leftButton != null) leftButton.SetActive(answers.Length >= 2);
         if (rightButton != null) rightButton.SetActive(answers.Length >= 1);
         if (answers.Length >= 2 && leftLabel != null) leftLabel.text = answers[0];

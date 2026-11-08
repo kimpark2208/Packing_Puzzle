@@ -17,14 +17,18 @@ MonoBehaviour:
   - orderIndex: 1
     npc: {fileID: 11400000, guid: 394bdd7e9c8bbd74899054078853d1d8, type: 2}
     dialogueId: merchant_d2_catalog
-    bondDialogueId: 
+    introDialogueId: 
+    outroDialogueId: 
     reactionPrefix: 
   - orderIndex: 2
     npc: {fileID: 11400000, guid: 09a6c8a80a44ee84780de94d006b69cf, type: 2}
     dialogueId: jaemin_d2_intro
-    bondDialogueId: 
+    introDialogueId: 
+    outroDialogueId: 
     reactionPrefix: jaemin_react
+  nightNpc: {fileID: 0}
+  nightDialogueId: 
   reservationCall: {fileID: 0}
   reservationCallAfterCustomers: 1
-  unlocksPhone: 1
+  unlocksPhone: 0
   unlocksCalendar: 0

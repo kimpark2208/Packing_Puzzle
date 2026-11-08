@@ -18,7 +18,7 @@ MonoBehaviour:
   flowerRole: 0
   acquireDay: 20
   shopPrice: 200
-  shopBundle: 15
+  shopBundle: 50
   specialOrder: "\uADF8\uAC70 \uC8FC\uC138\uC694. \uC54C\uB9AC\uC624\uC62C\uB9AC\uC624."
   specialReask1: "\uADF8\uB7F0 \uC774\uB984 \uC544\uB2C8\uC5C8\uB098\uC694? \uC0DD\uAC01\uD574\uBCF4\uB2C8
     \uCCAB \uAE00\uC790\uB294 \uAE00\uC774\uC5C8\uB358 \uAC83 \uAC19\uB124\uC694."

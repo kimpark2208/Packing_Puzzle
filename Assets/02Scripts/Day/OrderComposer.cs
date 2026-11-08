@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.RegularExpressions;
 using UnityEngine;
 
 /// <summary>
@@ -48,6 +49,7 @@ public static class OrderComposer
 
     private const string FlowerSlot = "[꽃템플릿]";     // 주문 전체 템플릿에서 꽃 부분이 들어갈 자리
     private const string WrapperSlot = "[포장지템플릿]"; // 포장지 부분이 들어갈 자리
+    private const string DecorationSlot = "[꾸미기템플릿]"; // 꾸미기 용품 부분이 들어갈 자리(없어도 된다. 용품이 없는 주문이면 빈다)
 
     public struct Result
     {
@@ -113,7 +115,7 @@ public static class OrderComposer
             : PlainReasks(restated, !flowerMetaphor && !wrapperMetaphor && !decorationMetaphor, templates);
 
         Debug.Log($"[OrderComposer] Day {day} 주문: {joined}");
-        return new Result { requirement = requirement, line = special != null ? joined : Frame(flowerPart, wrapperPart, templates) + decorationTail, reaskLines = reask };
+        return new Result { requirement = requirement, line = special != null ? joined : Frame(flowerPart, wrapperPart, decorationPart, templates), reaskLines = reask };
     }
 
     // ── 꾸미기 용품 부분 ─────────────────────────────────────────────────────
@@ -141,14 +143,18 @@ public static class OrderComposer
     }
 
     /// <summary>주문 전체 템플릿(꽃·포장지 자리가 모두 있는 것) 중 하나에 두 부분을 끼운다. 쓸 만한 템플릿이 없으면 두 부분을 붙여서 말한다.</summary>
-    private static string Frame(string flowerPart, string wrapperPart, OrderTemplateData t)
+    private static string Frame(string flowerPart, string wrapperPart, string decorationPart, OrderTemplateData t)
     {
         var frames = (t.fullOrder ?? new List<string>())
             .Where(s => !string.IsNullOrWhiteSpace(s) && s.Contains(FlowerSlot) && s.Contains(WrapperSlot))
             .ToList();
-        if (frames.Count == 0) return $"{flowerPart} {wrapperPart}";
+        string frame = frames.Count == 0 ? $"{FlowerSlot} {WrapperSlot}" : frames[Random.Range(0, frames.Count)].Trim();
 
-        return frames[Random.Range(0, frames.Count)].Trim().Replace(FlowerSlot, flowerPart).Replace(WrapperSlot, wrapperPart);
+        // 꾸미기 용품 부분은 템플릿의 [꾸미기템플릿] 자리(예: "...이쁘게 만들어주세요!" 앞)에 들어가고, 자리가 없는 템플릿이면 맨 뒤에 붙는다
+        bool hasSlot = frame.Contains(DecorationSlot);
+        string text = frame.Replace(FlowerSlot, flowerPart).Replace(WrapperSlot, wrapperPart).Replace(DecorationSlot, decorationPart ?? "");
+        text = Regex.Replace(text, @" {2,}", " ").Trim();
+        return hasSlot || decorationPart == null ? text : $"{text} {decorationPart}";
     }
 
     // ── 되묻기 ───────────────────────────────────────────────────────────────

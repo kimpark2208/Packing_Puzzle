@@ -17,8 +17,11 @@ MonoBehaviour:
   - orderIndex: 1
     npc: {fileID: 11400000, guid: 0ff7cfa45c88d2a40a2ac9b447d2e1b7, type: 2}
     dialogueId: supplies_d5_intro
-    bondDialogueId: 
+    introDialogueId: 
+    outroDialogueId: 
     reactionPrefix: 
+  nightNpc: {fileID: 0}
+  nightDialogueId: 
   reservationCall: {fileID: 0}
   reservationCallAfterCustomers: 1
   unlocksPhone: 0

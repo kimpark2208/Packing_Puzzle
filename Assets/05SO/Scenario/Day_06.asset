@@ -14,6 +14,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::DayScenarioData
   day: 6
   dayVisits: []
+  nightNpc: {fileID: 0}
+  nightDialogueId: 
   reservationCall: {fileID: 11400000, guid: 6dde361723e33844888a3bb38150ebcd, type: 2}
   reservationCallAfterCustomers: 1
   unlocksPhone: 0

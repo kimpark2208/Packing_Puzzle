@@ -9,13 +9,16 @@ using UnityEngine;
 /// </summary>
 public partial class GameManager
 {
-    private const int StartingFlowerStock = 20;    // 시작 꽃(장미, 소국)을 처음에 이만큼씩 준다. 0이면 자동으로 주지 않고 상점에서 사야 한다
+    [Header("시작 지급")]
+    [Tooltip("시작 꽃(획득 일차 0인 꽃)을 처음에 이만큼씩 준다. 0이면 자동으로 주지 않고 상점에서 사야 한다")]
+    [Min(0)] [SerializeField] private int startingFlowerStock = 20;
+
     private const int StartingDecorationStock = 5; // 임시: 꾸미기 용품 전부를 처음에 이만큼씩 준다
     private const int FinalWrapperDelayDays = 20; // 포장지 4번을 해금한 지 이만큼 지나면 5번을 해금한다
 
     private int finalWrapperDay = -1; // 포장지 5번을 해금할 일차(4번을 해금하면 정해진다. 아직이면 -1)
 
-    /// <summary>게임을 시작할 때 한 번: 시작 꽃(획득 일차 0)을 얻은 꽃으로 친다(주문과 상점 진열대에 나온다). StartingFlowerStock이 있으면 그만큼 지급한다.</summary>
+    /// <summary>게임을 시작할 때 한 번: 시작 꽃(획득 일차 0)을 얻은 꽃으로 친다(주문과 상점 진열대에 나온다). startingFlowerStock(인스펙터)이 있으면 그만큼 지급한다.</summary>
     private void GrantStartingFlowers()
     {
         CurrencyManager wallet = CurrencyManager.Instance;
@@ -25,10 +28,10 @@ public partial class GameManager
         foreach (FlowerData flower in registry.Flowers.Where(f => f != null && f.acquireDay <= 0))
         {
             wallet.ObtainFlower(flower.flowerID);
-            if (StartingFlowerStock <= 0) continue;
+            if (startingFlowerStock <= 0) continue;
 
-            wallet.AddFlowerStock(flower.flowerID, StartingFlowerStock);
-            NoticeToast.Show($"새 꽃 {flower.DisplayName} {NoticeToast.Highlight($"X{StartingFlowerStock}")}"); // 알림은 메인 화면의 토스트가 열리면 차례로 뜬다
+            wallet.AddFlowerStock(flower.flowerID, startingFlowerStock);
+            NoticeToast.Show($"새 꽃 {flower.DisplayName} {NoticeToast.Highlight($"X{startingFlowerStock}")}"); // 알림은 메인 화면의 토스트가 열리면 차례로 뜬다
         }
     }
 

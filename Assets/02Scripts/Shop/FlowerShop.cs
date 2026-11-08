@@ -16,6 +16,8 @@ public class FlowerShop
     public const int ShelfSize = 6;
     public const int RerollsPerVisit = 2;
     private const float ChancePerDay = 0.25f;
+    private const int BetaSnapdragonId = 1;  // 금어초(Flower_01_Snapdragon)
+    private const int BetaSnapdragonDay = 7; // 베타에서 금어초가 확정으로 나오는 밤(기획서 3장)
 
     private readonly List<FlowerData> flowers;
     private readonly Func<int, bool> isObtained;
@@ -30,9 +32,6 @@ public class FlowerShop
     public bool IsSoldOut(FlowerData flower) => soldOut.Contains(flower.flowerID);
     public int RerollsLeft { get; private set; } = RerollsPerVisit;
 
-    /// <summary>리롤 버튼을 보여 주는가: 항상 보인다(기획서는 진열 가능한 꽃이 6종류 이하면 숨기지만, 리롤로 신규 꽃 판정을 다시 하므로 보이게 했다).</summary>
-    public bool RerollAvailable => true;
-
     public FlowerShop(IEnumerable<FlowerData> allFlowers, Func<int, bool> isObtained, int day)
     {
         flowers = allFlowers.Where(f => f != null).ToList();
@@ -44,13 +43,14 @@ public class FlowerShop
     /// <summary>획득하지 않은 꽃이 day일차 상점에 나올 확률: 획득 일차부터 25%, 하루마다 25%씩 늘어 4일째 100%.</summary>
     public static float AppearChance(FlowerData flower, int day)
     {
+        if (flower.flowerID == BetaSnapdragonId && day <= BetaSnapdragonDay) return day == BetaSnapdragonDay ? 1f : 0f; // 베타 고정: 금어초는 7일차 밤에 100% 나오고 그 전에는 나오지 않는다
         return day < flower.acquireDay ? 0f : Mathf.Clamp01(ChancePerDay * (day - flower.acquireDay + 1));
     }
 
-    /// <summary>신규 꽃 등장 판정을 다시 하고 진열대를 새로 채운다. 리롤을 다 썼거나 버튼이 없는 상태면 false.</summary>
+    /// <summary>신규 꽃 등장 판정을 다시 하고 진열대를 새로 채운다. 리롤을 다 썼으면 false.</summary>
     public bool Reroll()
     {
-        if (!RerollAvailable || RerollsLeft <= 0) return false;
+        if (RerollsLeft <= 0) return false;
 
         RerollsLeft--;
         Fill();

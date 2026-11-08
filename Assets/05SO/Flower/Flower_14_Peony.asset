@@ -18,7 +18,7 @@ MonoBehaviour:
   flowerRole: 2
   acquireDay: 13
   shopPrice: 200
-  shopBundle: 15
+  shopBundle: 50
   specialOrder: "\uC790\uAE30\uC57C!"
   specialReask1: "\uC790\uAE30\uC57C\uB97C \uBE60\uB974\uAC8C \uBC1C\uC74C\uD574\uBCF4\uC138\uC694.
     \uC791\uC774\uC57D! \uC791\uC57D!"

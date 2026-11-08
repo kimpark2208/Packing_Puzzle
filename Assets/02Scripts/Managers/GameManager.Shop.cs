@@ -12,6 +12,25 @@ public partial class GameManager
     /// <summary>이번 밤 상점 방문(방문 중이 아니면 null).</summary>
     public FlowerShop Shop { get; private set; }
 
+    private int nightDialogueDay; // 밤 대화를 이미 한 일차(하루에 한 번만 한다)
+
+    /// <summary>오늘 밤에 시나리오가 정한 대화(상점 앞에서 하는 NPC의 말)가 있고 아직 안 했으면 돌려주고(그러면 오늘은 한 것으로 친다) true. 없으면 false.</summary>
+    public bool ConsumeNightDialogue(out NpcData npc, out Dialogue dialogue)
+    {
+        npc = null;
+        dialogue = null;
+        int day = CurrencyManager.Instance.CurrentDay;
+        if (nightDialogueDay == day || ScenarioManager.Instance == null) return false;
+
+        DayScenarioData scenario = ScenarioManager.Instance.ForDay(day);
+        dialogue = scenario != null ? ScenarioManager.Instance.Dialogue.Get(scenario.nightDialogueId) : null;
+        if (dialogue == null) return false;
+
+        nightDialogueDay = day;
+        npc = scenario.nightNpc;
+        return true;
+    }
+
     /// <summary>하루 영업이 끝났다: 밤 상점이 열린 메인 화면으로 간다.</summary>
     private void OpenShop()
     {

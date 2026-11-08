@@ -10,6 +10,7 @@ using UnityEngine;
 public class ScenarioManager : Singleton<ScenarioManager>
 {
     [SerializeField, Tooltip("대사 CSV(Assets/05SO/Dialogue/Dialogue.csv).")] private TextAsset dialogueCsv;
+    [SerializeField, Tooltip("반응 대사 CSV(Assets/05SO/Dialogue/Reaction.csv). 열은 대사 CSV와 같고, 대화ID는 `접두어_perfect/success/mistake/fail` 꼴이다.")] private TextAsset reactionCsv;
     [SerializeField, Tooltip("일차별 시나리오(1~10일차).")] private List<DayScenarioData> days = new();
 
     [SerializeField, Tooltip("꺼 두면 시나리오(정해진 손님, 예약 전화, 전화기·달력 해금)가 모두 없는 것처럼 동작해, 1일차부터 무작위 손님과 퍼즐만 나온다.")] private bool scenarioEnabled;
@@ -25,6 +26,7 @@ public class ScenarioManager : Singleton<ScenarioManager>
 
             var errors = new List<string>();
             dialogue = dialogueCsv != null ? DialogueDatabase.Parse(dialogueCsv.text, errors) : new DialogueDatabase();
+            if (reactionCsv != null) dialogue.AddFrom(DialogueDatabase.Parse(reactionCsv.text, errors), errors);
             foreach (string error in errors) Debug.LogWarning($"[ScenarioManager] 대사 CSV: {error}");
             return dialogue;
         }
@@ -45,6 +47,11 @@ public class ScenarioManager : Singleton<ScenarioManager>
         }
         return null;
     }
+
+    /// <summary>일차 데이터에 나오는 NPC 중 이름(NpcData.displayName)이 같은 것. 없으면 null.</summary>
+    public NpcData NpcByName(string displayName) => days.Where(d => d != null)
+        .SelectMany(d => d.dayVisits.Select(v => v.npc).Append(d.nightNpc))
+        .FirstOrDefault(n => n != null && n.displayName == displayName);
 
     /// <summary>전화기를 쓸 수 있는가(전화기가 해금된 일차부터).</summary>
     public bool IsPhoneUnlocked(int day) => scenarioEnabled && days.Any(d => d != null && d.day <= day && d.unlocksPhone);

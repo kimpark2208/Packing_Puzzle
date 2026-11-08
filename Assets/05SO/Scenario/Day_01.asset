@@ -17,8 +17,17 @@ MonoBehaviour:
   - orderIndex: 1
     npc: {fileID: 11400000, guid: 394bdd7e9c8bbd74899054078853d1d8, type: 2}
     dialogueId: merchant_d1_intro
-    bondDialogueId: 
+    introDialogueId: 
+    outroDialogueId: 
     reactionPrefix: 
+  - orderIndex: 3
+    npc: {fileID: 11400000, guid: 8fc2b91183bd1a44cbec42b26b262194, type: 2}
+    dialogueId: siren_d1_intro
+    introDialogueId: 
+    outroDialogueId: siren_d1_outro
+    reactionPrefix: siren_react
+  nightNpc: {fileID: 11400000, guid: 0ff7cfa45c88d2a40a2ac9b447d2e1b7, type: 2}
+  nightDialogueId: supplies_d1_night
   reservationCall: {fileID: 0}
   reservationCallAfterCustomers: 1
   unlocksPhone: 0
