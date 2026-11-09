@@ -101,7 +101,8 @@ public class FlowerSelectUI : MonoBehaviour
             if (box.stock != null)
             {
                 box.stock.transform.parent.gameObject.SetActive(!CurrencyManager.WrappersUnlimited); // 포장지 개수를 따지지 않는 동안은 재고 배지를 숨긴다(CountBadge는 글씨의 부모)
-                box.stock.text = $"x{(CurrencyManager.Instance != null ? CurrencyManager.Instance.GetWrapperStock(box.wrapperId) : 0)}"; // 재고(0이어도 그대로 보여 준다)
+                int shown = Craft != null && Craft.WrapperId == box.wrapperId ? Craft.WrapperRemaining : (CurrencyManager.Instance != null ? CurrencyManager.Instance.GetWrapperStock(box.wrapperId) : 0); // 예약 꽃다발이 쓰는 포장지는 보관해 둔 남은 수
+                box.stock.text = $"x{shown}"; // 재고(0이어도 그대로 보여 준다)
             }
             bool usable = IsWrapperUsable(box.wrapperId);
             box.button.interactable = usable;
@@ -124,7 +125,8 @@ public class FlowerSelectUI : MonoBehaviour
         WrapperData data = DataRegistry.Instance.GetWrapper(wrapperId);
         ReservationCraft craft = Craft; // 예약 꽃다발은 예약이 정한 포장지만 쓴다
         bool allowed = craft == null || craft.WrapperId <= 0 || craft.WrapperId == wrapperId;
-        return data != null && allowed && CurrencyManager.Instance.UsableWrappers.Contains(wrapperId)
+        bool inStock = craft != null && craft.WrapperId > 0 ? craft.WrapperRemaining > 0 : CurrencyManager.Instance.UsableWrappers.Contains(wrapperId); // 예약 꽃다발은 보관해 둔 포장지가 남아 있어야 한다
+        return data != null && allowed && inStock
             && data.presets.Count > 0 && data.ringCount <= DayPuzzleController.SupportedRings;
     }
 
@@ -413,14 +415,32 @@ public class FlowerSelectUI : MonoBehaviour
         return false;
     }
 
+    /// <summary>모든 칸을 채웠거나, 남은 빈 칸을 재고가 없어 더 채울 수 없으면 시작할 수 있다(예약 꽃다발의 보관 꽃이 모자란 칸처럼 영영 못 채우는 칸 때문에 막히지 않게).</summary>
+    private bool CanStart()
+    {
+        if (selection == null || DataRegistry.Instance == null) return false;
+        if (selection.IsComplete) return true;
+        if (selection.FilledCount == 0) return false;
+
+        foreach (FlowerData.FlowerRole role in Enum.GetValues(typeof(FlowerData.FlowerRole)))
+        {
+            if (selection.CellsOf(role) - selection.FilledOf(role) <= 0) continue;
+            if (IsRoleLocked(role)) continue; // 예약 필수 꽃의 역할은 직접 못 고르니 남아도 더 채울 수 없다
+
+            bool hasStock = DataRegistry.Instance.Flowers.Any(f => f != null && f.flowerRole == role && StockOf(f) - selection.Count(f) > 0);
+            if (hasStock) return false; // 아직 채울 수 있는 칸이 남았다
+        }
+        return true;
+    }
+
     private void RefreshConfirmButton()
     {
-        if (flowerConfirmButton != null && selection != null) flowerConfirmButton.interactable = selection.IsComplete; // 모든 칸을 채워야 시작할 수 있다
+        if (flowerConfirmButton != null && selection != null) flowerConfirmButton.interactable = CanStart();
     }
 
     private void ConfirmSelection()
     {
-        if (!wrapperChosen || GameManager.Instance == null || selection == null || !selection.IsComplete) return;
+        if (!wrapperChosen || GameManager.Instance == null || !CanStart()) return;
         GameManager.Instance.ConfirmFlowerSelection(selection.Chosen());
     }
 }

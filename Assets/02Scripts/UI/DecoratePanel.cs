@@ -51,7 +51,19 @@ public class DecoratePanel : MonoBehaviour
             SpawnCards();
         });
         if (placer != null) placer.Removed += Refresh;
+        chip = FirstUsableChip();
         SpawnCards();
+    }
+
+    /// <summary>처음에 열 칩: 가진 용품이 있는 칩 중 맨 앞(없으면 0). 가진 것이 없는 리본 칩이 먼저 열려 빈 목록이 보이지 않게 한다.</summary>
+    private int FirstUsableChip()
+    {
+        for (int i = 0; i < chips.Length; i++)
+        {
+            DecorationCategory category = chipCategories[Mathf.Min(i, chipCategories.Length - 1)];
+            if (decorations.Any(d => d != null && d.category == category && IsOwned(d))) return i;
+        }
+        return 0;
     }
 
     private void OnDestroy()
@@ -96,6 +108,8 @@ public class DecoratePanel : MonoBehaviour
             Button created = Instantiate(cardPrefab, parent);
             created.name = $"Card_{item.name}";
             created.transform.Find("Name").GetComponent<TMP_Text>().text = item.displayName;
+            Transform count = created.transform.Find("CountBadge/text"); // 프리팹의 재고 배지(오른쪽 위)
+            if (count != null) count.GetComponent<TMP_Text>().text = $"x{ShownStock(item)}";
 
             var picture = created.transform.Find("Image").GetComponent<Image>();
             picture.sprite = item.sprite;
@@ -116,7 +130,21 @@ public class DecoratePanel : MonoBehaviour
     }
 
     /// <summary>플레이어가 이 용품을 가지고 있는가(카탈로그에서 샀거나 선물로 받았는가). 씬 단독 실행처럼 보유 정보가 없으면 모두 가진 것으로 본다.</summary>
-    private static bool IsOwned(DecorationData data) => CurrencyManager.Instance == null || CurrencyManager.Instance.GetDecorationStock(data.id) > 0;
+    private static bool IsOwned(DecorationData data) => CurrencyManager.Instance == null || CurrencyManager.Instance.GetDecorationStock(data.id) > 0 || RequiredRemaining(data) > 0;
+
+    /// <summary>예약 꽃다발을 만드는 중이면 그 예약이 요구한 이 용품의 남은 보관 수(보관하면 재고에서 빠지므로 카드는 이 수로 보인다). 아니면 0.</summary>
+    private static int RequiredRemaining(DecorationData data)
+    {
+        GameManager game = GameManager.Instance;
+        return game != null && game.Crafting ? game.Craft.SupplyRemaining(data.id) : 0;
+    }
+
+    /// <summary>카드에 보이는 개수: 예약이 요구한 용품은 남은 보관 수, 나머지는 재고.</summary>
+    private static int ShownStock(DecorationData data)
+    {
+        int required = RequiredRemaining(data);
+        return required > 0 ? required : CurrencyManager.Instance != null ? CurrencyManager.Instance.GetDecorationStock(data.id) : 0;
+    }
 
     private void Hook(Button[] buttons, System.Action<int> select)
     {

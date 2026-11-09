@@ -83,16 +83,12 @@ public partial class CurrencyManager
         for (int i = 0; i < record.data.items.Length; i++)
         {
             ReservationData.Item item = record.data.items[i];
-            if (!item.Storable)
-            {
-                if (!HasItem(item)) return PickupState.NotReady; // 포장지와 꾸미기 용품은 가지고 있는지만 본다
-                continue;
-            }
+            if (!item.Storable) return PickupState.NotReady; // 연결하지 않은 항목(id 0)은 준비할 수 없다
 
             if (record.stored[i] >= item.count) continue;
 
             allStored = false;
-            if (record.stored[i] + GetFlowerStock(item.id) < item.count) canStore = false;
+            if (record.stored[i] + GetItemStock(item) < item.count) canStore = false; // 보관해도 필요한 수가 안 된다
         }
         return allStored ? PickupState.Ready : canStore ? PickupState.NeedsStoring : PickupState.NotReady;
     }
@@ -113,28 +109,33 @@ public partial class CurrencyManager
         reservations.Remove(record);
     }
 
-    /// <summary>꽃 항목의 보유 재고(보관할 수 있는 항목이 아니면 0).</summary>
-    public int GetItemStock(ReservationData.Item item) => item.Storable ? GetFlowerStock(item.id) : 0;
-
-    /// <summary>항목을 가지고 있는가(임시 규칙): 꽃은 재고가 있으면, 포장지는 얻었으면, 꾸미기 용품은 샀거나 받았으면. 연결하지 않은 항목(id 0)은 미보유다.</summary>
-    public bool HasItem(ReservationData.Item item)
+    /// <summary>항목의 보유 재고(꽃, 포장지, 꾸미기 용품). 연결하지 않은 항목은 0.</summary>
+    public int GetItemStock(ReservationData.Item item)
     {
-        if (item.id <= 0) return false;
+        if (!item.Storable) return 0;
 
         switch (item.kind)
         {
-            case ReservationData.ItemKind.Flower: return GetFlowerStock(item.id) > 0;
-            case ReservationData.ItemKind.Wrapper: return HasWrapper(item.id);
-            default: return GetDecorationStock(item.id) > 0;
+            case ReservationData.ItemKind.Flower: return GetFlowerStock(item.id);
+            case ReservationData.ItemKind.Wrapper: return GetWrapperStock(item.id);
+            default: return GetDecorationStock(item.id);
         }
     }
 
-    /// <summary>꽃 항목의 보유 재고를 늘리거나(음수면 줄인다).</summary>
+    /// <summary>항목을 가지고 있는가: 재고가 하나라도 있으면. 연결하지 않은 항목(id 0)은 미보유다.</summary>
+    public bool HasItem(ReservationData.Item item) => GetItemStock(item) > 0;
+
+    /// <summary>항목의 보유 재고를 늘리거나(음수면 줄인다).</summary>
     private void AddItemStock(ReservationData.Item item, int amount)
     {
         if (!item.Storable || amount == 0) return;
 
-        AddFlowerStock(item.id, amount);
+        switch (item.kind)
+        {
+            case ReservationData.ItemKind.Flower: AddFlowerStock(item.id, amount); break;
+            case ReservationData.ItemKind.Wrapper: AddWrapperStock(item.id, amount); break;
+            default: AddDecorationStock(item.id, amount); break;
+        }
     }
 
     /// <summary>지금 보관할 수 있는 최대 개수: 재고와, 아직 더 필요한 수 중 작은 쪽.</summary>

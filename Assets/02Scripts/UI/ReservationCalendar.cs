@@ -198,8 +198,8 @@ public class ReservationCalendar : MonoBehaviour
         ReservationRecord record = selected;
         int remaining = Currency.RemainingDays(record);
         deadlineText.text = remaining > 0
-            ? $"기한:   <color=#E58A2B><size=135%><b>{remaining}일</b></size></color>"
-            : "기한:   <color=#E58A2B><size=135%><b>D-DAY</b></size></color>";
+            ? $"기한: <color=#E58A2B><size=135%><b>{remaining}일</b></size></color>"
+            : "기한: <color=#E58A2B><size=135%><b>D-DAY</b></size></color>";
         rewardText.text = record.data.reward.ToString("N0");
         cancelButton.interactable = Currency.CanCancel(record); // 예약일 당일에는 취소할 수 없다
 

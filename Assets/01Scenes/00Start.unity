@@ -343,7 +343,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::GameFlowController
   dontDestroyOnLoad: 1
-  startingFlowerStock: 50
+  startingFlowerStock: 60
   orderTemplates: {fileID: 11400000, guid: 2ae78ed91dcbc6b40a3ef90af7a34901, type: 2}
 --- !u!114 &438470795
 MonoBehaviour:
@@ -2016,10 +2016,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::GameClock
   dontDestroyOnLoad: 1
-  dayDurationSeconds: 300
+  dayDurationSeconds: 240
   moodDurationSeconds: 120
-  sunsetStartElapsed: 0.5
-  nightStartElapsed: 0.75
+  sunsetStartElapsed: 0.3
+  nightStartElapsed: 0.7
 --- !u!4 &1513376232
 Transform:
   m_ObjectHideFlags: 0

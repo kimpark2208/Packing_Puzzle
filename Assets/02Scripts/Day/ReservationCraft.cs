@@ -71,7 +71,7 @@ public class ReservationCraft
 
     // ---------- 필수 꽃 (보관해 둔 꽃) ----------
 
-    private IEnumerable<int> StoredFlowerIndices => Enumerable.Range(0, Data.items.Length).Where(i => Data.items[i].Storable);
+    private IEnumerable<int> StoredFlowerIndices => Enumerable.Range(0, Data.items.Length).Where(i => Data.items[i].IsFlower);
 
     public bool IsRequired(int flowerId) => StoredFlowerIndices.Any(i => Data.items[i].id == flowerId);
 
@@ -118,6 +118,35 @@ public class ReservationCraft
 
     /// <summary>예약이 요구한 포장지 번호(없으면 0 = 보유한 아무 포장지).</summary>
     public int WrapperId => Data.items.FirstOrDefault(i => i.kind == ReservationData.ItemKind.Wrapper && i.id > 0).id;
+
+    /// <summary>예약이 요구한 포장지의 남은 보관 수(꽃다발 하나를 마칠 때마다 한 장씩 준다). 포장지를 요구하지 않으면 0.</summary>
+    public int WrapperRemaining => WrapperId > 0 ? StoredAmount(ReservationData.ItemKind.Wrapper, WrapperId) : 0;
+
+    /// <summary>필수 꾸미기 용품의 남은 보관 수(꽃다발에 쓸 때마다 하나씩 준다).</summary>
+    public int SupplyRemaining(int decorationId) => StoredAmount(ReservationData.ItemKind.Supply, decorationId);
+
+    public void UseWrapper(int amount) => TakeStored(ReservationData.ItemKind.Wrapper, WrapperId, amount);
+
+    public void UseSupply(int decorationId, int amount) => TakeStored(ReservationData.ItemKind.Supply, decorationId, amount);
+
+    private int StoredAmount(ReservationData.ItemKind kind, int id)
+    {
+        int sum = 0;
+        for (int i = 0; i < Data.items.Length; i++) if (Data.items[i].kind == kind && Data.items[i].id == id) sum += record.stored[i];
+        return sum;
+    }
+
+    private void TakeStored(ReservationData.ItemKind kind, int id, int amount)
+    {
+        for (int i = 0; i < Data.items.Length && amount > 0; i++)
+        {
+            if (Data.items[i].kind != kind || Data.items[i].id != id) continue;
+
+            int take = Mathf.Min(amount, record.stored[i]);
+            record.stored[i] -= take;
+            amount -= take;
+        }
+    }
 
     /// <summary>예약이 요구한 꽃다발 꾸미기 용품(꽃다발에 직접 놓아야 한다).</summary>
     public IEnumerable<DecorationData> Supplies()

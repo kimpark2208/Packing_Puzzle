@@ -46,7 +46,7 @@ public partial class CurrencyManager : Singleton<CurrencyManager>
 
     /// <summary>지금 쓸 수 있는 포장지: 재고가 있는 것. 재고가 있는 포장지가 하나도 없으면 막히지 않도록 보유한 포장지 전부(포장지를 사는 곳이 생기기 전까지의 임시 대비).</summary>
     /// <summary>포장지 개수를 일단 따지지 않는다: 가진 포장지는 재고와 상관없이 쓸 수 있고, 퍼즐을 마쳐도 줄지 않는다(재고 수는 계속 기록만 한다). 개수 제도가 정해지면 false로 바꾼다.</summary>
-    public const bool WrappersUnlimited = true;
+    public const bool WrappersUnlimited = false; // 포장지는 소모품이다(개수가 보이고, 퍼즐을 마치면 한 장씩 준다)
 
     public IReadOnlyCollection<int> UsableWrappers
     {
@@ -114,6 +114,19 @@ public partial class CurrencyManager : Singleton<CurrencyManager>
         Debug.LogWarning($"[CurrencyManager] 금액 부족 (필요: {amount}, 보유: {currentMoney})");
         return false;
     }
+
+    // ========== 카탈로그 활성화 ==========
+
+    public enum CatalogKind { Furniture, Supplies }
+
+    private readonly HashSet<CatalogKind> unlockedCatalogs = new();
+
+    /// <summary>카탈로그를 받았다(대사의 `카탈로그:가구`, `카탈로그:용품` 효과). 받기 전에는 카탈로그에 그 탭이 나오지 않는다.</summary>
+    public void UnlockCatalog(CatalogKind kind) => unlockedCatalogs.Add(kind);
+
+    /// <summary>그 카탈로그를 받았는가. 시나리오가 없으면(씬 단독 실행) 모두 받은 것으로 친다.</summary>
+    public bool IsCatalogUnlocked(CatalogKind kind) =>
+        ScenarioManager.Instance == null || unlockedCatalogs.Contains(kind) || ScenarioManager.Instance.IsCatalogUnlockedByDay(kind == CatalogKind.Supplies ? "용품" : "가구", currentDay); // 대사로 받은 적이 없어도(일수를 건너뛴 경우) 그 일차까지의 시나리오로 계산한다
 
     // ========== 포장지 (Wrapper) 관리 ==========
 

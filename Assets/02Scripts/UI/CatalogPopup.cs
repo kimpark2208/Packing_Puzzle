@@ -29,6 +29,7 @@ public class CatalogPopup : MonoBehaviour
     [SerializeField] private TMP_Text titleText;
     [SerializeField] private RectTransform content;
     [SerializeField] private RectTransform itemTemplate;
+    [SerializeField, Tooltip("꾸미기 용품의 주문을 누르면 수량을 정하는 팝업.")] private QuantityPopup quantityPopup;
     [SerializeField] private ScrollRect scroll;
     [SerializeField] private Button closeButton;
     [Header("확대 보기: 카드의 확대 버튼을 누르면 카드 목록 대신 이 영역에 그림을 크게 보여 준다")]
@@ -42,6 +43,8 @@ public class CatalogPopup : MonoBehaviour
     private bool clockPaused; // 이 팝업이 시간을 멈춰 두었는가(열릴 때 멈추고 닫힐 때 푼다)
     private int selected;
     private int selectedChip;    // 가구 탭에서 고른 칩(가구 카테고리 번호)
+    private int suppliesChip;    // 꽃다발 용품 탭에서 고른 칩(0 포장지, 1 꾸미기)
+    private static readonly string[] SupplyChipNames = { "포장지", "꾸미기" };
     private bool syncingChips;    // 코드가 칩을 맞추는 동안은 칩을 눌러도 목록을 다시 채우지 않는다
     private Color[] tabBaseColors; // 프리팹에 둔 탭 색/높이(고르지 않은 탭의 모습)
     private float[] tabBaseHeights;
@@ -75,18 +78,20 @@ public class CatalogPopup : MonoBehaviour
         if (syncingChips || !on) return;
 
         CloseExpand();
-        selectedChip = index;
-        Fill(ShopManager.ShopCategory.Furniture);
+        if (tabs[selected].category == ShopManager.ShopCategory.Deco) suppliesChip = index;
+        else selectedChip = index;
+        Fill(tabs[selected].category);
         scroll.horizontalNormalizedPosition = 0f;
     }
 
-    /// <summary>지금 카탈로그에 나오는 가구: 카탈로그 표시가 켜져 있고, 나오기 시작하는 일차가 된 것.</summary>
+    /// <summary>지금 카탈로그에 나오는 가구: 카탈로그 표시가 켜져 있고, 나오기 시작하는 일차가 된 것(주문했거나 이미 설치된 가구는 뺀다).</summary>
     private static IEnumerable<FurnitureData> AvailableFurniture()
     {
         if (DataRegistry.Instance == null) return Enumerable.Empty<FurnitureData>();
 
         int day = CurrencyManager.Instance != null ? CurrencyManager.Instance.CurrentDay : int.MaxValue;
-        return DataRegistry.Instance.Furniture.Where(f => f != null && f.inCatalog && f.availableFromDay <= day);
+        CurrencyManager wallet = CurrencyManager.Instance;
+        return DataRegistry.Instance.Furniture.Where(f => f != null && f.inCatalog && f.availableFromDay <= day && (wallet == null || !wallet.IsFurnitureOrdered(f.id)));
     }
 
     /// <summary>칩으로 보여 줄 가구 카테고리: 지금 나오는 가구가 하나라도 있는 카테고리만.</summary>
@@ -96,23 +101,48 @@ public class CatalogPopup : MonoBehaviour
         return FurnitureCategories.Where(c => available.Any(f => f.category == c)).ToList();
     }
 
-    /// <summary>가구 탭의 칩을 가구 카테고리 이름으로 채우고 고른 칩을 켠다. 가구 탭이 아니면 칩 줄을 숨긴다.</summary>
-    private void ShowChips(bool furniture)
+    /// <summary>칩을 채우고 고른 칩을 켠다: 가구 탭은 가구 카테고리 이름, 꽃다발 용품 탭은 포장지/꾸미기. 다른 탭이면 칩 줄을 숨긴다.</summary>
+    private void ShowChips(ShopManager.ShopCategory category)
     {
-        List<FurnitureCategory> categories = furniture ? ChipCategories() : new List<FurnitureCategory>();
-        chips[0].transform.parent.gameObject.SetActive(categories.Count > 0);
-        if (categories.Count == 0) return;
+        List<string> names = new();
+        int chosen = 0;
+        if (category == ShopManager.ShopCategory.Furniture)
+        {
+            names = ChipCategories().Select(FurnitureData.CategoryName).ToList();
+            chosen = selectedChip = Mathf.Clamp(selectedChip, 0, Mathf.Max(0, names.Count - 1));
+        }
+        else if (category == ShopManager.ShopCategory.Deco)
+        {
+            names = SupplyChipNames.ToList();
+            chosen = suppliesChip = Mathf.Clamp(suppliesChip, 0, names.Count - 1);
+        }
 
-        selectedChip = Mathf.Clamp(selectedChip, 0, categories.Count - 1);
+        chips[0].transform.parent.gameObject.SetActive(names.Count > 0);
+        if (names.Count == 0) return;
+
         syncingChips = true;
         for (int i = 0; i < chips.Length; i++)
         {
-            bool used = i < categories.Count;
+            bool used = i < names.Count;
             chips[i].gameObject.SetActive(used);
-            if (used) chips[i].GetComponentInChildren<TMP_Text>().text = FurnitureData.CategoryName(categories[i]);
+            if (used) chips[i].GetComponentInChildren<TMP_Text>().text = names[i];
         }
-        chips[selectedChip].isOn = true; // 같은 ToggleGroup의 다른 칩은 저절로 꺼진다
+        chips[chosen].isOn = true; // 같은 ToggleGroup의 다른 칩은 저절로 꺼진다
         syncingChips = false;
+    }
+
+    /// <summary>이 탭의 카탈로그를 받았는가(대사로 카탈로그를 받아야 그 탭이 나온다). 가구 탭은 가구 카탈로그, 꽃다발 용품 탭은 용품 카탈로그를 받은 뒤. 그 밖의 탭(유물)은 나오지 않는다.</summary>
+    private static bool IsTabUnlocked(ShopManager.ShopCategory category)
+    {
+        CurrencyManager wallet = CurrencyManager.Instance;
+        if (wallet == null) return true;
+
+        return category switch
+        {
+            ShopManager.ShopCategory.Furniture => wallet.IsCatalogUnlocked(CurrencyManager.CatalogKind.Furniture),
+            ShopManager.ShopCategory.Deco => wallet.IsCatalogUnlocked(CurrencyManager.CatalogKind.Supplies),
+            _ => false,
+        };
     }
 
     private static void BindChip(Toggle chip)
@@ -150,6 +180,21 @@ public class CatalogPopup : MonoBehaviour
     private void Select(int index)
     {
         CloseExpand();
+        for (int i = 0; i < tabs.Length; i++) tabs[i].button.gameObject.SetActive(IsTabUnlocked(tabs[i].category)); // 받은 카탈로그의 탭만 보인다
+        if (!IsTabUnlocked(tabs[index].category)) index = Array.FindIndex(tabs, t => IsTabUnlocked(t.category)); // 못 받은 탭이면 받은 첫 탭을 연다
+        if (index < 0) // 받은 카탈로그가 하나도 없다: 빈 카탈로그
+        {
+            ShowChips(ShopManager.ShopCategory.Artifact); // 칩 줄을 숨긴다
+            for (int i = content.childCount - 1; i >= 0; i--)
+            {
+                Transform child = content.GetChild(i);
+                if (child == itemTemplate) continue;
+                child.gameObject.SetActive(false);
+                Destroy(child.gameObject);
+            }
+            titleText.text = "";
+            return;
+        }
         selected = index;
         for (int i = 0; i < tabs.Length; i++)
         {
@@ -162,7 +207,7 @@ public class CatalogPopup : MonoBehaviour
         }
 
         titleText.text = tabs[index].button.GetComponentInChildren<TMP_Text>().text;
-        ShowChips(tabs[index].category == ShopManager.ShopCategory.Furniture);
+        ShowChips(tabs[index].category);
         Fill(tabs[index].category);
         scroll.horizontalNormalizedPosition = 0f;
     }
@@ -187,18 +232,32 @@ public class CatalogPopup : MonoBehaviour
             {
                 FurnitureData item = furniture;
                 string key = $"Furniture{item.id}";
-                if (CurrencyManager.Instance != null && CurrencyManager.Instance.IsFurnitureOrdered(item.id)) ordered.Add(key); // 주문했거나 이미 설치된 가구는 다시 주문할 수 없다
                 AddCard(key, item.displayName, item.description, item.price, item.CatalogSprite, () => CurrencyManager.Instance.OrderFurniture(item.id)); // 주문하면 다음 날 설치된다
             }
             return;
         }
 
-        if (category == ShopManager.ShopCategory.Deco) // 꾸미기 용품은 DecorationData(DataRegistry)에서 읽고, 주문하면 바로 재고에 들어간다
+        if (category == ShopManager.ShopCategory.Deco && suppliesChip == 0) // 꽃다발 용품 탭의 포장지 칩: 가진(해금한) 포장지를 수량을 정해 산다
+        {
+            if (DataRegistry.Instance == null || CurrencyManager.Instance == null) return;
+
+            foreach (int id in CurrencyManager.Instance.OwnedWrappers.OrderBy(w => w))
+            {
+                WrapperData wrapper = DataRegistry.Instance.GetWrapper(id);
+                if (wrapper == null) continue;
+
+                WrapperData item = wrapper;
+                AddCard($"Wrapper{item.wrapperId}", $"{item.ColorName}색 포장지", "꽃다발 하나에 한 장씩 쓰는 포장지예요.", item.price, item.previewSprite, openOrder: () => OpenWrapperOrder(item));
+            }
+            return;
+        }
+
+        if (category == ShopManager.ShopCategory.Deco) // 꾸미기 칩: 꾸미기 용품은 DecorationData(DataRegistry)에서 읽는다. 주문을 누르면 수량 팝업이 뜨고, 정한 수만큼 바로 재고에 들어간다
         {
             foreach (DecorationData decoration in AvailableDecorations().OrderBy(d => d.id))
             {
                 DecorationData item = decoration;
-                AddCard($"Deco{item.id}", item.displayName, item.description, item.price, item.sprite, () => CurrencyManager.Instance.AddDecorationStock(item.id, 1));
+                AddCard($"Deco{item.id}", item.displayName, item.description, item.price, item.sprite, openOrder: () => OpenDecorationOrder(item));
             }
             return;
         }
@@ -209,18 +268,54 @@ public class CatalogPopup : MonoBehaviour
             AddCard($"{category}{item.itemId}", item.itemName, item.description, item.price, null);
     }
 
-    /// <summary>지금 카탈로그에 나오는 꾸미기 용품: 카탈로그 표시가 켜져 있고, 나오기 시작하는 일차가 되었고, 아직 가지고 있지 않은 것(이미 산 용품은 나오지 않는다).</summary>
+    /// <summary>지금 카탈로그에 나오는 꾸미기 용품: 카탈로그 표시가 켜져 있고, 나오기 시작하는 일차가 된 것(이미 가진 용품도 수량을 정해 더 주문할 수 있다).</summary>
     private static IEnumerable<DecorationData> AvailableDecorations()
     {
         if (DataRegistry.Instance == null) return Enumerable.Empty<DecorationData>();
 
-        CurrencyManager currency = CurrencyManager.Instance;
-        int day = currency != null ? currency.CurrentDay : int.MaxValue;
-        return DataRegistry.Instance.Decorations.Where(d => d != null && d.inCatalog && d.availableFromDay <= day && (currency == null || currency.GetDecorationStock(d.id) <= 0));
+        int day = CurrencyManager.Instance != null ? CurrencyManager.Instance.CurrentDay : int.MaxValue;
+        return DataRegistry.Instance.Decorations.Where(d => d != null && d.inCatalog && d.availableFromDay <= day);
     }
 
-    /// <summary>카드 템플릿을 복제해 내용을 채운다. sprite가 없으면 템플릿의 그림을 그대로 둔다. 주문하면(돈을 낸 뒤) onOrdered를 부른다.</summary>
-    private void AddCard(string key, string itemName, string description, int price, Sprite sprite, Action onOrdered = null)
+    /// <summary>포장지의 수량 팝업을 연다. 주문하면 수량 × 가격을 내고(모자라면 알림만 띄우고 팝업은 열어 둔다) 포장지 재고에 넣는다.</summary>
+    private void OpenWrapperOrder(WrapperData item)
+    {
+        if (quantityPopup == null || CurrencyManager.Instance == null) return;
+
+        string itemName = $"{item.ColorName}색 포장지";
+        quantityPopup.Open(itemName, item.previewSprite, CurrencyManager.Instance.GetWrapperStock(item.wrapperId), item.price, quantity =>
+        {
+            if (!CurrencyManager.Instance.TrySpendMoney(item.price * quantity))
+            {
+                NoticeToast.Show("돈이 모자라요");
+                return false;
+            }
+            CurrencyManager.Instance.AddWrapperStock(item.wrapperId, quantity);
+            NoticeToast.Show($"{itemName} {NoticeToast.Highlight($"X{quantity}")}");
+            return true;
+        });
+    }
+
+    /// <summary>꾸미기 용품의 수량 팝업을 연다. 주문하면 수량 × 가격을 내고(모자라면 알림만 띄우고 팝업은 열어 둔다) 재고에 넣는다.</summary>
+    private void OpenDecorationOrder(DecorationData item)
+    {
+        if (quantityPopup == null || CurrencyManager.Instance == null) return;
+
+        quantityPopup.Open(item.displayName, item.sprite, CurrencyManager.Instance.GetDecorationStock(item.id), item.price, quantity =>
+        {
+            if (!CurrencyManager.Instance.TrySpendMoney(item.price * quantity))
+            {
+                NoticeToast.Show("돈이 모자라요");
+                return false;
+            }
+            CurrencyManager.Instance.AddDecorationStock(item.id, quantity);
+            NoticeToast.Show($"{item.displayName} {NoticeToast.Highlight($"X{quantity}")}");
+            return true;
+        });
+    }
+
+    /// <summary>카드 템플릿을 복제해 내용을 채운다. sprite가 없으면 템플릿의 그림을 그대로 둔다. 주문하면(돈을 낸 뒤) onOrdered를 부른다. openOrder가 있으면 주문을 눌러도 바로 사지 않고 그것을 부른다(수량 팝업).</summary>
+    private void AddCard(string key, string itemName, string description, int price, Sprite sprite, Action onOrdered = null, Action openOrder = null)
     {
         RectTransform card = Instantiate(itemTemplate, content);
         card.gameObject.SetActive(true);
@@ -238,6 +333,11 @@ public class CatalogPopup : MonoBehaviour
 
         var order = card.Find("Body/OrderBTN").GetComponent<Button>();
         var orderText = order.GetComponentInChildren<TMP_Text>();
+        if (openOrder != null)
+        {
+            order.onClick.AddListener(() => openOrder());
+            return;
+        }
         if (ordered.Contains(key))
         {
             MarkOrdered(order, orderText);
@@ -251,6 +351,13 @@ public class CatalogPopup : MonoBehaviour
             onOrdered?.Invoke();
             MarkOrdered(order, orderText);
         });
+    }
+
+    /// <summary>목록의 그 카드(키: 예 "Furniture3")의 주문 버튼. 카드가 없으면 null(튜토리얼이 가리키는 데 쓴다).</summary>
+    public RectTransform OrderButtonOf(string key)
+    {
+        Transform card = content.Find($"Item_{key}");
+        return card != null && card.gameObject.activeInHierarchy ? card.Find("Body/OrderBTN") as RectTransform : null;
     }
 
     /// <summary>카드 목록(목록과 스크롤바)을 숨기고 확대 보기 영역에 그림을 크게 보여 준다.</summary>

@@ -56,6 +56,25 @@ public class ScenarioManager : Singleton<ScenarioManager>
     /// <summary>전화기를 쓸 수 있는가(전화기가 해금된 일차부터).</summary>
     public bool IsPhoneUnlocked(int day) => scenarioEnabled && days.Any(d => d != null && d.day <= day && d.unlocksPhone);
 
+    /// <summary>그 카탈로그("가구"/"용품")를 받았는가: day일차까지의 정해진 방문 대사에 `카탈로그:대상` 효과가 있으면 받은 것으로 계산한다(일수를 건너뛰어도 맞게).</summary>
+    public bool IsCatalogUnlockedByDay(string target, int day)
+    {
+        if (!scenarioEnabled) return false;
+
+        foreach (DayScenarioData d in days.Where(d => d != null && d.day < day)) // 오늘 받는 카탈로그는 대사 효과(UnlockCatalog)가 처리한다. 여기는 지난 날만 본다
+        {
+            foreach (DayVisit visit in d.dayVisits)
+            {
+                foreach (string id in new[] { visit.introDialogueId, visit.dialogueId })
+                {
+                    Dialogue dlg = Dialogue.Get(id);
+                    if (dlg != null && dlg.lines.Any(l => l.effects.Any(e => e.kind == DialogueEffect.Catalog && e.target == target))) return true;
+                }
+            }
+        }
+        return false;
+    }
+
     /// <summary>달력을 쓸 수 있는가(달력이 해금된 일차부터).</summary>
     public bool IsCalendarUnlocked(int day) => scenarioEnabled && days.Any(d => d != null && d.day <= day && d.unlocksCalendar);
 }

@@ -61,7 +61,7 @@ public class DecorationPlacer : MonoBehaviour
     {
         if (IsPlaced(data)) return true;
 
-        foreach (PlacedDecoration item in layer.GetComponentsInChildren<PlacedDecoration>())
+        foreach (PlacedDecoration item in GetComponentsInChildren<PlacedDecoration>()) // layer는 Awake에서 정해지는데, 꾸미기 패널이 먼저 Awake에서 부를 수 있어 layer 대신 자기 자신에서 찾는다
         {
             if (item != null && item.Data == data) return true;
         }
@@ -122,5 +122,5 @@ public class DecorationPlacer : MonoBehaviour
     }
 
     /// <summary>이 포장지가 지금 꽃다발 모양인가.</summary>
-    public bool IsShapeSelected(DecorationData data) => bouquetImage.sprite == data.sprite;
+    public bool IsShapeSelected(DecorationData data) => bouquetImage != null && bouquetImage.sprite == data.sprite;
 }

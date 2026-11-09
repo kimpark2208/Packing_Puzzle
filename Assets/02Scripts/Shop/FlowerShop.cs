@@ -16,7 +16,7 @@ public class FlowerShop
     public const int ShelfSize = 6;
     public const int RerollsPerVisit = 2;
     private const float ChancePerDay = 0.25f;
-    private const int BetaSnapdragonId = 1;  // 금어초(Flower_01_Snapdragon)
+    public const int BetaSnapdragonId = 1;  // 금어초(Flower_01_Snapdragon). 신규 꽃 구매 튜토리얼이 이 꽃을 사게 한다
     private const int BetaSnapdragonDay = 7; // 베타에서 금어초가 확정으로 나오는 밤(기획서 3장)
 
     private readonly List<FlowerData> flowers;
@@ -30,7 +30,20 @@ public class FlowerShop
     public IReadOnlyList<FlowerData> Shelf => shelf;
 
     public bool IsSoldOut(FlowerData flower) => soldOut.Contains(flower.flowerID);
+    /// <summary>이번 진열 판정에 붙은 신규 꽃인가(NEW 뱃지 표시용). 리롤하면 판정을 다시 해서 값이 바뀐다.</summary>
+    public bool IsNew(FlowerData flower) => newFlowers.Contains(flower);
     public int RerollsLeft { get; private set; } = RerollsPerVisit;
+
+    /// <summary>
+    /// 지금 꼭 사야 하는 꽃(없으면 null). 신규 꽃 구매 튜토리얼: 시작 꽃 말고는 한 번도 사 본 적이 없을 때 처음 진열대에 나온 신규 꽃, 베타 강제: 7일차 밤의 금어초.
+    /// 살 돈이 없으면 막히지 않게 null이다. 사야 하는 동안은 상점을 마칠 수 없다.
+    /// </summary>
+    public FlowerData ForcedFlower(CurrencyManager wallet)
+    {
+        FlowerData flower = day == BetaSnapdragonDay ? shelf.FirstOrDefault(f => f.flowerID == BetaSnapdragonId && !wallet.HasObtainedFlower(f.flowerID)) : null;
+        if (flower == null && !flowers.Any(f => f.acquireDay > 0 && wallet.HasObtainedFlower(f.flowerID))) flower = shelf.FirstOrDefault(IsNew);
+        return flower != null && wallet.CurrentMoney >= flower.shopPrice ? flower : null;
+    }
 
     public FlowerShop(IEnumerable<FlowerData> allFlowers, Func<int, bool> isObtained, int day)
     {

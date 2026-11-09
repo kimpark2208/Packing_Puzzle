@@ -324,10 +324,26 @@ public partial class GameManager : Singleton<GameManager>
     /// <summary>낮 퍼즐이 끝났을 때: 쓴 포장지(소모품) 한 장을 소모한다(재고는 0 아래로 내려가지 않는다).</summary>
     public void ConsumeUsedWrapper()
     {
-        if (CurrencyManager.WrappersUnlimited) return; // 포장지 개수는 일단 따지지 않는다
+        if (Crafting && Craft.WrapperId > 0) // 예약 꽃다발은 보관해 둔 포장지에서 한 장 쓴다
+        {
+            Craft.UseWrapper(1);
+            return;
+        }
+        if (CurrencyManager.WrappersUnlimited) return; // 포장지 개수를 따지지 않는 동안은 줄지 않는다
 
         WrapperData wrapper = CurrentDayOrder != null ? CurrentDayOrder.wrapper : null;
         if (wrapper != null) CurrencyManager.Instance.AddWrapperStock(wrapper.wrapperId, -1);
+    }
+
+    /// <summary>예약 꽃다발을 마쳤을 때: 꽃다발에 쓴 필수 꾸미기 용품마다 보관해 둔 수에서 하나씩 뺀다(안 쓴 용품은 줄지 않는다).</summary>
+    public void ConsumeUsedSupplies(DecorationPlacer placer)
+    {
+        if (!Crafting || placer == null) return;
+
+        foreach (DecorationData supply in Craft.Supplies())
+        {
+            if (placer.IsUsed(supply)) Craft.UseSupply(supply.id, 1);
+        }
     }
 
     /// <summary>낮 퍼즐이 끝났을 때: 실제로 칸에 놓은 꽃 한 송이마다 보유 수량을 1씩 소모한다(한 번만).</summary>

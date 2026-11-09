@@ -64,10 +64,11 @@ public class NoticeToast : MonoBehaviour
     {
         while (waiting.Count > 0)
         {
-            if (label != null) label.text = waiting.Dequeue();
+            if (label != null) label.text = waiting.Peek(); // 다 보여 준 뒤에 큐에서 뺀다: 보이는 도중 장면이 바뀌어 토스트가 사라져도 다음 장면에서 다시 뜬다
             yield return Slide(HiddenPosition, restPosition, slideInSeconds);
             yield return new WaitForSecondsRealtime(holdSeconds);
             yield return Slide(restPosition, HiddenPosition, slideOutSeconds);
+            waiting.Dequeue();
         }
         routine = null;
     }

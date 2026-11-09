@@ -40,7 +40,7 @@ public class ReservationShowCard : MonoBehaviour
         rejectButton.interactable = !(TutorialOverlay.Instance != null && !TutorialOverlay.HasSeen(TutorialLessons.ReservationCallLesson)); // 처음 걸려 온 예약은 튜토리얼이 수락하게 한다(안내를 한 번 본 뒤에는 거절할 수 있다)
 
         titleText.text = data.title;
-        deadlineText.text = $"기한:   <color={Orange}><size=135%><b>{data.deadlineDays}일</b></size></color>";
+        deadlineText.text = $"기한: <color={Orange}><size=135%><b>{data.deadlineDays}일</b></size></color>";
         rewardText.text = data.reward.ToString("N0");
         depositText.text = data.deposit.ToString("N0");
         totalText.text = data.Total.ToString("N0");
@@ -52,8 +52,7 @@ public class ReservationShowCard : MonoBehaviour
             GameObject row = Instantiate(rowTemplate, rowParent, false);
             row.SetActive(true);
             row.transform.Find("Name").GetComponent<TMP_Text>().text = item.name;
-            bool owned = CurrencyManager.Instance == null || CurrencyManager.Instance.HasItem(item);
-            row.transform.Find("Count").GetComponent<TMP_Text>().text = !owned ? "미보유" : item.Storable ? $"X{item.count}" : "보유"; // 꽃은 필요한 수, 포장지와 용품은 보유 여부만(임시)
+            row.transform.Find("Count").GetComponent<TMP_Text>().text = item.Storable ? $"X{item.count}" : "미연결"; // 꽃, 포장지, 꾸미기 용품 모두 필요한 수. 데이터에 연결하지 않은 항목(id 0)만 다르게 보인다
             var icon = row.transform.Find("Icon").GetComponent<Image>();
             Sprite art = item.ResolveIcon();
             if (art != null) icon.sprite = art;

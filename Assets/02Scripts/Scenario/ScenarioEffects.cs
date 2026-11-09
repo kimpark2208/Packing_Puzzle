@@ -15,6 +15,7 @@ public static class ScenarioEffects
                 GiveWrapper(effect);
                 break;
             case DialogueEffect.Catalog:
+                if (CurrencyManager.Instance != null) CurrencyManager.Instance.UnlockCatalog(effect.target == "용품" ? CurrencyManager.CatalogKind.Supplies : CurrencyManager.CatalogKind.Furniture);
                 NoticeToast.Show($"{(effect.target == "용품" ? "꽃다발 용품" : "가구")} 카탈로그 {NoticeToast.Highlight("NEW")}");
                 break;
             case DialogueEffect.Leave:

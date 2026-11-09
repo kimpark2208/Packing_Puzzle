@@ -15,9 +15,25 @@ public class ShopSlotView : MonoBehaviour
     [SerializeField] private TMP_Text roleText;
     [SerializeField] private TMP_Text nameText;
     [SerializeField] private TMP_Text priceText;
+    [SerializeField] private GameObject newBadge; // 신규 꽃 NEW 뱃지(프리팹 ShopSlot의 InfoTag/NewBadge)
 
-    public void Bind(FlowerData flower, bool affordable, bool soldOut, Action onBuy)
+    private void Awake()
     {
+        if (newBadge == null) newBadge = transform.Find("InfoTag/NewBadge")?.gameObject; // 인스펙터 연결이 빠졌을 때의 폴백
+    }
+
+    /// <summary>이 칸에 진열된 꽃(튜토리얼이 특정 꽃의 구매 버튼을 가리키는 데 쓴다).</summary>
+    public FlowerData Flower { get; private set; }
+
+    public RectTransform BuyRect => (RectTransform)buyButton.transform;
+
+    public Button BuyButton => buyButton;
+
+    public void Bind(FlowerData flower, bool affordable, bool soldOut, bool isNew, Action onBuy)
+    {
+        Flower = flower;
+        if (newBadge != null) newBadge.SetActive(isNew);
+
         Sprite sprite = flower.stemSprite != null ? flower.stemSprite : flower.iconSprite;
         flowerImage.sprite = sprite;
         flowerImage.color = ColorPalette.ToUnityColor(flower.color) * (soldOut ? SoldOutShade : Color.white);

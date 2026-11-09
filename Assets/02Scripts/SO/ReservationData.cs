@@ -16,13 +16,16 @@ public class ReservationData : ScriptableObject
     public struct Item
     {
         public string name;
-        [Tooltip("꽃은 보유한 재고에서 수량만큼 보관한다. 포장지와 꾸미기 용품은 개수를 따지지 않고 가지고 있는지(보유/미보유)만 본다(임시).")] public ItemKind kind;
+        [Tooltip("꽃, 포장지, 꾸미기 용품 모두 보유한 재고에서 수량만큼 보관한다(꽃다발 하나에 하나씩 쓰므로 포장지와 용품은 꽃다발 수와 같은 수가 필요하다).")] public ItemKind kind;
         [Tooltip("꽃이면 꽃 번호(flowerID), 포장지면 포장지 번호(wrapperId), 꾸미기 용품이면 DecorationData의 id. 0이면 연결하지 않아 미보유다.")] public int id;
-        [Min(1), Tooltip("필요한 수량(꽃만 쓴다).")] public int count;
+        [Min(1), Tooltip("필요한 수량.")] public int count;
         [Tooltip("항목 그림(선택). 비우면 꽃과 꾸미기 용품은 그 데이터의 그림을 쓴다.")] public Sprite icon;
 
-        /// <summary>미리 모아 두는(보관하는) 항목인가: 꽃만.</summary>
-        public bool Storable => id > 0 && kind == ItemKind.Flower;
+        /// <summary>미리 모아 두는(보관하는) 항목인가: 꽃, 포장지, 꾸미기 용품 모두(연결한 항목만).</summary>
+        public bool Storable => id > 0;
+
+        /// <summary>보관하는 꽃 항목인가.</summary>
+        public bool IsFlower => id > 0 && kind == ItemKind.Flower;
 
         /// <summary>보여 줄 그림: 직접 정한 그림, 없으면 꽃의 아이콘이나 꾸미기 용품의 그림. 없으면 null.</summary>
         public Sprite ResolveIcon()

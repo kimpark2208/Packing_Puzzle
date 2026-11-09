@@ -19,11 +19,13 @@ public class TutorialOverlay : MonoBehaviour
     {
         public readonly string text;
         public readonly Func<IEnumerable<RectTransform>> targets; // 보여 주는 순간에 찾는다(레이아웃이 자리 잡은 뒤의 위치를 쓰려고)
+        public readonly bool press; // 확인 버튼 대신 밝게 살린 버튼을 직접 눌러야 넘어간다(강요)
 
-        private Step(string text, Func<IEnumerable<RectTransform>> targets)
+        private Step(string text, Func<IEnumerable<RectTransform>> targets, bool press = false)
         {
             this.text = text;
             this.targets = targets;
+            this.press = press;
         }
 
         /// <summary>배너만 보여 준다.</summary>
@@ -34,6 +36,9 @@ public class TutorialOverlay : MonoBehaviour
 
         /// <summary>여러 대상을 모두 감싸는 영역을 밝게 살린다.</summary>
         public static Step On(string text, Func<IEnumerable<RectTransform>> targets) => new(text, targets);
+
+        /// <summary>대상 버튼을 밝게 살리고 그 버튼을 직접 눌러야 다음으로 넘어간다(확인 버튼은 없다). 대상이 없어지거나 눌러도 되지 않게 되면 저절로 넘어간다.</summary>
+        public static Step Press(string text, Func<RectTransform> target) => new(text, () => new[] { target() }, true);
     }
 
     private const string EmphasisColor = "#C8501E";
@@ -119,17 +124,44 @@ public class TutorialOverlay : MonoBehaviour
             confirmed = false;
             Show(step);
 
-            for (float t = 0f; t < SettleSeconds && !confirmed && step.targets != null; t += Time.unscaledDeltaTime)
+            UnityEngine.Events.UnityAction onPressed = () => confirmed = true;
+            Button pressTarget = null; // 직접 눌러야 하는 장면의 대상 버튼(카탈로그가 열리는 것처럼 나중에 나타날 수 있어 매 프레임 찾는다)
+            bool hadTarget = false;
+            for (float t = 0f; !confirmed; t += Time.unscaledDeltaTime)
             {
+                if (step.targets != null && t < SettleSeconds) Show(step); // 스와이프나 카드 모션이 끝나기 전에 위치를 잡았을 수 있어 잠깐 동안 다시 맞춘다
+
+                if (step.press)
+                {
+                    Button now = PressButton(step);
+                    if (now != pressTarget) // 대상이 나타났거나 바뀌었다
+                    {
+                        if (pressTarget != null) pressTarget.onClick.RemoveListener(onPressed);
+                        pressTarget = now;
+                        if (pressTarget != null)
+                        {
+                            pressTarget.onClick.AddListener(onPressed);
+                            hadTarget = true;
+                            Show(step); // 확인 버튼을 감추고 대상을 밝힌다
+                        }
+                    }
+                    if (hadTarget && t >= SettleSeconds && (pressTarget == null || !pressTarget.gameObject.activeInHierarchy || !pressTarget.interactable)) break; // 눌러서 팝업이 닫히거나 버튼이 눌리지 않게 되면(다 산 꽃 등) 넘어간다
+                }
                 yield return null;
-                Show(step); // 스와이프나 카드 모션이 끝나기 전에 위치를 잡았을 수 있어 잠깐 동안 다시 맞춘다
             }
-            yield return new WaitUntil(() => confirmed);
+            if (pressTarget != null) pressTarget.onClick.RemoveListener(onPressed);
         }
 
         content.gameObject.SetActive(false);
         IsShowing = false;
         if (GameClock.Instance != null) GameClock.Instance.TutorialHold = false;
+    }
+
+    /// <summary>눌러야 하는 장면의 대상 버튼(대상이 없거나 버튼이 아니면 null: 그러면 확인 버튼으로 넘어간다).</summary>
+    private static Button PressButton(Step step)
+    {
+        RectTransform target = step.targets?.Invoke()?.FirstOrDefault(t => t != null);
+        return target != null ? target.GetComponent<Button>() : null;
     }
 
     /// <summary>한 장면을 보여 준다.</summary>
@@ -154,7 +186,9 @@ public class TutorialOverlay : MonoBehaviour
         bannerText.text = step.text;
         foreach (RectTransform dim in new[] { dimTop, dimBottom, dimLeft, dimRight }) dim.gameObject.SetActive(hasTarget);
         hand.gameObject.SetActive(hasTarget);
-        holeBlocker.gameObject.SetActive(true); // 대상이 없으면 화면 전체를 덮어 확인을 누르기 전엔 뒤의 화면이 눌리지 않게 한다
+        bool pressing = step.press && hasTarget; // 직접 눌러야 하는 장면: 밝은 곳을 막지 않고 확인 버튼도 없다
+        holeBlocker.gameObject.SetActive(!pressing); // 대상이 없으면 화면 전체를 덮어 확인을 누르기 전엔 뒤의 화면이 눌리지 않게 한다
+        confirmButton.gameObject.SetActive(!pressing);
 
         if (!hasTarget)
         {

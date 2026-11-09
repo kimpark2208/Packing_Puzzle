@@ -98,7 +98,7 @@ public class MainUI : MonoBehaviour
             return;
         }
         ShopUI shopUi = FindShop();
-        if (shopUi != null) shopUi.gameObject.SetActive(false); // 상점은 밤 상점 때만 보인다(에디터에서 켜 둔 채여도 시작하면 꺼진다)
+        if (shopUi != null) shopUi.Hide(); // 상점은 밤 상점 때만 보인다(에디터에서 켜 둔 채여도 시작하면 꺼진다)
 
         if (morning) StartCoroutine(BeginDayCustomerAfterMorning());
         else BeginDayCustomer();
@@ -110,6 +110,8 @@ public class MainUI : MonoBehaviour
     {
         SetBubble(false);
         if (character != null) character.gameObject.SetActive(false);
+        ShopUI shopUi = FindShop();
+        if (shopUi != null) shopUi.Hide(); // 에디터에서 켜 둔 채여도 밤 대화(상인 등장)가 끝날 때까지는 상점이 보이지 않는다(열기는 NightDialogueThenShop)
         StartCoroutine(NightDialogueThenShop());
     }
 
@@ -614,8 +616,8 @@ public class MainUI : MonoBehaviour
         StartCoroutine(GoToFlowerSelectAfterDelay());
     }
 
-    private static readonly string[] PickupReadyAnswers = { "네!", "그래요" };
-    private static readonly string[] PickupNotReadyAnswers = { "뭐라고요?", "네?" };
+    private static readonly string[] PickupReadyAnswers = { "네", "맞아요!" };
+    private static readonly string[] PickupNotReadyAnswers = { "네?", "뭐라고요?" };
 
     /// <summary>
     /// 예약일: 예약자가 찾아와 준비가 됐냐고 묻는다. 준비 상태에 따라 답 버튼이 다르다(준비됨 = 네!/그래요, 안 됨 = 뭐라고요?/네?).

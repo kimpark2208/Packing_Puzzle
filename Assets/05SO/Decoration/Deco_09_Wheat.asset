@@ -18,6 +18,8 @@ MonoBehaviour:
   price: 120
   description: "\uD669\uAE08\uBE5B \uC774\uC0AD"
   inCatalog: 1
-  availableFromDay: 5
+  availableFromDay: 1
+  startingStock: 15
+  orderMetaphors: []
   sprite: {fileID: 3293485504598729124, guid: 5780be66b2fdefd4c9dc041f048420e2, type: 3}
   sizeScale: 1

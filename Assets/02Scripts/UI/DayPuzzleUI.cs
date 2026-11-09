@@ -189,6 +189,7 @@ public class DayPuzzleUI : MonoBehaviour
         }
         GameManager.Instance?.ConsumeUsedFlowers(board.PlacementHistory); // 퍼즐이 끝났으니 놓은 꽃이 소모된다(붕괴 재시작은 끝이 아니다)
         GameManager.Instance?.ConsumeUsedWrapper(); // 포장지도 한 장 소모된다
+        GameManager.Instance?.ConsumeUsedSupplies(FindFirstObjectByType<DecorationPlacer>()); // 예약 꽃다발에 쓴 필수 꾸미기 용품도 하나씩 소모된다
         GameClock.Instance?.StopMood(); // 퍼즐이 끝났으니 기분 시간은 다음 주문까지 멈춘다
         return result;
     }

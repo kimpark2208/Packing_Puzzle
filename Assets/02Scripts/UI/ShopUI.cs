@@ -38,12 +38,24 @@ public class ShopUI : MonoBehaviour
         }
 
         gameObject.SetActive(true);
+        if (closeButton != null) closeButton.gameObject.SetActive(true); // 마치기 버튼은 상점 밖(카운터 화면)에 있어서, 상점이 열려 있는 동안에만 보인다
         Refresh();
+    }
+
+    /// <summary>상점을 숨긴다(마치기 버튼도 같이). 씬이 에디터에서 켜진 채 저장돼 있어도 낮에는 보이지 않게 MainUI가 부른다.</summary>
+    public void Hide()
+    {
+        gameObject.SetActive(false);
+        if (closeButton != null) closeButton.gameObject.SetActive(false);
     }
 
     private void OnEnable() => EventBus.OnMoneyChanged += OnMoneyChanged;
 
-    private void OnDisable() => EventBus.OnMoneyChanged -= OnMoneyChanged;
+    private void OnDisable()
+    {
+        EventBus.OnMoneyChanged -= OnMoneyChanged;
+        if (closeButton != null) closeButton.gameObject.SetActive(false);
+    }
 
     private void OnMoneyChanged(int money)
     {
@@ -60,7 +72,7 @@ public class ShopUI : MonoBehaviour
             if (!filled) continue;
 
             FlowerData flower = shop.Shelf[i];
-            slots[i].Bind(flower, wallet != null && wallet.CurrentMoney >= flower.shopPrice, shop.IsSoldOut(flower), () => OnBuyClicked(flower));
+            slots[i].Bind(flower, wallet != null && wallet.CurrentMoney >= flower.shopPrice, shop.IsSoldOut(flower), shop.IsNew(flower), () => OnBuyClicked(flower));
         }
 
         if (rerollButton != null)
@@ -70,6 +82,9 @@ public class ShopUI : MonoBehaviour
         }
         if (rerollCountText != null) rerollCountText.text = shop.RerollsLeft.ToString();
     }
+
+    /// <summary>신규 꽃 구매 튜토리얼이 가리키는 꽃(지금 꼭 사야 하는 꽃, 없으면 null).</summary>
+    public FlowerData ForcedFlower => shop != null && CurrencyManager.Instance != null ? shop.ForcedFlower(CurrencyManager.Instance) : null;
 
     private void OnBuyClicked(FlowerData flower)
     {
@@ -88,6 +103,11 @@ public class ShopUI : MonoBehaviour
     private void OnCloseClicked()
     {
         if (closed) return; // 두 번 눌러 다음 날이 두 번 시작되지 않게
+        if (ForcedFlower != null)
+        {
+            NoticeToast.Show("새 꽃을 구매해야 마칠 수 있어요");
+            return;
+        }
         closed = true;
         onClose?.Invoke();
     }

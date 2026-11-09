@@ -1,0 +1,29 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 563bff9d3474c0945aa0772be79cc9f9, type: 3}
+  m_Name: Tutorial_shop
+  m_EditorClassIdentifier: Assembly-CSharp::TutorialPopupData
+  id: shop
+  title: "\uAF43 \uC0C1\uC810"
+  icon: {fileID: 21300000, guid: 1f72a2cd4d09ee0419cc08987562474f, type: 3}
+  pages:
+  - image: {fileID: 21300000, guid: a881250bb8feae34d894d9df6f392034, type: 3}
+    text: "\uC601\uC5C5\uC774 \uB05D\uB098\uBA74 \uAF43\uB2E4\uBC1C \uC6A9\uD488
+      \uC0C1\uC778\uC774 <b>\uAF43 \uC0C1\uC810</b>\uC744 \uC5F4\uC5B4\uC694.\n\uC9C4\uC5F4\uB300\uC5D0\uC11C
+      \uAF43\uC744 \uAD6C\uB9E4\uD574 \uB2E4\uC74C \uB0A0 \uC7A5\uC0AC\uB97C \uC900\uBE44\uD574\uC694."
+  - image: {fileID: 21300000, guid: 249e0e2ae033d6e47882ec8b30758a67, type: 3}
+    text: "<b>\uC815\uBCF4\uD45C</b>\uC5D0\uC11C \uAF43\uC758 \uC815\uBCF4\uB97C
+      \uD655\uC778\uD560 \uC218 \uC788\uC5B4\uC694."
+  - image: {fileID: 21300000, guid: dbed60afabd18be4a8464f20a76dd7c6, type: 3}
+    text: "\uC9C0\uAE08\uC740 \uC9C4\uC5F4\uB300\uAC00 \uBE44\uC5B4\uC788\uC9C0\uB9CC,
+      \uB0A0\uC774 \uC9C0\uB0A0\uC218\uB85D <b>\uC0C8\uB85C\uC6B4 \uAF43</b>\uC774
+      \uB4E4\uC5B4\uC640\uC694!"

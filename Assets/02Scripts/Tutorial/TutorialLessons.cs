@@ -44,6 +44,11 @@ public static class TutorialLessons
 
     private const string ReservationAccept = MainRoot + "ReservationPopup/Card/ReservationAcceptBTN"; // 예약 쇼카드의 수락 버튼
 
+    private const string ShopRoot = MainRoot + "ShopRoot"; // 밤 상점(상인 대화가 끝난 뒤에 켜진다)
+    private const string PhoneBar = MainRoot + "CounterDesk/CounterTelephone/TelephoneBar"; // 전화기를 누르면 뜨는 메뉴 바
+    private const string CatalogButton = PhoneBar + "/CatalogBTN"; // 바의 상품주문 버튼
+    private const int BetterPhoneId = 3; // 가구 "더 나은 전화기"(FurnitureData id). 전화기 튜토리얼이 주문하게 한다(가격 0)
+
     /// <summary>예약 쇼카드 안내의 id. 이 안내를 보기 전의 첫 예약은 거절할 수 없다(ReservationShowCard).</summary>
     public const string ReservationCallLesson = "reservation-call";
 
@@ -51,10 +56,13 @@ public static class TutorialLessons
     // 제목, 그림, 설명은 TutorialPopupData 에셋(id가 같은 것)에 있고, 여기서는 언제 보여 줄지만 정한다. 배너형(아래 All)보다 먼저 검사한다.
     public static readonly (string id, Func<bool> when)[] PopupTriggers =
     {
+        // 밤 상점과 전화기
+        ("shop", () => In(GameManager.SceneDayMain) && Active(ShopRoot)),     // 꽃다발 용품 상인 대화가 끝나고 꽃 상점이 처음 열리면
+        ("phone", () => In(GameManager.SceneDayMain) && Active(PhoneBar)),    // 전화기를 처음 눌러 메뉴 바가 열리면
+
         // 낮
         ("day-flower", () => In(GameManager.SceneDayMain) && Visible(FlowerConfirm)),                       // 꽃 선택 페이지에 처음 오면
         ("day-puzzle", () => In(GameManager.SceneDayPuzzle) && Active(FlowerBucket)),                                                        // 낮 퍼즐에 처음 들어오면
-        ("furniture", () => In(GameManager.SceneDayMain) && PhoneUnlocked() && !MerchantTalking() && !Crafting && Visible(AcceptButton)), // 2일차 가구 상인이 떠난 뒤(다음 손님이 말할 때)
         ("reservation-prep", () => In(GameManager.SceneDayMain) && !Crafting && HasReservation() && !ReservationCall.Busy && Visible(AcceptButton)), // 예약을 수락한 뒤 다음 손님이 오면
         ("reservation-craft", () => In(GameManager.SceneDayMain) && Crafting && Visible(FlowerConfirm)),                                      // 예약일에 꽃 선택 페이지로 넘어가면
     };
@@ -66,7 +74,21 @@ public static class TutorialLessons
         (ReservationCallLesson, () => In(GameManager.SceneDayMain) && Active(ReservationAccept), () => new[]
         {
             Banner($"예약 주문이 걸려왔어요! 필요한 꽃과 용품들을 {Em("예약일까지 준비")}하면 일반 주문보다 훨씬 더 많은 돈을 받아요."),
-            On($"{Em("[수락]")}을 눌러 예약을 받아요.", () => Rt(ReservationAccept)),
+            Press($"{Em("[수락]")}을 눌러 예약을 받아요.", () => Rt(ReservationAccept)), // 확인 버튼 없이 수락을 직접 눌러야 넘어간다
+        }),
+
+        // 전화기 팝업(phone)을 본 뒤: 상품 주문을 열어 "더 나은 전화기"를 주문하게 한다(직접 눌러야 넘어간다)
+        ("better-phone", () => In(GameManager.SceneDayMain) && TutorialPopup.HasSeen("phone") && Active(PhoneBar) && !BetterPhoneOrdered(), () => new[]
+        {
+            Press($"{Em("[상품 주문]")}을 눌러 카탈로그를 열어요.", () => Rt(CatalogButton)),
+            Press($"{Em("[더 나은 전화기]")}를 주문해요.\n주문한 가구는 다음 날 아침 설치돼요.", () => CatalogOrderButton($"Furniture{BetterPhoneId}")),
+        }),
+
+        // 신규 꽃 구매(베타 기획서: 이전 튜토리얼 방식): 처음 새 꽃이 진열되면 그 꽃을 직접 사게 한다(사기 전에는 ShopUI가 상점 마치기를 막는다. 7일차 금어초도 같다)
+        ("new-flower", () => In(GameManager.SceneDayMain) && Active(ShopRoot) && ForcedSlot() != null, () => new[]
+        {
+            Banner($"처음 보는 꽃이 들어왔어요! 새 꽃을 구매하면 다음 날부터 {Em("그 꽃을 찾는 손님")}이 찾아와요."),
+            Press($"{Em("[구매]")}를 눌러 새 꽃을 사요.", () => ForcedSlot()?.BuyRect),
         }),
 
         // 꽃 선택 페이지(주문을 받으면 자동으로 넘어온다)
@@ -102,7 +124,7 @@ public static class TutorialLessons
         // 낮 퍼즐: 꾸미기와 결과
         ("decorate", () => In(GameManager.SceneDayPuzzle) && Active(DecoratePanelPath), () => new[]
         {
-            On($"{Em("리본과 풀")}은 카드를 누르면 위치에 놓아지고,\n{Em("카드와 장식")}은 드래그로 끌어다 놓아요.\n{Em("[꽃다발 모양]")}에서는 포장지를 바꿔요.", () => Rt(DecoratePanelPath)),
+            On($"카드를 누르면 놓아지고, 드래그로 위치를 조정해요.\n{Em("[꽃다발 모양]")}에서는 포장지를 바꿔요.", () => Rt(DecoratePanelPath)),
         }),
         ("result", () => In(GameManager.SceneDayPuzzle) && Active(ResultGauge), () => new[]
         {
@@ -122,15 +144,15 @@ public static class TutorialLessons
     /// <summary>수락한 예약이 있는가.</summary>
     private static bool HasReservation() => CurrencyManager.Instance != null && CurrencyManager.Instance.Reservations.Count > 0;
 
-    /// <summary>오늘부터 전화기를 쓸 수 있는가(시나리오의 해금 일차. 시나리오가 없으면 처음부터 쓸 수 있으니 안내하지 않는다).</summary>
-    private static bool PhoneUnlocked() => ScenarioManager.Instance != null && CurrencyManager.Instance != null && ScenarioManager.Instance.IsPhoneUnlocked(CurrencyManager.Instance.CurrentDay);
-
-    /// <summary>지금 가구 상인이 대화하는 중인가(상인이 떠나야 가구 주문 안내를 한다).</summary>
-    private static bool MerchantTalking()
+    /// <summary>카탈로그에서 그 카드(키: 예 "Furniture3")의 주문 버튼(카탈로그가 열려 있고 그 카드가 있을 때만, 없으면 null).</summary>
+    private static RectTransform CatalogOrderButton(string cardKey)
     {
-        DayVisit? visit = Game != null ? Game.CurrentScriptedVisit : null;
-        return visit.HasValue && visit.Value.dialogueId != null && visit.Value.dialogueId.StartsWith("merchant");
+        CatalogPopup catalog = UnityEngine.Object.FindFirstObjectByType<CatalogPopup>();
+        return catalog != null ? catalog.OrderButtonOf(cardKey) : null;
     }
+
+    /// <summary>"더 나은 전화기"를 이미 주문했는가(주문했거나 설치된 가구).</summary>
+    private static bool BetterPhoneOrdered() => CurrencyManager.Instance != null && CurrencyManager.Instance.IsFurnitureOrdered(BetterPhoneId);
 
     /// <summary>경로의 오브젝트(켜져 있을 때만. GameObject.Find는 경로로 찾으면 꺼진 것도 돌려주므로 직접 거른다).</summary>
     private static GameObject Go(string path)
@@ -163,6 +185,14 @@ public static class TutorialLessons
         float width = cam != null ? cam.pixelWidth : Screen.width;
         float x = RectTransformUtility.WorldToScreenPoint(cam, rt.TransformPoint(rt.rect.center)).x;
         return x > width * 0.05f && x < width * 0.95f;
+    }
+
+    /// <summary>상점 진열대에서 지금 꼭 사야 하는 꽃(처음 나온 신규 꽃, 7일차 금어초)의 칸(없으면 null).</summary>
+    private static ShopSlotView ForcedSlot()
+    {
+        ShopUI shop = UnityEngine.Object.FindFirstObjectByType<ShopUI>();
+        FlowerData forced = shop != null ? shop.ForcedFlower : null;
+        return forced == null ? null : UnityEngine.Object.FindObjectsByType<ShopSlotView>(FindObjectsSortMode.None).FirstOrDefault(s => s.gameObject.activeInHierarchy && s.Flower == forced);
     }
 
     /// <summary>낮 퍼즐 안내(별·그늘·다시 뽑기)를 보여 줄 때가 됐는가: 팝업형 day-puzzle을 본 뒤.</summary>

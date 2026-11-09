@@ -13,7 +13,6 @@ public partial class GameManager
     [Tooltip("시작 꽃(획득 일차 0인 꽃)을 처음에 이만큼씩 준다. 0이면 자동으로 주지 않고 상점에서 사야 한다")]
     [Min(0)] [SerializeField] private int startingFlowerStock = 20;
 
-    private const int StartingDecorationStock = 5; // 임시: 꾸미기 용품 전부를 처음에 이만큼씩 준다
     private const int FinalWrapperDelayDays = 20; // 포장지 4번을 해금한 지 이만큼 지나면 5번을 해금한다
 
     private int finalWrapperDay = -1; // 포장지 5번을 해금할 일차(4번을 해금하면 정해진다. 아직이면 -1)
@@ -35,14 +34,14 @@ public partial class GameManager
         }
     }
 
-    /// <summary>게임을 시작할 때 한 번: 지금 있는 꾸미기 용품 전부를 기본으로 지급한다(손님은 얻은 용품만 주문한다).</summary>
+    /// <summary>게임을 시작할 때 한 번: 기본 제공으로 정해진 꾸미기 용품(DecorationData.startingStock)만 지급한다(손님은 얻은 용품만 주문한다).</summary>
     private void GrantStartingDecorations()
     {
         CurrencyManager wallet = CurrencyManager.Instance;
         DataRegistry registry = DataRegistry.Instance;
         if (wallet == null || registry == null) return;
 
-        foreach (DecorationData decoration in registry.Decorations.Where(d => d != null)) wallet.AddDecorationStock(decoration.id, StartingDecorationStock);
+        foreach (DecorationData decoration in registry.Decorations.Where(d => d != null && d.startingStock > 0)) wallet.AddDecorationStock(decoration.id, decoration.startingStock);
     }
 
     /// <summary>day일차를 시작할 때: 해금 조건이 된 포장지를 해금한다.</summary>
