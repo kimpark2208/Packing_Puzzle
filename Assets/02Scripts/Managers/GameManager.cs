@@ -338,7 +338,18 @@ public partial class GameManager : Singleton<GameManager>
     /// <summary>예약 꽃다발을 마쳤을 때: 꽃다발에 쓴 필수 꾸미기 용품마다 보관해 둔 수에서 하나씩 뺀다(안 쓴 용품은 줄지 않는다).</summary>
     public void ConsumeUsedSupplies(DecorationPlacer placer)
     {
-        if (!Crafting || placer == null) return;
+        if (placer == null) return;
+
+        if (!Crafting) // 일반 주문: 꽃다발에 쓴 꾸미기 용품(리본·잎·카드·장식)은 소모품이라 재고에서 종류마다 하나씩 준다(꽃다발 모양 그림은 제외). ponytail: 카드/장식을 여러 개 놓아도 하나로 센다
+        {
+            if (DataRegistry.Instance == null || CurrencyManager.Instance == null) return;
+
+            foreach (DecorationData decoration in DataRegistry.Instance.Decorations)
+            {
+                if (decoration != null && decoration.category != DecorationCategory.Wrapper && placer.IsUsed(decoration)) CurrencyManager.Instance.AddDecorationStock(decoration.id, -1);
+            }
+            return;
+        }
 
         foreach (DecorationData supply in Craft.Supplies())
         {

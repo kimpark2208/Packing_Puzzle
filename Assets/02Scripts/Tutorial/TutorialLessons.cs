@@ -124,7 +124,7 @@ public static class TutorialLessons
         // 낮 퍼즐: 꾸미기와 결과
         ("decorate", () => In(GameManager.SceneDayPuzzle) && Active(DecoratePanelPath), () => new[]
         {
-            On($"카드를 누르면 놓아지고, 드래그로 위치를 조정해요.\n{Em("[꽃다발 모양]")}에서는 포장지를 바꿔요.", () => Rt(DecoratePanelPath)),
+            On("카드를 누르면 놓아지고, 드래그로 위치를 조정해요.", () => Rt(DecoratePanelPath)), // 꽃다발 모양 탭은 뾰족 포장지가 열리는 5일차 전까지 비어 있어서 그 안내는 뺀다
         }),
         ("result", () => In(GameManager.SceneDayPuzzle) && Active(ResultGauge), () => new[]
         {

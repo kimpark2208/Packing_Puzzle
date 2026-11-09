@@ -129,7 +129,7 @@ public class TutorialOverlay : MonoBehaviour
             bool hadTarget = false;
             for (float t = 0f; !confirmed; t += Time.unscaledDeltaTime)
             {
-                if (step.targets != null && t < SettleSeconds) Show(step); // 스와이프나 카드 모션이 끝나기 전에 위치를 잡았을 수 있어 잠깐 동안 다시 맞춘다
+                if (step.targets != null && (t < SettleSeconds || step.press)) Show(step); // 스와이프나 카드 모션이 끝나기 전에 위치를 잡았을 수 있어 잠깐 동안 다시 맞춘다(직접 눌러야 하는 장면은 누를 때까지 매 프레임: 대상이 늦게 움직여도 어긋나지 않는다)
 
                 if (step.press)
                 {
