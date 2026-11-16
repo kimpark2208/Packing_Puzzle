@@ -251,6 +251,9 @@ public class MainUI : MonoBehaviour
 
     private bool PopupOpen => (catalogPopup != null && catalogPopup.activeSelf) || (calendarPopup != null && calendarPopup.activeSelf);
 
+    /// <summary>지금 전화기를 눌러 메뉴 바를 열 수 있는 상태인가(튜토리얼이 전화기를 누르게 할 때를 정하는 데 쓴다).</summary>
+    public bool PhoneReady => phoneUnlocked && telephoneBar != null && !telephoneBar.activeSelf && !PopupOpen && !ReservationCall.Busy && !MerchantTalking;
+
     /// <summary>
     /// 대사를 시작한다. 말풍선과 응답 버튼을 숨겨 두었다가, 씬 전환의 페이드가 다 걷힌 뒤(걷힐 게 없으면 한 프레임 뒤)에 보이고 대사(와 말소리)를 시작한다.
     /// </summary>

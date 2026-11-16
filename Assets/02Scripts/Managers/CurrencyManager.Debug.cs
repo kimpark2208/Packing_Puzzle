@@ -1,11 +1,25 @@
 using System.Linq;
 using UnityEngine;
+using UnityEngine.InputSystem;
 
 /// <summary>CurrencyManager의 에디터 전용 디버그 메뉴(OnGUI). 빌드에는 들어가지 않는다. 새 디버그 기능은 여기에 한 줄씩 더한다.</summary>
 public partial class CurrencyManager
 {
 #if UNITY_EDITOR
     private bool debugOpen;
+
+    // S 키 = 스크린샷. 프로젝트 루트 Screenshots/ 폴더(Assets 밖이라 임포트·커밋에 안 섞임)에 저장.
+    private void Update()
+    {
+        Keyboard keyboard = Keyboard.current;
+        if (keyboard == null || !keyboard.sKey.wasPressedThisFrame) return;
+
+        string dir = System.IO.Path.Combine(System.IO.Path.GetDirectoryName(Application.dataPath), "Screenshots");
+        System.IO.Directory.CreateDirectory(dir);
+        string path = System.IO.Path.Combine(dir, $"shot_{System.DateTime.Now:yyyyMMdd_HHmmss}.png");
+        ScreenCapture.CaptureScreenshot(path);
+        Debug.Log($"스크린샷 저장: {path}");
+    }
 
     private void OnGUI()
     {

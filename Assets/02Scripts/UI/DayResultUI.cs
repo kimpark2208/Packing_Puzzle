@@ -79,6 +79,10 @@ public class DayResultUI : MonoBehaviour
         {
             if (bonusMoney > 0) wallet.AddMoney(bonusMoney);
         }
-        if (GameManager.Instance != null) GameManager.Instance.StartNextDay();
+        int day = wallet != null ? wallet.CurrentDay : 1; // 방금 끝난 날(다음 날로 넘기기 전)
+        AdManager.ShowInterstitialThen(day, () =>
+        {
+            if (GameManager.Instance != null) GameManager.Instance.StartNextDay();
+        });
     }
 }

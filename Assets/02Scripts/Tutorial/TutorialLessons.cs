@@ -45,6 +45,7 @@ public static class TutorialLessons
     private const string ReservationAccept = MainRoot + "ReservationPopup/Card/ReservationAcceptBTN"; // 예약 쇼카드의 수락 버튼
 
     private const string ShopRoot = MainRoot + "ShopRoot"; // 밤 상점(상인 대화가 끝난 뒤에 켜진다)
+    private const string Telephone = MainRoot + "CounterDesk/CounterTelephone"; // 전화기(누르면 메뉴 바가 뜬다)
     private const string PhoneBar = MainRoot + "CounterDesk/CounterTelephone/TelephoneBar"; // 전화기를 누르면 뜨는 메뉴 바
     private const string CatalogButton = PhoneBar + "/CatalogBTN"; // 바의 상품주문 버튼
     private const int BetterPhoneId = 3; // 가구 "더 나은 전화기"(FurnitureData id). 전화기 튜토리얼이 주문하게 한다(가격 0)
@@ -58,8 +59,6 @@ public static class TutorialLessons
     {
         // 밤 상점과 전화기
         ("shop", () => In(GameManager.SceneDayMain) && Active(ShopRoot)),     // 꽃다발 용품 상인 대화가 끝나고 꽃 상점이 처음 열리면
-        ("phone", () => In(GameManager.SceneDayMain) && Active(PhoneBar)),    // 전화기를 처음 눌러 메뉴 바가 열리면
-
         // 낮
         ("day-flower", () => In(GameManager.SceneDayMain) && Visible(FlowerConfirm)),                       // 꽃 선택 페이지에 처음 오면
         ("day-puzzle", () => In(GameManager.SceneDayPuzzle) && Active(FlowerBucket)),                                                        // 낮 퍼즐에 처음 들어오면
@@ -77,8 +76,14 @@ public static class TutorialLessons
             Press($"{Em("[수락]")}을 눌러 예약을 받아요.", () => Rt(ReservationAccept)), // 확인 버튼 없이 수락을 직접 눌러야 넘어간다
         }),
 
-        // 전화기 팝업(phone)을 본 뒤: 상품 주문을 열어 "더 나은 전화기"를 주문하게 한다(직접 눌러야 넘어간다)
-        ("better-phone", () => In(GameManager.SceneDayMain) && TutorialPopup.HasSeen("phone") && Active(PhoneBar) && !BetterPhoneOrdered(), () => new[]
+        // 전화기가 쓸 수 있게 되면(3일차 상인이 떠난 뒤): 전화기를 직접 눌러 메뉴를 열게 한다(확인 버튼 없이 눌러야 넘어간다). 이 뒤 바가 열리면 better-phone이 이어진다
+        ("phone-touch", () => In(GameManager.SceneDayMain) && !BetterPhoneOrdered() && UnityEngine.Object.FindFirstObjectByType<MainUI>() is MainUI main && main.PhoneReady, () => new[]
+        {
+            Press($"전화기를 터치하면 {Em("메뉴")}가 열려요.", () => Rt(Telephone)),
+        }),
+
+        // 전화기를 눌러 메뉴 바가 열리면: 상품 주문을 열어 "더 나은 전화기"를 주문하게 한다(직접 눌러야 넘어간다)
+        ("better-phone", () => In(GameManager.SceneDayMain) && Active(PhoneBar) && !BetterPhoneOrdered(), () => new[]
         {
             Press($"{Em("[상품 주문]")}을 눌러 카탈로그를 열어요.", () => Rt(CatalogButton)),
             Press($"{Em("[더 나은 전화기]")}를 주문해요.\n주문한 가구는 다음 날 아침 설치돼요.", () => CatalogOrderButton($"Furniture{BetterPhoneId}")),
