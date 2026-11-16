@@ -28,8 +28,8 @@ MonoBehaviour:
   iconSprite: {fileID: 7063445062853087527, guid: 133ed902eb78116429f4e19cbf0d67d6, type: 3}
   stemSprite: {fileID: 5856240631183992178, guid: b9f97a0c03bea8c49ac2b17ce37cf466, type: 3}
   ringSprites:
-  - {fileID: -8763125123694568423, guid: 560daf14085f39544941438f5a5c72ae, type: 3}
-  - {fileID: -2764537206855289646, guid: ff27b819afb375b499366b7b05aa9148, type: 3}
-  - {fileID: -3480653308909891845, guid: 29875a58e269b374195376c434488224, type: 3}
-  - {fileID: 21300000, guid: c750f916bf3b2e14bb054adabd242bab, type: 3}
+  - {fileID: 21300000, guid: 44e822af355c5f44aaed9ed15a99db29, type: 3}
+  - {fileID: 21300000, guid: 8c58328b75c058b4fb3f1b24b5d7371b, type: 3}
+  - {fileID: 21300000, guid: ebb466f36f4e86e438ffcd7e5a7727a6, type: 3}
+  - {fileID: 21300000, guid: a3c1d3eeed32d6f45ba8b9f0f36dcbc5, type: 3}
   - {fileID: 0}

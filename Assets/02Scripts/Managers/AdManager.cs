@@ -26,6 +26,7 @@ public class AdManager : Singleton<AdManager>
         {
             PlayerPrefs.SetInt(RemovedKey, value ? 1 : 0);
             PlayerPrefs.Save();
+            if (!value && Instance != null) Instance.StartAds(); // 광고 제거를 끈 경우: 시작할 때 꺼져 있어서 아직 안 켠 광고를 지금 켠다
         }
     }
 
@@ -44,25 +45,32 @@ public class AdManager : Singleton<AdManager>
 
 #if UNITY_ANDROID // 에디터(타깃이 안드로이드일 때)에서도 컴파일은 되게 두고, 실행만 아래에서 막는다
     private InterstitialAd interstitial;
+    private bool loading; // 불러오는 중에는 같은 요청을 또 하지 않는다
+    private bool started;
 
-    protected override void OnAwake()
+    protected override void OnAwake() => StartAds();
+
+    private void StartAds()
     {
-        if (AdsRemoved) return;
+        if (started || AdsRemoved) return;
+        started = true;
         MobileAds.RaiseAdEventsOnUnityMainThread = true; // 광고 이벤트를 유니티 메인 스레드에서 받는다
         MobileAds.Initialize(_ => Load());
     }
 
     private void Load()
     {
-        if (AdsRemoved) return;
+        if (AdsRemoved || loading) return;
         if (interstitial != null)
         {
             interstitial.Destroy();
             interstitial = null;
         }
 
+        loading = true;
         InterstitialAd.Load(UseTestAds ? TestInterstitialId : InterstitialId, new AdRequest(), (ad, error) =>
         {
+            loading = false;
             if (error != null || ad == null)
             {
                 Debug.LogWarning($"[Ad] 전면 광고 불러오기 실패: {error}");
@@ -99,6 +107,7 @@ public class AdManager : Singleton<AdManager>
         ad.Show();
     }
 #else
+    private void StartAds() { }
     private void ShowThen(int day, Action then) => then();
 #endif
 }
