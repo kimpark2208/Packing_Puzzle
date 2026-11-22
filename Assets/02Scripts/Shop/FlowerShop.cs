@@ -14,7 +14,7 @@ using UnityEngine;
 public class FlowerShop
 {
     public const int ShelfSize = 6;
-    public const int RerollsPerVisit = 2;
+    //public const int RerollsPerVisit = 2;
     private const float ChancePerDay = 0.25f;
 
     private readonly List<FlowerData> flowers;
@@ -30,7 +30,7 @@ public class FlowerShop
     public bool IsSoldOut(FlowerData flower) => soldOut.Contains(flower.flowerID);
     /// <summary>이번 진열 판정에 붙은 신규 꽃인가(NEW 뱃지 표시용). 리롤하면 판정을 다시 해서 값이 바뀐다.</summary>
     public bool IsNew(FlowerData flower) => newFlowers.Contains(flower);
-    public int RerollsLeft { get; private set; } = RerollsPerVisit;
+    //public int RerollsLeft { get; private set; } = RerollsPerVisit;
 
     /// <summary>
     /// 지금 꼭 사야 하는 꽃(없으면 null). 신규 꽃 구매 튜토리얼: 시작 꽃 말고는 한 번도 얻은 적이 없을 때 처음 진열대에 나온 신규 꽃.
@@ -60,9 +60,9 @@ public class FlowerShop
     /// <summary>신규 꽃 등장 판정을 다시 하고 진열대를 새로 채운다. 리롤을 다 썼으면 false.</summary>
     public bool Reroll()
     {
-        if (RerollsLeft <= 0) return false;
+        /*if (RerollsLeft <= 0) return false;
 
-        RerollsLeft--;
+        RerollsLeft--;*/
         Fill();
         return true;
     }

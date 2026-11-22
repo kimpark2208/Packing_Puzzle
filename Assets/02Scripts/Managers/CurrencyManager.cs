@@ -128,8 +128,6 @@ public partial class CurrencyManager : Singleton<CurrencyManager>
         EventBus.RaiseDiamondsChanged(currentDiamonds);
     }
 
-    public void AddDiamonds(int amount) => SetDiamonds(currentDiamonds + amount);
-
     /// <summary>다이아 소비. 모자라면 쓰지 않고 false.</summary>
     public bool TrySpendDiamonds(int amount)
     {

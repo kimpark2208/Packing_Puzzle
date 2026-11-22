@@ -36,7 +36,7 @@ public class ReservationData : ScriptableObject
             if (kind == ItemKind.Flower)
             {
                 FlowerData flower = DataRegistry.Instance.GetFlower(id);
-                return flower != null ? flower.iconSprite : null;
+                return flower != null ? flower.IconSprite : null;
             }
             if (kind == ItemKind.Supply)
             {

@@ -78,9 +78,9 @@ public class ShopUI : MonoBehaviour
         if (rerollButton != null)
         {
             rerollButton.gameObject.SetActive(true);
-            rerollButton.interactable = shop.RerollsLeft > 0;
+            rerollButton.interactable = true; // 횟수 제한이 없다. 다이아가 모자라면 누를 때 알림이 뜬다
         }
-        if (rerollCountText != null) rerollCountText.text = shop.RerollsLeft.ToString();
+        if (rerollCountText != null) rerollCountText.text = GachaManager.RerollDiamondCost.ToString(); // 남은 횟수 대신 드는 다이아
     }
 
     /// <summary>신규 꽃 구매 튜토리얼이 가리키는 꽃(지금 꼭 사야 하는 꽃, 없으면 null).</summary>
@@ -97,6 +97,12 @@ public class ShopUI : MonoBehaviour
 
     private void OnRerollClicked()
     {
+        if (CurrencyManager.Instance != null && !CurrencyManager.Instance.TrySpendDiamonds(GachaManager.RerollDiamondCost))
+        {
+            NoticeToast.Show("다이아가 부족해요");
+            return;
+        }
+
         if (shop.Reroll()) Refresh();
     }
 

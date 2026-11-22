@@ -144,7 +144,8 @@ public class DialogueDatabase
 
             string condition = Cell(row, conditionCol);
             var memory = new List<MemoryCondition>();
-            bool memoryOk = condition.Length > 0 && condition != "응답1" && condition != "응답2";
+            bool isMemory = condition.Length > 0 && condition != "응답1" && condition != "응답2";
+            bool memoryOk = isMemory;
             if (memoryOk)
             {
                 foreach (string part in condition.Split('&'))
@@ -154,7 +155,7 @@ public class DialogueDatabase
                     memory.Add(new MemoryCondition(m.Groups[1].Value, int.Parse(m.Groups[2].Value)));
                 }
             }
-            if (condition.Length > 0 && condition != "응답1" && condition != "응답2" && !memoryOk) errors?.Add($"{r + 1}행({id}): 조건은 비우거나 응답1/응답2/이름=값(여러 개는 &로 잇기)여야 합니다('{condition}').");
+            if (isMemory && !memoryOk) errors?.Add($"{r + 1}행({id}): 조건은 비우거나 응답1/응답2/이름=값(여러 개는 &로 잇기)여야 합니다('{condition}').");
 
             // 응답 칸 끝의 `[다이아10]`은 그 응답을 누를 때 드는 다이아다
             var answerTexts = new[] { Cell(row, answer1Col), Cell(row, answer2Col) }.Where(a => a.Length > 0).Select(a =>

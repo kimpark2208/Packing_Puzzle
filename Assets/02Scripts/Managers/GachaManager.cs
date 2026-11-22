@@ -32,6 +32,8 @@ public class GachaManager : MonoBehaviour
     private int rerollCount;
     private TMP_Text rerollBadge; // 리롤 버튼 안의 텍스트(남은 횟수)
 
+    public const int RerollDiamondCost = 1; // 리롤 한 번에 드는 다이아
+
     public int RerollsLeft => Mathf.Max(0, maxRerolls - rerollCount);
 
     /// <summary>고른 꽃을 모두 놓아서 더 놓을 꽃이 없는가(바구니도 보관 칸도 비었다). 칸을 다 채우지 않고 꽃 선정을 마쳤을 때 퍼즐이 끝나는 조건이다.</summary>
@@ -103,6 +105,11 @@ public class GachaManager : MonoBehaviour
     public void Reroll()
     {
         if (rerollCount >= maxRerolls || pool.IsEmpty) return;
+        if (CurrencyManager.Instance != null && !CurrencyManager.Instance.TrySpendDiamonds(RerollDiamondCost))
+        {
+            NoticeToast.Show("다이아가 부족해요");
+            return;
+        }
 
         rerollCount++;
         Draw(ShownFlowers());
@@ -147,7 +154,7 @@ public class GachaManager : MonoBehaviour
         draggable.storeTarget = storageSlot;
 
         FlowerPieceView view = FlowerPieceView.GetOrAdd(block);
-        view.Apply(flower, flower.iconSprite, true);
+        view.Apply(flower, flower.IconSprite, true);
 
         // FlowerImage의 Button은 선택 화면(클릭으로 고르기)용이라 드래그로 놓는 버켓에서는 꺼둔다.
         Transform flowerImageT = block.transform.Find("FlowerImage");

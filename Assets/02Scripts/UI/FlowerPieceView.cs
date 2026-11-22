@@ -91,7 +91,7 @@ public class FlowerPieceView : MonoBehaviour
         {
             if (sprite != null) icon.sprite = sprite;
             icon.preserveAspect = preserveAspect;
-            icon.color = ColorPalette.ToUnityColor(flower.color);
+            icon.color = flower.TintFor(sprite); // 0링 그림은 틴트 없이
 
             if (icon.TryGetComponent(out Outline outline)) // 꽃 아이콘의 외곽선(있으면 꽃의 역할 상징 색으로 칠해진다)
             {

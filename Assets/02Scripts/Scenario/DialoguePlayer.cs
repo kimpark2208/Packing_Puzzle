@@ -3,7 +3,6 @@ using System.Linq;
 using TMPro;
 using UnityEngine;
 using UnityEngine.InputSystem;
-using UnityEngine.UI;
 
 /// <summary>
 /// 대화(Dialogue) 하나를 말풍선에 한 줄씩 재생한다. 응답이 있는 줄은 응답 버튼(문구를 그 줄의 응답으로 바꿔서)을 눌러야 넘어가고,
@@ -31,8 +30,8 @@ public class DialoguePlayer
         rightButton = aIsLeft ? buttonB : buttonA;
         leftLabel = LabelOf(leftButton);
         rightLabel = LabelOf(rightButton);
-        HideBadge(leftButton);
-        HideBadge(rightButton);
+        SetBadge(leftButton, 0);
+        SetBadge(rightButton, 0);
     }
 
     private const string BadgeName = "DiaBadge"; // 응답 버튼 안의 다이아 표시(다이아 아이콘 + 개수 글씨). 다이아가 드는 응답에만 보인다
@@ -132,23 +131,16 @@ public class DialoguePlayer
         SetBadge(rightButton, rightCost);
     }
 
-    /// <summary>응답 버튼의 다이아 표시: 다이아가 들면(cost &gt; 0) 개수와 함께 보이고, 아니면 숨긴다. 가진 다이아가 모자라면 버튼을 눌러지지 않게 한다.</summary>
+    /// <summary>응답 버튼의 다이아 표시: 다이아가 들면(cost &gt; 0) 개수와 함께 보이고, 아니면 숨긴다. 다이아가 모자라도 버튼은 눌려서, 누르면 "다이아가 부족해요" 알림이 뜬다(Answer).</summary>
     private static void SetBadge(GameObject button, int cost)
     {
-        if (button == null) return;
+        Transform badge = button != null ? button.transform.Find(BadgeName) : null;
+        if (badge == null) return;
 
-        Transform badge = button.transform.Find(BadgeName);
-        if (badge != null)
-        {
-            badge.gameObject.SetActive(cost > 0);
-            TMP_Text text = badge.Find(BadgeTextName) != null ? badge.Find(BadgeTextName).GetComponent<TMP_Text>() : badge.GetComponentInChildren<TMP_Text>(true);
-            if (text != null && cost > 0) text.text = $"X {cost}"; // 씬에 놓아 둔 "X 20" 모양에 맞춘다
-        }
-
-        if (button.TryGetComponent(out Button ui)) ui.interactable = cost <= 0 || CurrencyManager.Instance == null || CurrencyManager.Instance.CurrentDiamonds >= cost;
+        badge.gameObject.SetActive(cost > 0);
+        TMP_Text text = badge.Find(BadgeTextName)?.GetComponent<TMP_Text>();
+        if (text != null && cost > 0) text.text = $"X {cost}"; // 씬에 놓아 둔 "X 20" 모양에 맞춘다
     }
-
-    private static void HideBadge(GameObject button) => SetBadge(button, 0);
 
     /// <summary>글자가 다 나온 뒤에 화면 아무 곳이나 누를 때까지 기다린다(글자를 한 번에 보이게 한 눌림은 쓰지 않는다).</summary>
     private IEnumerator WaitForTap()

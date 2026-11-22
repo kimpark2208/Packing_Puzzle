@@ -63,6 +63,15 @@ public class FlowerData : ScriptableObject
     [Header("일반 아이콘 (요청 UI, 드래그 조각 등. 색상은 런타임에 ColorPalette로 틴트됨)")]
     public Sprite iconSprite;
 
+    /// <summary>0링(중앙) 그림. 있으면 이 꽃의 아이콘으로 쓴다(틴트 없이). 없으면 null.</summary>
+    public Sprite CenterSprite => ringSprites != null && ringSprites.Length > 0 ? ringSprites[0] : null;
+
+    /// <summary>요청 UI·드래그 조각 등에 쓰는 아이콘: 0링 그림이 있으면 그것, 없으면 기존 일반 아이콘(iconSprite).</summary>
+    public Sprite IconSprite => CenterSprite != null ? CenterSprite : iconSprite;
+
+    /// <summary>sprite를 이 꽃의 아이콘으로 그릴 때의 색: 0링 그림은 틴트 없이(흰색), 그 밖의 그림은 꽃 색으로 칠한다.</summary>
+    public UnityEngine.Color TintFor(Sprite sprite) => sprite != null && sprite == CenterSprite ? UnityEngine.Color.white : ColorPalette.ToUnityColor(color);
+
     [Header("꽃 선택 선반 - 화병에 꽂히는 줄기까지 있는 꽃 (색상은 런타임에 ColorPalette로 틴트됨)")]
     public Sprite stemSprite;
 

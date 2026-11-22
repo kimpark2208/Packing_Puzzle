@@ -40,7 +40,12 @@ public static class ScenarioValidator
             .Select(g => AssetDatabase.LoadAssetAtPath<WrapperData>(AssetDatabase.GUIDToAssetPath(g))).Where(w => w != null).Select(w => w.wrapperId).ToHashSet();
 
         HashSet<string> conditionKeys = database.All.SelectMany(d => d.lines).SelectMany(l => l.memory).Select(m => m.key).ToHashSet(); // 소지품은 조건에서 읽는 이름이어야 한다
-        HashSet<string> remembered = database.All.SelectMany(d => d.lines).SelectMany(l => l.effects).Where(e => e.kind == DialogueEffect.Remember).Select(e => e.target.Split('=')[0].Trim()).ToHashSet();
+        // 조건이 읽을 수 있는 이름: 기억 효과가 적는 이름과, 획득 효과로 생기는 소지품 이름(꽃·꾸미기 용품·포장지·카탈로그가 아닌 것)
+        HashSet<string> remembered = database.All.SelectMany(d => d.lines).SelectMany(l => l.effects)
+            .Where(e => e.kind == DialogueEffect.Remember).Select(e => e.target.Split('=')[0].Trim())
+            .Concat(database.All.SelectMany(d => d.lines).SelectMany(l => l.effects)
+                .Where(e => e.kind == DialogueEffect.Gift && ScenarioEffects.CatalogOf(e.target) == null && e.WrapperNumber <= 0 && !flowerNames.Contains(e.target)).Select(e => e.target))
+            .ToHashSet();
 
         foreach (Dialogue dialogue in database.All)
         {

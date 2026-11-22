@@ -38,8 +38,8 @@ public partial class CurrencyManager
         if (GUILayout.Button("Debug: 하루 시간 -1분") && GameClock.Instance != null)
             GameClock.Instance.SkipDayTime(60f);
 
-        if (GUILayout.Button("Debug: 밤으로 건너뛰기") && GameClock.Instance != null)
-            GameClock.Instance.SkipToNight();
+        if (GUILayout.Button("Debug: 상점으로(그날 아이템 지급, 상점 앞 대화 생략)"))
+            GameManager.Instance?.DebugGoShop();
 
         if (GUILayout.Button("Debug: 손님 기분 -20%") && GameClock.Instance != null)
             GameClock.Instance.DrainMood(0.2f);

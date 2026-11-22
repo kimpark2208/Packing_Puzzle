@@ -34,9 +34,9 @@ public class ShopSlotView : MonoBehaviour
         Flower = flower;
         if (newBadge != null) newBadge.SetActive(isNew);
 
-        Sprite sprite = flower.stemSprite != null ? flower.stemSprite : flower.iconSprite;
+        Sprite sprite = flower.stemSprite != null ? flower.stemSprite : flower.IconSprite;
         flowerImage.sprite = sprite;
-        flowerImage.color = ColorPalette.ToUnityColor(flower.color) * (soldOut ? SoldOutShade : Color.white);
+        flowerImage.color = flower.TintFor(sprite) * (soldOut ? SoldOutShade : Color.white);
         flowerImage.enabled = sprite != null;
         roleText.text = flower.RoleName;
         nameText.text = flower.DisplayName;
