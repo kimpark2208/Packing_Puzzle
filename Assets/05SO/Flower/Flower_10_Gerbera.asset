@@ -16,7 +16,7 @@ MonoBehaviour:
   flowerName: "\uAC70\uBCA0\uB77C"
   color: 0
   flowerRole: 2
-  acquireDay: 11
+  acquireDay: 3
   shopPrice: 200
   shopBundle: 50
   specialOrder: "\uAC70, \uBCA0\uB77C \uC528 \uACC4\uC138\uC694?"

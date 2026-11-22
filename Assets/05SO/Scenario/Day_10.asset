@@ -13,7 +13,35 @@ MonoBehaviour:
   m_Name: Day_10
   m_EditorClassIdentifier: Assembly-CSharp::DayScenarioData
   day: 10
-  dayVisits: []
+  dayVisits:
+  - time: 0
+    orderIndex: 1
+    npc: {fileID: 11400000, guid: d734a82091fa18f4d90377c73c236414, type: 2}
+    dialogueId: hero_jaemin_ping_jian_d10_intro
+    introDialogueId: 
+    outroDialogueId: 
+    reactionPrefix: 
+  - time: 1
+    orderIndex: 1
+    npc: {fileID: 11400000, guid: de9ba7fac4196f2d72184c56628ec6d8, type: 2}
+    dialogueId: gogwajang_d10_intro
+    introDialogueId: 
+    outroDialogueId: 
+    reactionPrefix: 
+  - time: 2
+    orderIndex: 1
+    npc: {fileID: 11400000, guid: c48c0228b7e0c9f0f004892a51754b22, type: 2}
+    dialogueId: superidol_siren_santa_d10_intro
+    introDialogueId: 
+    outroDialogueId: 
+    reactionPrefix: 
+  - time: 2
+    orderIndex: 1
+    npc: {fileID: 11400000, guid: 87d25e5237cd6a04b926170044059797, type: 2}
+    dialogueId: santa_d10_intro
+    introDialogueId: 
+    outroDialogueId: 
+    reactionPrefix: 
   nightNpc: {fileID: 0}
   nightDialogueId: 
   reservationCall: {fileID: 0}

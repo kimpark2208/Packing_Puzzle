@@ -16,8 +16,6 @@ public class FlowerShop
     public const int ShelfSize = 6;
     public const int RerollsPerVisit = 2;
     private const float ChancePerDay = 0.25f;
-    public const int BetaSnapdragonId = 1;  // 금어초(Flower_01_Snapdragon). 신규 꽃 구매 튜토리얼이 이 꽃을 사게 한다
-    private const int BetaSnapdragonDay = 7; // 베타에서 금어초가 확정으로 나오는 밤(기획서 3장)
 
     private readonly List<FlowerData> flowers;
     private readonly Func<int, bool> isObtained;
@@ -35,13 +33,13 @@ public class FlowerShop
     public int RerollsLeft { get; private set; } = RerollsPerVisit;
 
     /// <summary>
-    /// 지금 꼭 사야 하는 꽃(없으면 null). 신규 꽃 구매 튜토리얼: 시작 꽃 말고는 한 번도 사 본 적이 없을 때 처음 진열대에 나온 신규 꽃, 베타 강제: 7일차 밤의 금어초.
+    /// 지금 꼭 사야 하는 꽃(없으면 null). 신규 꽃 구매 튜토리얼: 시작 꽃 말고는 한 번도 얻은 적이 없을 때 처음 진열대에 나온 신규 꽃.
+    /// (베타 시나리오는 금어초·거베라·작약을 획득 효과로 주므로 보통은 이미 얻은 꽃이 있어 강제로 사게 하지 않는다.)
     /// 살 돈이 없으면 막히지 않게 null이다. 사야 하는 동안은 상점을 마칠 수 없다.
     /// </summary>
     public FlowerData ForcedFlower(CurrencyManager wallet)
     {
-        FlowerData flower = day == BetaSnapdragonDay ? shelf.FirstOrDefault(f => f.flowerID == BetaSnapdragonId && !wallet.HasObtainedFlower(f.flowerID)) : null;
-        if (flower == null && !flowers.Any(f => f.acquireDay > 0 && wallet.HasObtainedFlower(f.flowerID))) flower = shelf.FirstOrDefault(IsNew);
+        FlowerData flower = !flowers.Any(f => f.acquireDay > 0 && wallet.HasObtainedFlower(f.flowerID)) ? shelf.FirstOrDefault(IsNew) : null;
         return flower != null && wallet.CurrentMoney >= flower.shopPrice ? flower : null;
     }
 
@@ -56,7 +54,6 @@ public class FlowerShop
     /// <summary>획득하지 않은 꽃이 day일차 상점에 나올 확률: 획득 일차부터 25%, 하루마다 25%씩 늘어 4일째 100%.</summary>
     public static float AppearChance(FlowerData flower, int day)
     {
-        if (flower.flowerID == BetaSnapdragonId && day <= BetaSnapdragonDay) return day == BetaSnapdragonDay ? 1f : 0f; // 베타 고정: 금어초는 7일차 밤에 100% 나오고 그 전에는 나오지 않는다
         return day < flower.acquireDay ? 0f : Mathf.Clamp01(ChancePerDay * (day - flower.acquireDay + 1));
     }
 

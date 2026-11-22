@@ -51,6 +51,20 @@ public static class ColorPalette
         }
     }
 
+    /// <summary>"분홍색꽃" 같은 말이 가리키는 꽃 색(공백은 무시). 아니면 false.</summary>
+    public static bool TryParseFlowerColor(string text, out FlowerData.Color color)
+    {
+        string key = text.Replace(" ", "");
+        foreach (FlowerData.Color c in System.Enum.GetValues(typeof(FlowerData.Color)))
+        {
+            if (key != ToKoreanName(c) + "색꽃") continue;
+            color = c;
+            return true;
+        }
+        color = default;
+        return false;
+    }
+
     public static string ToKoreanName(FlowerData.Color color)
     {
         switch (color)

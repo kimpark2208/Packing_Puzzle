@@ -129,7 +129,7 @@ public class DecoratePanel : MonoBehaviour
         Refresh();
     }
 
-    /// <summary>플레이어가 이 용품을 가지고 있는가(카탈로그에서 샀거나 선물로 받았는가). 씬 단독 실행처럼 보유 정보가 없으면 모두 가진 것으로 본다.</summary>
+    /// <summary>플레이어가 이 용품을 가지고 있는가(카탈로그에서 샀거나 시나리오에서 획득했는가). 씬 단독 실행처럼 보유 정보가 없으면 모두 가진 것으로 본다.</summary>
     private static bool IsOwned(DecorationData data) => CurrencyManager.Instance == null || CurrencyManager.Instance.GetDecorationStock(data.id) > 0 || RequiredRemaining(data) > 0;
 
     /// <summary>예약 꽃다발을 만드는 중이면 그 예약이 요구한 이 용품의 남은 보관 수(보관하면 재고에서 빠지므로 카드는 이 수로 보인다). 아니면 0.</summary>

@@ -7,16 +7,15 @@ using System.Text.RegularExpressions;
 /// <summary>대사 한 줄이 끝날 때 일어나는 일. CSV의 효과 칸에서 읽는다: `효과:대상` 또는 `효과:대상x수량`(수량을 안 쓰면 1), 대상이 없는 효과는 낱말만(`퇴장`).</summary>
 public readonly struct DialogueEffect
 {
-    public const string Gift = "선물";           // 선물:포장지1x30
-    public const string Order = "주문";          // 주문:금어초x2 / 주문:포장지1
-    public const string GrantFlower = "꽃지급";  // 꽃지급:금어초x10
-    public const string Catalog = "카탈로그";    // 카탈로그:가구 / 카탈로그:용품
+    public const string Gift = "획득";           // 획득:포장지1x30 / 획득:금어초x40 / 획득:웨딩 리본x1 / 획득:가구 카탈로그 / 획득:에어팟x1 (포장지, 꽃, 꾸미기 용품, 카탈로그, 그 밖의 소지품)
+    public const string Order = "주문";          // 주문:금어초x2 / 주문:분홍색꽃x2 / 주문:포장지1
     public const string Unlock = "해금";         // 해금:전화기 / 해금:달력
     public const string Tutorial = "튜토리얼";   // 튜토리얼:night-intro
     public const string Leave = "퇴장";
     public const string TimeSkip = "시간경과";
+    public const string Remember = "기억";       // 기억:핑호출 (선택지가 있는 줄에 쓴다: 그 줄에서 누른 응답 번호를 이름으로 기억한다) / 기억:에어팟=0 (값을 직접 적는다: 소지품을 건넸다 같은 사실). 뒤의 줄이 조건 칸에 `핑호출=1`, `에어팟=1&명찰=1`처럼 쓴다
 
-    public static readonly string[] AllKinds = { Gift, Order, GrantFlower, Catalog, Unlock, Tutorial, Leave, TimeSkip };
+    public static readonly string[] AllKinds = { Gift, Order, Unlock, Tutorial, Leave, TimeSkip, Remember };
 
     private const string WrapperPrefix = "포장지";
 
@@ -48,13 +47,34 @@ public readonly struct DialogueEffect
     public override string ToString() => string.IsNullOrEmpty(target) ? kind : $"{kind}:{target}x{amount}";
 }
 
+/// <summary>기억 조건 하나: 이름으로 기억해 둔 값이 value일 때 맞다(기억한 적 없으면 0).</summary>
+public readonly struct MemoryCondition
+{
+    public readonly string key;
+    public readonly int value;
+
+    public MemoryCondition(string key, int value)
+    {
+        this.key = key;
+        this.value = value;
+    }
+
+    public bool Holds => ScenarioMemory.Get(key) == value;
+}
+
 /// <summary>말풍선 한 번에 나오는 대사. answers가 비어 있으면 말풍선의 아무 곳이나 눌러 넘기고, 있으면 그 버튼 문구(1~2개)로 답한다.</summary>
 public class DialogueLine
 {
     public string speaker; // CSV의 화자 열(NpcData.displayName과 같으면 그 NPC의 그림을 보인다). 비어 있을 수 있다
     public string text;
     public int condition; // 0이면 언제나 나오고, 1·2면 직전 선택에서 그 번호의 응답을 눌렀을 때만 나온다(CSV의 조건 열: 응답1/응답2)
+    /// <summary>조건 열이 `이름=값`(여러 개면 `&`로 잇는다: `에어팟=1&명찰=1`)이면 그 목록. 기억해 둔 값(효과 `기억:이름`, `기억:이름=값`)이 모두 맞을 때만 나온다. 0은 "기억한 적 없음"이다.
+    /// 선택이 겹치거나 다른 대화·다른 날에서 이어질 때, 물건을 얻었는지 같은 사실에 쓴다.</summary>
+    public MemoryCondition[] memory = Array.Empty<MemoryCondition>();
+    public bool HasCondition => condition != 0 || memory.Length > 0;
     public string[] answers = Array.Empty<string>();
+    /// <summary>응답마다 드는 다이아(answers와 같은 순서). 응답 칸 끝에 `[다이아10]`을 쓰면 그 응답을 누를 때 10다이아가 빠진다. 안 쓰면 0.</summary>
+    public int[] answerCosts = Array.Empty<int>();
     public DialogueEffect[] effects = Array.Empty<DialogueEffect>();
 }
 
@@ -68,7 +88,7 @@ public class Dialogue
     public IEnumerable<DialogueEffect> EffectsOf(string kind) => lines.SelectMany(l => l.effects).Where(e => e.kind == kind);
 }
 
-/// <summary>대사 CSV(Assets/05SO/Dialogue/Dialogue.csv)를 읽어 대화ID로 찾을 수 있게 한다. 열: 대화ID, 순번, 화자, 대사, 응답1, 응답2, 효과, 메모(메모는 읽지 않는다).</summary>
+/// <summary>대사 CSV(Assets/05SO/Dialogue/Dialogue.csv)를 읽어 대화ID로 찾을 수 있게 한다. 열: 대화ID, 순번, 화자, 조건, 대사, 응답1, 응답2, 효과, 메모(메모는 읽지 않는다). 열은 머리줄의 이름으로 찾아서 순서가 바뀌어도 된다.</summary>
 public class DialogueDatabase
 {
     private readonly Dictionary<string, Dialogue> byId = new();
@@ -123,14 +143,34 @@ public class DialogueDatabase
             }
 
             string condition = Cell(row, conditionCol);
-            if (condition.Length > 0 && condition != "응답1" && condition != "응답2") errors?.Add($"{r + 1}행({id}): 조건은 비우거나 응답1/응답2여야 합니다('{condition}').");
+            var memory = new List<MemoryCondition>();
+            bool memoryOk = condition.Length > 0 && condition != "응답1" && condition != "응답2";
+            if (memoryOk)
+            {
+                foreach (string part in condition.Split('&'))
+                {
+                    Match m = Regex.Match(part.Trim(), @"^(.+?)\s*=\s*(\d+)$");
+                    if (!m.Success) { memoryOk = false; break; }
+                    memory.Add(new MemoryCondition(m.Groups[1].Value, int.Parse(m.Groups[2].Value)));
+                }
+            }
+            if (condition.Length > 0 && condition != "응답1" && condition != "응답2" && !memoryOk) errors?.Add($"{r + 1}행({id}): 조건은 비우거나 응답1/응답2/이름=값(여러 개는 &로 잇기)여야 합니다('{condition}').");
+
+            // 응답 칸 끝의 `[다이아10]`은 그 응답을 누를 때 드는 다이아다
+            var answerTexts = new[] { Cell(row, answer1Col), Cell(row, answer2Col) }.Where(a => a.Length > 0).Select(a =>
+            {
+                Match cost = Regex.Match(a, @"\s*\[다이아\s*(\d+)\]\s*$");
+                return cost.Success ? (text: a.Substring(0, cost.Index), cost: int.Parse(cost.Groups[1].Value)) : (text: a, cost: 0);
+            }).ToArray();
 
             var line = new DialogueLine
             {
                 speaker = Cell(row, speakerCol),
                 text = Cell(row, textCol),
                 condition = condition == "응답1" ? 1 : condition == "응답2" ? 2 : 0,
-                answers = new[] { Cell(row, answer1Col), Cell(row, answer2Col) }.Where(a => a.Length > 0).ToArray(),
+                memory = memoryOk ? memory.ToArray() : Array.Empty<MemoryCondition>(),
+                answers = answerTexts.Select(a => a.text).ToArray(),
+                answerCosts = answerTexts.Select(a => a.cost).ToArray(),
                 effects = Cell(row, effectCol).Split(new[] { ';' }, StringSplitOptions.RemoveEmptyEntries).Select(DialogueEffect.Parse).ToArray(),
             };
             if (!ordered.TryGetValue(id, out var list)) ordered[id] = list = new List<(int, DialogueLine)>();

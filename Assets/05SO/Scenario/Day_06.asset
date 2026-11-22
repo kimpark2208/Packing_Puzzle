@@ -13,9 +13,44 @@ MonoBehaviour:
   m_Name: Day_06
   m_EditorClassIdentifier: Assembly-CSharp::DayScenarioData
   day: 6
-  dayVisits: []
-  nightNpc: {fileID: 0}
-  nightDialogueId: 
+  dayVisits:
+  - time: 0
+    orderIndex: 1
+    npc: {fileID: 11400000, guid: 09a6c8a80a44ee84780de94d006b69cf, type: 2}
+    dialogueId: jaemin_d6_intro
+    introDialogueId: 
+    outroDialogueId: jaemin_jian_d6_outro
+    reactionPrefix: jaemin_react
+  - time: 0
+    orderIndex: 2
+    npc: {fileID: 11400000, guid: 39f2023357306a058edd757633f594b1, type: 2}
+    dialogueId: jian_d6_intro
+    introDialogueId: 
+    outroDialogueId: 
+    reactionPrefix: 
+  - time: 0
+    orderIndex: 3
+    npc: {fileID: 11400000, guid: d734a82091fa18f4d90377c73c236414, type: 2}
+    dialogueId: hero_jaemin_jian_d6_intro
+    introDialogueId: 
+    outroDialogueId: 
+    reactionPrefix: hero_react
+  - time: 1
+    orderIndex: 1
+    npc: {fileID: 11400000, guid: de9ba7fac4196f2d72184c56628ec6d8, type: 2}
+    dialogueId: gogwajang_d6_intro
+    introDialogueId: 
+    outroDialogueId: 
+    reactionPrefix: 
+  - time: 2
+    orderIndex: 1
+    npc: {fileID: 11400000, guid: 8fc2b91183bd1a44cbec42b26b262194, type: 2}
+    dialogueId: siren_d6_intro
+    introDialogueId: 
+    outroDialogueId: siren_d6_outro
+    reactionPrefix: siren_react
+  nightNpc: {fileID: 11400000, guid: 0ff7cfa45c88d2a40a2ac9b447d2e1b7, type: 2}
+  nightDialogueId: supplies_d6_night
   reservationCall: {fileID: 11400000, guid: 6dde361723e33844888a3bb38150ebcd, type: 2}
   reservationCallAfterCustomers: 1
   unlocksPhone: 0

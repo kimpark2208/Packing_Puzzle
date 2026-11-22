@@ -330,7 +330,7 @@ public static class OrderComposer
     }
 
     /// <summary>프리셋에서 이 색 꽃을 최대 몇 송이 놓을 수 있나 (그 색 꽃이 있는 역할들의 칸 수 합).</summary>
-    private static int ColorCapacity(WrapperPresetData preset, FlowerData.Color color)
+    public static int ColorCapacity(WrapperPresetData preset, FlowerData.Color color)
     {
         if (preset == null) return int.MaxValue;
         return ObtainedFlowers().Where(f => f.color == color).Select(f => f.flowerRole).Distinct().Sum(role => preset.CountByTag(role));

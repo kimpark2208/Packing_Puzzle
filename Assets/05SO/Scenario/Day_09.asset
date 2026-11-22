@@ -14,14 +14,29 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::DayScenarioData
   day: 9
   dayVisits:
-  - orderIndex: 1
-    npc: {fileID: 11400000, guid: 394bdd7e9c8bbd74899054078853d1d8, type: 2}
-    dialogueId: merchant_d9_update
+  - time: 0
+    orderIndex: 1
+    npc: {fileID: 11400000, guid: 390322fb732969dc41eba87213f1784f, type: 2}
+    dialogueId: ping_d9_intro
     introDialogueId: 
     outroDialogueId: 
     reactionPrefix: 
-  nightNpc: {fileID: 11400000, guid: 0ff7cfa45c88d2a40a2ac9b447d2e1b7, type: 2}
-  nightDialogueId: supplies_d9_night
+  - time: 0
+    orderIndex: 2
+    npc: {fileID: 11400000, guid: d734a82091fa18f4d90377c73c236414, type: 2}
+    dialogueId: hero_d9_intro
+    introDialogueId: 
+    outroDialogueId: 
+    reactionPrefix: 
+  - time: 1
+    orderIndex: 1
+    npc: {fileID: 11400000, guid: 394bdd7e9c8bbd74899054078853d1d8, type: 2}
+    dialogueId: merchant_supplies_d9_intro
+    introDialogueId: 
+    outroDialogueId: 
+    reactionPrefix: 
+  nightNpc: {fileID: 0}
+  nightDialogueId: 
   reservationCall: {fileID: 0}
   reservationCallAfterCustomers: 1
   unlocksPhone: 0

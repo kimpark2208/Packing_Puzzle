@@ -9,6 +9,9 @@ public static class EventBus
     /// <summary>금액 변경 (변경된 금액)</summary>
     public static event Action<int> OnMoneyChanged;
 
+    /// <summary>다이아 변경 (변경된 개수)</summary>
+    public static event Action<int> OnDiamondsChanged;
+
     /// <summary>다음 날로 진행 (새로운 일수)</summary>
     public static event Action<int> OnDayAdvanced;
 
@@ -16,6 +19,7 @@ public static class EventBus
     public static event Action OnDayTimeUp;
 
     public static void RaiseMoneyChanged(int newAmount) => OnMoneyChanged?.Invoke(newAmount);
+    public static void RaiseDiamondsChanged(int newAmount) => OnDiamondsChanged?.Invoke(newAmount);
     public static void RaiseDayAdvanced(int newDay) => OnDayAdvanced?.Invoke(newDay);
     public static void RaiseDayTimeUp() => OnDayTimeUp?.Invoke();
 }

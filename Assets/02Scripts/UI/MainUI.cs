@@ -756,7 +756,11 @@ public class MainUI : MonoBehaviour
         if (outroLine != null)
         {
             PauseForNpc(true);
+            NpcData previous = Game != null ? Game.PreviousNpc : null;
+            shownNpc = previous != null && previous.portrait != null ? previous : null; // 지금 캐릭터 자리에 보이는 NPC(다른 NPC가 말하면 그림을 바꾼다)
+            dialoguePlayer.SpeakerChanged = SwapSpeaker;
             yield return dialoguePlayer.Play(outroLine);
+            dialoguePlayer.SpeakerChanged = null;
         }
         bool nextScripted = Game != null && Game.CurrentScriptedVisit != null;
         if (!nextScripted) PauseForNpc(false); // 반응 대사와 아웃트로 대사가 끝났다. 다음이 정해진 NPC 방문이면 그 대화가 끝날 때까지 멈춘 채로 둔다(NPC가 오가는 동안에도 시간이 가지 않게)

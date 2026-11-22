@@ -14,26 +14,64 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::DayScenarioData
   day: 8
   dayVisits:
-  - orderIndex: 1
-    npc: {fileID: 11400000, guid: 0ff7cfa45c88d2a40a2ac9b447d2e1b7, type: 2}
-    dialogueId: supplies_d8_unlock
+  - time: 0
+    orderIndex: 1
+    npc: {fileID: 11400000, guid: 09a6c8a80a44ee84780de94d006b69cf, type: 2}
+    dialogueId: jaemin_jian_d8_intro
+    introDialogueId: 
+    outroDialogueId: 
+    reactionPrefix: jaemin_react
+  - time: 0
+    orderIndex: 2
+    npc: {fileID: 11400000, guid: d734a82091fa18f4d90377c73c236414, type: 2}
+    dialogueId: hero_jaemin_ping_jian_d8_intro
+    introDialogueId: 
+    outroDialogueId: 
+    reactionPrefix: hero_react
+  - time: 0
+    orderIndex: 3
+    npc: {fileID: 11400000, guid: 390322fb732969dc41eba87213f1784f, type: 2}
+    dialogueId: ping_d8_intro
     introDialogueId: 
     outroDialogueId: 
     reactionPrefix: 
-  - orderIndex: 2
-    npc: {fileID: 11400000, guid: 09a6c8a80a44ee84780de94d006b69cf, type: 2}
-    dialogueId: jaemin_d8_order
+  - time: 0
+    orderIndex: 4
+    npc: {fileID: 11400000, guid: 39f2023357306a058edd757633f594b1, type: 2}
+    dialogueId: jian_d8_intro
     introDialogueId: 
-    outroDialogueId: jaemin_d8_outro
-    reactionPrefix: jaemin_react
-  - orderIndex: 3
-    npc: {fileID: 11400000, guid: d734a82091fa18f4d90377c73c236414, type: 2}
-    dialogueId: hero_d8_intro
+    outroDialogueId: jian_hero_ping_jaemin_d8_outro
+    reactionPrefix: 
+  - time: 2
+    orderIndex: 1
+    npc: {fileID: 11400000, guid: 69f9aaf1fec1134f9ceac0cb7b0d0b1d, type: 2}
+    dialogueId: dog_d8_intro
     introDialogueId: 
-    outroDialogueId: hero_d8_outro
-    reactionPrefix: hero_react
-  nightNpc: {fileID: 0}
-  nightDialogueId: 
+    outroDialogueId: 
+    reactionPrefix: 
+  - time: 2
+    orderIndex: 1
+    npc: {fileID: 11400000, guid: de9ba7fac4196f2d72184c56628ec6d8, type: 2}
+    dialogueId: gogwajang_santa_superidol_d8_intro
+    introDialogueId: 
+    outroDialogueId: 
+    reactionPrefix: 
+  - time: 2
+    orderIndex: 1
+    npc: {fileID: 11400000, guid: 87d25e5237cd6a04b926170044059797, type: 2}
+    dialogueId: santa_d8_intro
+    introDialogueId: 
+    outroDialogueId: santa_superidol_d8_outro
+    reactionPrefix: santa_react
+  - time: 2
+    orderIndex: 1
+    npc: {fileID: 11400000, guid: 8fc2b91183bd1a44cbec42b26b262194, type: 2}
+    dialogueId: siren_gogwajang_superidol_santa_d8_intro
+    introDialogueId: 
+    outroDialogueId: siren_gogwajang_superidol_santa_d8_outro
+    reactionPrefix: siren_react
+  nightNpc: {fileID: 11400000, guid: 0ff7cfa45c88d2a40a2ac9b447d2e1b7, type: 2}
+  nightDialogueId: supplies_d8_night
   reservationCall: {fileID: 0}
   reservationCallAfterCustomers: 1
   unlocksPhone: 0

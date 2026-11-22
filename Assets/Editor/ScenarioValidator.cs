@@ -39,6 +39,9 @@ public static class ScenarioValidator
         HashSet<int> wrapperIds = AssetDatabase.FindAssets("t:WrapperData")
             .Select(g => AssetDatabase.LoadAssetAtPath<WrapperData>(AssetDatabase.GUIDToAssetPath(g))).Where(w => w != null).Select(w => w.wrapperId).ToHashSet();
 
+        HashSet<string> conditionKeys = database.All.SelectMany(d => d.lines).SelectMany(l => l.memory).Select(m => m.key).ToHashSet(); // 소지품은 조건에서 읽는 이름이어야 한다
+        HashSet<string> remembered = database.All.SelectMany(d => d.lines).SelectMany(l => l.effects).Where(e => e.kind == DialogueEffect.Remember).Select(e => e.target.Split('=')[0].Trim()).ToHashSet();
+
         foreach (Dialogue dialogue in database.All)
         {
             for (int i = 0; i < dialogue.lines.Count; i++)
@@ -47,8 +50,11 @@ public static class ScenarioValidator
                 string where = $"{dialogue.id} {i + 1}번째 줄";
                 if (string.IsNullOrWhiteSpace(line.text)) problems.Add($"{where}: 대사가 비어 있습니다.");
                 if (line.answers.Length == 1) problems.Add($"{where}: 응답이 하나뿐입니다(둘 다 쓰거나 둘 다 비워 주세요).");
+                foreach (MemoryCondition memory in line.memory)
+                    if (!remembered.Contains(memory.key)) problems.Add($"{where}: 조건 '{memory.key}={memory.value}'을 기억하는 줄(효과 `기억:{memory.key}`)이 어디에도 없습니다.");
+                if (line.effects.Any(e => e.kind == DialogueEffect.Remember && !e.target.Contains("=")) && line.answers.Length == 0) problems.Add($"{where}: 값 없는 기억 효과(`기억:이름`)는 선택지가 있는 줄에 써야 누른 응답을 기억합니다. 사실을 기억하려면 `기억:이름=1`처럼 값을 적어 주세요.");
 
-                foreach (DialogueEffect effect in line.effects) CheckEffect(effect, where, flowerNames, wrapperIds, problems);
+                foreach (DialogueEffect effect in line.effects) CheckEffect(effect, where, flowerNames, wrapperIds, conditionKeys, problems);
             }
         }
 
@@ -71,7 +77,7 @@ public static class ScenarioValidator
         else Debug.LogWarning($"[Scenario] 문제 {problems.Count}개\n- " + string.Join("\n- ", problems));
     }
 
-    private static void CheckEffect(DialogueEffect effect, string where, HashSet<string> flowerNames, HashSet<int> wrapperIds, List<string> problems)
+    private static void CheckEffect(DialogueEffect effect, string where, HashSet<string> flowerNames, HashSet<int> wrapperIds, HashSet<string> conditionKeys, List<string> problems)
     {
         if (!DialogueEffect.AllKinds.Contains(effect.kind))
         {
@@ -83,20 +89,20 @@ public static class ScenarioValidator
         {
             case DialogueEffect.Gift:
                 bool isDecoration = AssetDatabase.FindAssets("t:DecorationData").Any(g => AssetDatabase.LoadAssetAtPath<DecorationData>(AssetDatabase.GUIDToAssetPath(g)).displayName == effect.target);
-                if (!wrapperIds.Contains(effect.WrapperNumber) && !isDecoration) problems.Add($"{where}: 선물 대상 '{effect.target}'은 없는 포장지 번호이거나 꾸미기 용품 이름이 아닙니다.");
+                string catalog = ScenarioEffects.CatalogOf(effect.target);
+                if (catalog != null) { if (!CatalogTargets.Contains(catalog)) problems.Add($"{where}: 카탈로그 획득 '{effect.target}'은 '가구 카탈로그' 또는 '용품 카탈로그'여야 합니다."); }
+                else if (effect.target.StartsWith("포장지")) { if (!wrapperIds.Contains(effect.WrapperNumber)) problems.Add($"{where}: 획득 포장지 '{effect.target}'이 없습니다."); }
+                else if (!flowerNames.Contains(effect.target) && !isDecoration && !conditionKeys.Contains(effect.target)) problems.Add($"{where}: 획득 대상 '{effect.target}'을 모르겠습니다(포장지 번호·꽃·꾸미기 용품 이름이 아니고, 소지품이라면 조건 칸에서 `{effect.target}=1`처럼 읽는 곳이 있어야 합니다).");
                 break;
             case DialogueEffect.Order:
                 if (effect.target.StartsWith("포장지")) { if (!wrapperIds.Contains(effect.WrapperNumber)) problems.Add($"{where}: 주문 포장지 '{effect.target}'이 없습니다."); }
-                else if (!flowerNames.Contains(effect.target)) problems.Add($"{where}: 주문 꽃 '{effect.target}'이 꽃 목록에 없습니다.");
-                break;
-            case DialogueEffect.GrantFlower:
-                if (!flowerNames.Contains(effect.target)) problems.Add($"{where}: 꽃지급 꽃 '{effect.target}'이 꽃 목록에 없습니다.");
-                break;
-            case DialogueEffect.Catalog:
-                if (!CatalogTargets.Contains(effect.target)) problems.Add($"{where}: 카탈로그 대상 '{effect.target}'은 가구 또는 용품이어야 합니다.");
+                else if (!ColorPalette.TryParseFlowerColor(effect.target, out _) && !flowerNames.Contains(effect.target)) problems.Add($"{where}: 주문 꽃 '{effect.target}'이 꽃 목록에 없고 '분홍색꽃' 같은 색 이름도 아닙니다.");
                 break;
             case DialogueEffect.Unlock:
                 if (!UnlockTargets.Contains(effect.target)) problems.Add($"{where}: 해금 대상 '{effect.target}'은 {string.Join(" 또는 ", UnlockTargets)}이어야 합니다.");
+                break;
+            case DialogueEffect.Remember:
+                if (string.IsNullOrEmpty(effect.target)) problems.Add($"{where}: 기억할 이름이 비어 있습니다(`기억:핑호출`처럼 씁니다).");
                 break;
             case DialogueEffect.Tutorial:
                 if (string.IsNullOrEmpty(effect.target)) problems.Add($"{where}: 튜토리얼 ID가 비어 있습니다.");

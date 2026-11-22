@@ -14,18 +14,27 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::DayScenarioData
   day: 7
   dayVisits:
-  - orderIndex: 2
-    npc: {fileID: 11400000, guid: 8fc2b91183bd1a44cbec42b26b262194, type: 2}
-    dialogueId: siren_d7_intro
+  - time: 0
+    orderIndex: 1
+    npc: {fileID: 11400000, guid: 390322fb732969dc41eba87213f1784f, type: 2}
+    dialogueId: ping_d7_intro
     introDialogueId: 
-    outroDialogueId: siren_d7_outro
-    reactionPrefix: siren_react
-  - orderIndex: 3
+    outroDialogueId: 
+    reactionPrefix: 
+  - time: 0
+    orderIndex: 2
     npc: {fileID: 11400000, guid: 87d25e5237cd6a04b926170044059797, type: 2}
-    dialogueId: santa_d7_order
-    introDialogueId: siren_santa_d7_meet
-    outroDialogueId: santa_d7_outro
-    reactionPrefix: santa_react
+    dialogueId: santa_ping_siren_d7_intro
+    introDialogueId: 
+    outroDialogueId: 
+    reactionPrefix: 
+  - time: 0
+    orderIndex: 3
+    npc: {fileID: 11400000, guid: c48c0228b7e0c9f0f004892a51754b22, type: 2}
+    dialogueId: superidol_siren_santa_d7_intro
+    introDialogueId: 
+    outroDialogueId: superidol_d7_outro
+    reactionPrefix: 
   nightNpc: {fileID: 11400000, guid: 0ff7cfa45c88d2a40a2ac9b447d2e1b7, type: 2}
   nightDialogueId: supplies_d7_night
   reservationCall: {fileID: 0}

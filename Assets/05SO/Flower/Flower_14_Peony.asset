@@ -16,7 +16,7 @@ MonoBehaviour:
   flowerName: "\uC791\uC57D"
   color: 5
   flowerRole: 2
-  acquireDay: 13
+  acquireDay: 3
   shopPrice: 200
   shopBundle: 50
   specialOrder: "\uC790\uAE30\uC57C!"

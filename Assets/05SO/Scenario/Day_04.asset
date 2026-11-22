@@ -14,11 +14,47 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::DayScenarioData
   day: 4
   dayVisits:
-  - orderIndex: 2
+  - time: 0
+    orderIndex: 1
+    npc: {fileID: 11400000, guid: 390322fb732969dc41eba87213f1784f, type: 2}
+    dialogueId: ping_d4_intro
+    introDialogueId: 
+    outroDialogueId: ping_jian_d4_outro
+    reactionPrefix: 
+  - time: 0
+    orderIndex: 2
+    npc: {fileID: 11400000, guid: 39f2023357306a058edd757633f594b1, type: 2}
+    dialogueId: jian_d4_intro
+    introDialogueId: 
+    outroDialogueId: 
+    reactionPrefix: 
+  - time: 1
+    orderIndex: 1
+    npc: {fileID: 11400000, guid: 87d25e5237cd6a04b926170044059797, type: 2}
+    dialogueId: santa_gogwajang_d4_intro
+    introDialogueId: 
+    outroDialogueId: 
+    reactionPrefix: santa_react
+  - time: 1
+    orderIndex: 1
+    npc: {fileID: 11400000, guid: de9ba7fac4196f2d72184c56628ec6d8, type: 2}
+    dialogueId: gogwajang_d4_intro
+    introDialogueId: 
+    outroDialogueId: gogwajang_santa_d4_outro
+    reactionPrefix: 
+  - time: 2
+    orderIndex: 1
+    npc: {fileID: 11400000, guid: 8fc2b91183bd1a44cbec42b26b262194, type: 2}
+    dialogueId: siren_santa_d4_intro
+    introDialogueId: 
+    outroDialogueId: 
+    reactionPrefix: siren_react
+  - time: 2
+    orderIndex: 1
     npc: {fileID: 11400000, guid: 87d25e5237cd6a04b926170044059797, type: 2}
     dialogueId: santa_d4_intro
     introDialogueId: 
-    outroDialogueId: santa_d4_outro
+    outroDialogueId: santa_siren_d4_outro
     reactionPrefix: santa_react
   nightNpc: {fileID: 0}
   nightDialogueId: 

@@ -29,9 +29,17 @@ public partial class GameManager
             wallet.ObtainFlower(flower.flowerID);
             if (startingFlowerStock <= 0) continue;
 
-            wallet.AddFlowerStock(flower.flowerID, startingFlowerStock);
-            NoticeToast.Show($"새 꽃 {flower.DisplayName} {NoticeToast.Highlight($"X{startingFlowerStock}")}"); // 알림은 메인 화면의 토스트가 열리면 차례로 뜬다
+            wallet.AddFlowerStock(flower.flowerID, startingFlowerStock); // 시작 꽃은 획득 알림 없이 조용히 들어온다
         }
+    }
+
+    [Tooltip("게임을 시작할 때 주는 다이아 개수(BM 기획서 7장: 99개). 새 게임을 시작할 때마다 이 값으로 맞춘다")]
+    [Min(0)] [SerializeField] private int startingDiamonds = 99;
+
+    /// <summary>게임을 시작할 때 한 번: 다이아를 시작 지급량으로 맞춘다(상단 자원 바의 다이아 버튼에 보인다).</summary>
+    private void GrantStartingDiamonds()
+    {
+        if (CurrencyManager.Instance != null) CurrencyManager.Instance.SetDiamonds(startingDiamonds);
     }
 
     /// <summary>게임을 시작할 때 한 번: 기본 제공으로 정해진 꾸미기 용품(DecorationData.startingStock)만 지급한다(손님은 얻은 용품만 주문한다).</summary>

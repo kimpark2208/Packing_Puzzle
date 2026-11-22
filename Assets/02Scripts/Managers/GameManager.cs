@@ -81,7 +81,11 @@ public partial class GameManager : Singleton<GameManager>
         yield return 0f;
         GrantStartingFlowers();
         GrantStartingDecorations();
+        GrantStartingDiamonds();
         ApplyDailyProgression(CurrencyManager.Instance.CurrentDay);
+        ScenarioMemory.Clear(); // 새 게임: 기억해 둔 선택도 처음부터
+        usedTimedVisits.Clear(); // 새 게임: 오늘의 노을·밤 방문은 아직 안 왔다
+        usedTimedDay = 0;
         PrepareNewDay();
         yield return 1f;
     }
@@ -102,7 +106,39 @@ public partial class GameManager : Singleton<GameManager>
     public bool TimeIsUp => Craft == null && GameClock.Instance != null && GameClock.Instance.DayRemaining <= 0f;
 
     /// <summary>아직 안 일어난 중간 이벤트(지금 손님 뒤에 오기로 한 정해진 방문, 오늘 걸려 올 예약 전화)가 남았는가.</summary>
-    public bool HasPendingEvent => NextPendingVisitIndex(DayVisitIndex + 1) > 0 || HasPendingReservationCall;
+    public bool HasPendingEvent => NextPendingVisitIndex(DayVisitIndex + 1) > 0 || PendingTimedVisits().Any() || HasPendingReservationCall;
+
+    private readonly HashSet<int> usedTimedVisits = new(); // 오늘 이미 온 낮>밤 전환·밤 방문(일차 데이터 안의 번호)
+    private int usedTimedDay;
+
+    /// <summary>오늘 아직 안 온 낮>밤 전환·밤 방문(노을 먼저, 같은 때끼리는 목록 순서).</summary>
+    private IEnumerable<(int index, DayVisit visit)> PendingTimedVisits()
+    {
+        int day = CurrencyManager.Instance.CurrentDay;
+        if (usedTimedDay != day)
+        {
+            usedTimedVisits.Clear();
+            usedTimedDay = day;
+        }
+
+        DayScenarioData scenario = ScenarioManager.Instance != null ? ScenarioManager.Instance.ForDay(day) : null;
+        if (scenario == null) return Enumerable.Empty<(int, DayVisit)>();
+
+        return scenario.dayVisits.Select((v, i) => (index: i, visit: v))
+            .Where(t => t.visit.time != VisitTime.Day && !usedTimedVisits.Contains(t.index))
+            .OrderBy(t => t.visit.time).ThenBy(t => t.index);
+    }
+
+    /// <summary>하루 시계가 그 방문의 때(낮>밤 전환 방문은 GameClock.TransitionVisitElapsed, 밤 방문은 NightStartElapsed)에 이르렀는가.
+    /// 하루 시간이 끝났으면 언제나 참이다: 그때까지 안 온 방문은 하루가 끝난 뒤 낮 방문, 전환, 밤 순서로 차례로 온다.</summary>
+    private bool TimedVisitReady(DayVisit visit)
+    {
+        GameClock clock = GameClock.Instance;
+        if (TimeIsUp || clock == null) return true;
+
+        float elapsed = 1f - clock.DayRatio;
+        return elapsed >= (visit.time == VisitTime.Night ? clock.NightStartElapsed : clock.TransitionVisitElapsed);
+    }
 
     private bool HasPendingReservationCall
     {
@@ -125,7 +161,7 @@ public partial class GameManager : Singleton<GameManager>
         int next = 0;
         foreach (DayVisit visit in scenario.dayVisits)
         {
-            if (visit.orderIndex >= from && (next == 0 || visit.orderIndex < next)) next = visit.orderIndex;
+            if (visit.time == VisitTime.Day && visit.orderIndex >= from && (next == 0 || visit.orderIndex < next)) next = visit.orderIndex;
         }
         return next;
     }
@@ -147,12 +183,23 @@ public partial class GameManager : Singleton<GameManager>
 
         int day = CurrencyManager.Instance.CurrentDay;
         DayVisitIndex++;
-        if (TimeIsUp)
+        bool dayVisitWaiting = TimeIsUp && NextPendingVisitIndex(DayVisitIndex) > 0; // 하루 시간이 끝났어도 낮 방문이 남았으면 그것이 먼저다
+        (int index, DayVisit visit) timed = dayVisitWaiting ? default : PendingTimedVisits().FirstOrDefault(t => TimedVisitReady(t.visit));
+        if (timed.visit.npc != null || timed.visit.dialogueId != null)
         {
-            int pending = NextPendingVisitIndex(DayVisitIndex);
-            if (pending > 0) DayVisitIndex = pending; // 하루 시간이 끝났으면 무작위 손님은 건너뛰고 남은 정해진 방문으로 바로 간다
+            DayVisitIndex--; // 노을·밤 방문은 낮의 몇 번째 손님으로 세지 않는다
+            usedTimedVisits.Add(timed.index);
+            CurrentScriptedVisit = timed.visit;
         }
-        CurrentScriptedVisit = ScenarioManager.Instance != null ? ScenarioManager.Instance.DayVisitAt(day, DayVisitIndex) : null;
+        else
+        {
+            if (TimeIsUp)
+            {
+                int pending = NextPendingVisitIndex(DayVisitIndex);
+                if (pending > 0) DayVisitIndex = pending; // 하루 시간이 끝났으면 무작위 손님은 건너뛰고 남은 정해진 방문으로 바로 간다
+            }
+            CurrentScriptedVisit = ScenarioManager.Instance != null ? ScenarioManager.Instance.DayVisitAt(day, DayVisitIndex) : null;
+        }
 
         CurrentDayOrder = ScriptedOrder(CurrentScriptedVisit, day) ?? DayPuzzleGenerator.GenerateOrder(day, orderTemplates);
         CurrencyManager.Instance.SetCurrentRequirement(CurrentDayOrder.requirement);
@@ -205,7 +252,7 @@ public partial class GameManager : Singleton<GameManager>
         return due;
     }
 
-    /// <summary>정해진 방문의 대화에 주문 효과(`주문:꽃xN`, `주문:포장지N`)가 있으면 그 주문으로 낮 주문을 만든다. 주문 대사는 주문 효과가 달린 줄이다. 없거나 쓸 수 없으면 null(무작위 주문).</summary>
+    /// <summary>정해진 방문의 대화에 주문 효과(`주문:꽃xN`, `주문:분홍색꽃xN`, `주문:포장지N`)가 있으면 그 주문으로 낮 주문을 만든다. 주문 대사는 주문 효과가 달린 줄이다. 없거나 쓸 수 없으면 null(무작위 주문).</summary>
     private static DayPuzzleGenerator.DayOrder ScriptedOrder(DayVisit? visit, int day)
     {
         if (!visit.HasValue || ScenarioManager.Instance == null || DataRegistry.Instance == null) return null;
@@ -216,13 +263,21 @@ public partial class GameManager : Singleton<GameManager>
 
         var flowers = new List<(FlowerData flower, int count)>();
         int wrapperId = 0;
+        FlowerData.Color? orderColor = null; // `주문:분홍색꽃x2`: 이 색 꽃을 송이 수 이상(색 주문은 꽃 이름 주문과 함께 쓸 수 없다)
+        int colorCount = 0;
         foreach (DialogueEffect effect in orderLine.effects.Where(e => e.kind == DialogueEffect.Order))
         {
             if (effect.WrapperNumber > 0) { wrapperId = effect.WrapperNumber; continue; }
+            if (ColorPalette.TryParseFlowerColor(effect.target, out FlowerData.Color color)) { orderColor = color; colorCount = effect.amount; continue; }
 
             FlowerData flower = DataRegistry.Instance.Flowers.FirstOrDefault(f => f != null && f.DisplayName == effect.target);
             if (flower == null) Debug.LogWarning($"[GameManager] 대화 '{dialogue.id}'의 주문 꽃 '{effect.target}'을(를) 찾을 수 없습니다.");
             else flowers.Add((ObtainableFlower(flower), effect.amount));
+        }
+        if (orderColor.HasValue)
+        {
+            if (flowers.Count == 0) return DayPuzzleGenerator.GenerateFixedColorOrder(day, orderColor.Value, colorCount, wrapperId, orderLine.text);
+            Debug.LogWarning($"[GameManager] 대화 '{dialogue.id}'의 주문에 색과 꽃 이름이 함께 있어 꽃 이름만 씁니다.");
         }
         if (flowers.Count == 0) return null;
 
@@ -430,16 +485,15 @@ public partial class GameManager : Singleton<GameManager>
         return arriving;
     }
 
-    /// <summary>디버그용: 하루를 건너뛴다. 그날 낮 대사에서 받았을 포장지 선물은 재고를 지급하고, 다음 날을 첫 방문자부터 연출과 함께 시작한다.</summary>
+    /// <summary>디버그용: 하루를 건너뛴다. 그날 대화(낮·전환·밤 방문과 상점 앞 대화)에서 획득했을 것들(포장지·꽃·꾸미기 용품·카탈로그·소지품)을 지급하고, 다음 날을 첫 방문자부터 연출과 함께 시작한다.
+    /// 포장지 해금은 날이 바뀔 때, 전화기·달력 해금은 일수로 저절로 계산된다.</summary>
     public void DebugAdvanceDay()
     {
-        DayScenarioData scenario = ScenarioManager.Instance != null ? ScenarioManager.Instance.ForDay(CurrencyManager.Instance.CurrentDay) : null;
-        if (scenario != null)
+        if (ScenarioManager.Instance != null)
         {
-            foreach (DayVisit visit in scenario.dayVisits)
+            foreach (Dialogue dialogue in ScenarioManager.Instance.DialoguesOfDay(CurrencyManager.Instance.CurrentDay))
             {
-                Dialogue dialogue = ScenarioManager.Instance.Dialogue.Get(visit.dialogueId);
-                if (dialogue != null) foreach (DialogueEffect gift in dialogue.EffectsOf(DialogueEffect.Gift)) ScenarioEffects.Apply(gift); // 이미 받았어도 한 번 더 지급되는 것은 디버그라 그냥 둔다
+                foreach (DialogueEffect gift in dialogue.EffectsOf(DialogueEffect.Gift)) ScenarioEffects.Apply(gift); // 포장지·꽃·꾸미기 용품·카탈로그·소지품 모두. 이미 받았어도 한 번 더 지급되는 것은 디버그라 그냥 둔다
             }
         }
         StartNextDay();

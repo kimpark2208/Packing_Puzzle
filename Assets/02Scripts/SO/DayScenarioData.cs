@@ -1,11 +1,20 @@
 using System;
 using UnityEngine;
 
-/// <summary>낮 손님 방문 하나: 그날 몇 번째 손님으로 NPC가 오는지와 그 대사. 고정 주문(꽃·포장지)은 대사 CSV의 `주문:` 효과에 적는다.</summary>
+/// <summary>정해진 방문이 오는 때. 낮은 몇 번째 손님인가(orderIndex)로, 노을·밤은 하루 시계가 그 때에 이르면 다음 손님으로 온다.</summary>
+public enum VisitTime
+{
+    [InspectorName("낮 (몇 번째 손님인가로 정한다)")] Day,
+    [InspectorName("낮>밤 전환 (하루 시계가 TransitionVisitElapsed, 절반에 이르면)")] Sunset,
+    [InspectorName("밤 (하루 시계가 NightStartElapsed에 이르면)")] Night,
+}
+
+/// <summary>손님 방문 하나: 언제(낮 몇 번째 / 노을 / 밤) NPC가 오는지와 그 대사. 고정 주문(꽃·포장지)은 대사 CSV의 `주문:` 효과에 적는다.</summary>
 [Serializable]
 public struct DayVisit
 {
-    [Min(1), Tooltip("그날 몇 번째 방문자인가(1이 첫 방문자, 상인도 한 번으로 센다).")] public int orderIndex;
+    [Tooltip("이 방문이 오는 때. 낮은 아래 orderIndex로, 낮>밤 전환과 밤은 하루 시계가 TransitionVisitElapsed/NightStartElapsed에 이르면 다음 손님으로 온다(이 둘은 orderIndex를 쓰지 않고, 같은 때끼리는 목록 순서대로 온다). 하루 시간이 끝날 때까지 안 온 방문은 하루가 끝난 뒤 낮, 전환, 밤 순서로 차례로 온다.")] public VisitTime time;
+    [Min(1), Tooltip("낮 방문일 때: 그날 몇 번째 방문자인가(1이 첫 방문자, 상인도 한 번으로 센다).")] public int orderIndex;
     public NpcData npc;
     [Tooltip("등장·주문 대화ID(CSV).")] public string dialogueId;
     [Tooltip("등장·주문 대화 앞에 먼저 재생할 대화ID(CSV, 선택). 앞 손님과 마주치는 장면 같은 것. 주문 효과는 등장·주문 대화에 둔다.")] public string introDialogueId;

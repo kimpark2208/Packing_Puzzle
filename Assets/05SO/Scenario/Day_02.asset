@@ -14,18 +14,41 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::DayScenarioData
   day: 2
   dayVisits:
-  - orderIndex: 1
+  - time: 0
+    orderIndex: 1
     npc: {fileID: 11400000, guid: 394bdd7e9c8bbd74899054078853d1d8, type: 2}
-    dialogueId: merchant_d2_catalog
+    dialogueId: merchant_d2_intro
     introDialogueId: 
     outroDialogueId: 
     reactionPrefix: 
-  - orderIndex: 2
-    npc: {fileID: 11400000, guid: 09a6c8a80a44ee84780de94d006b69cf, type: 2}
-    dialogueId: jaemin_d2_intro
+  - time: 0
+    orderIndex: 2
+    npc: {fileID: 11400000, guid: 87d25e5237cd6a04b926170044059797, type: 2}
+    dialogueId: santa_d2_intro
+    introDialogueId: 
+    outroDialogueId: santa_d2_outro
+    reactionPrefix: santa_react
+  - time: 0
+    orderIndex: 3
+    npc: {fileID: 11400000, guid: 390322fb732969dc41eba87213f1784f, type: 2}
+    dialogueId: ping_jaemin_d2_intro
     introDialogueId: 
     outroDialogueId: 
-    reactionPrefix: jaemin_react
+    reactionPrefix: 
+  - time: 1
+    orderIndex: 1
+    npc: {fileID: 11400000, guid: de9ba7fac4196f2d72184c56628ec6d8, type: 2}
+    dialogueId: gogwajang_d2_intro
+    introDialogueId: 
+    outroDialogueId: gogwajang_d2_outro
+    reactionPrefix: 
+  - time: 2
+    orderIndex: 1
+    npc: {fileID: 11400000, guid: 69f9aaf1fec1134f9ceac0cb7b0d0b1d, type: 2}
+    dialogueId: dog_d2_intro
+    introDialogueId: 
+    outroDialogueId: 
+    reactionPrefix: 
   nightNpc: {fileID: 0}
   nightDialogueId: 
   reservationCall: {fileID: 0}

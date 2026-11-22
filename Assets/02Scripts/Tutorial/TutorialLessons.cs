@@ -89,7 +89,7 @@ public static class TutorialLessons
             Press($"{Em("[더 나은 전화기]")}를 주문해요.\n주문한 가구는 다음 날 아침 설치돼요.", () => CatalogOrderButton($"Furniture{BetterPhoneId}")),
         }),
 
-        // 신규 꽃 구매(베타 기획서: 이전 튜토리얼 방식): 처음 새 꽃이 진열되면 그 꽃을 직접 사게 한다(사기 전에는 ShopUI가 상점 마치기를 막는다. 7일차 금어초도 같다)
+        // 신규 꽃 구매(베타 기획서: 이전 튜토리얼 방식): 처음 새 꽃이 진열되면 그 꽃을 직접 사게 한다(사기 전에는 ShopUI가 상점 마치기를 막는다. 베타 시나리오는 금어초·거베라·작약을 획득 효과로 줘서 보통은 이미 얻은 꽃이 있어 나오지 않는다)
         ("new-flower", () => In(GameManager.SceneDayMain) && Active(ShopRoot) && ForcedSlot() != null, () => new[]
         {
             Banner($"처음 보는 꽃이 들어왔어요! 새 꽃을 구매하면 다음 날부터 {Em("그 꽃을 찾는 손님")}이 찾아와요."),
@@ -192,7 +192,7 @@ public static class TutorialLessons
         return x > width * 0.05f && x < width * 0.95f;
     }
 
-    /// <summary>상점 진열대에서 지금 꼭 사야 하는 꽃(처음 나온 신규 꽃, 7일차 금어초)의 칸(없으면 null).</summary>
+    /// <summary>상점 진열대에서 지금 꼭 사야 하는 꽃(처음 나온 신규 꽃)의 칸(없으면 null).</summary>
     private static ShopSlotView ForcedSlot()
     {
         ShopUI shop = UnityEngine.Object.FindFirstObjectByType<ShopUI>();

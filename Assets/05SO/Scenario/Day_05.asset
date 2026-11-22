@@ -14,9 +14,31 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::DayScenarioData
   day: 5
   dayVisits:
-  - orderIndex: 1
-    npc: {fileID: 11400000, guid: 0ff7cfa45c88d2a40a2ac9b447d2e1b7, type: 2}
-    dialogueId: supplies_d5_intro
+  - time: 0
+    orderIndex: 1
+    npc: {fileID: 11400000, guid: d734a82091fa18f4d90377c73c236414, type: 2}
+    dialogueId: hero_ping_jaemin_jian_d5_intro
+    introDialogueId: 
+    outroDialogueId: hero_ping_jaemin_d5_outro
+    reactionPrefix: hero_react
+  - time: 1
+    orderIndex: 1
+    npc: {fileID: 11400000, guid: de9ba7fac4196f2d72184c56628ec6d8, type: 2}
+    dialogueId: gogwajang_d5_intro
+    introDialogueId: 
+    outroDialogueId: gogwajang_d5_outro
+    reactionPrefix: 
+  - time: 2
+    orderIndex: 1
+    npc: {fileID: 11400000, guid: 8fc2b91183bd1a44cbec42b26b262194, type: 2}
+    dialogueId: siren_d5_intro
+    introDialogueId: 
+    outroDialogueId: 
+    reactionPrefix: siren_react
+  - time: 2
+    orderIndex: 1
+    npc: {fileID: 11400000, guid: 69f9aaf1fec1134f9ceac0cb7b0d0b1d, type: 2}
+    dialogueId: dog_d5_intro
     introDialogueId: 
     outroDialogueId: 
     reactionPrefix: 

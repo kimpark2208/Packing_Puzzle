@@ -115,13 +115,37 @@ public partial class CurrencyManager : Singleton<CurrencyManager>
         return false;
     }
 
+    // ========== 다이아 ==========
+
+    private int currentDiamonds;
+
+    public int CurrentDiamonds => currentDiamonds;
+
+    /// <summary>다이아 개수를 정한다(새 게임을 시작할 때 시작 지급량으로 맞춘다).</summary>
+    public void SetDiamonds(int amount)
+    {
+        currentDiamonds = Mathf.Max(0, amount);
+        EventBus.RaiseDiamondsChanged(currentDiamonds);
+    }
+
+    public void AddDiamonds(int amount) => SetDiamonds(currentDiamonds + amount);
+
+    /// <summary>다이아 소비. 모자라면 쓰지 않고 false.</summary>
+    public bool TrySpendDiamonds(int amount)
+    {
+        if (currentDiamonds < amount) return false;
+
+        SetDiamonds(currentDiamonds - amount);
+        return true;
+    }
+
     // ========== 카탈로그 활성화 ==========
 
     public enum CatalogKind { Furniture, Supplies }
 
     private readonly HashSet<CatalogKind> unlockedCatalogs = new();
 
-    /// <summary>카탈로그를 받았다(대사의 `카탈로그:가구`, `카탈로그:용품` 효과). 받기 전에는 카탈로그에 그 탭이 나오지 않는다.</summary>
+    /// <summary>카탈로그를 받았다(대사의 `획득:가구 카탈로그`, `획득:용품 카탈로그` 효과). 받기 전에는 카탈로그에 그 탭이 나오지 않는다.</summary>
     public void UnlockCatalog(CatalogKind kind) => unlockedCatalogs.Add(kind);
 
     /// <summary>그 카탈로그를 받았는가. 시나리오가 없으면(씬 단독 실행) 모두 받은 것으로 친다.</summary>

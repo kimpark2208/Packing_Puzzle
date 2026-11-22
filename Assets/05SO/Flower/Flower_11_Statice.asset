@@ -16,7 +16,7 @@ MonoBehaviour:
   flowerName: "\uC2A4\uD0C0\uD2F0\uC2A4"
   color: 4
   flowerRole: 3
-  acquireDay: 18
+  acquireDay: 8
   shopPrice: 200
   shopBundle: 50
   specialOrder: 

@@ -17,6 +17,11 @@ public class GameClock : Singleton<GameClock>
     [SerializeField, Range(0f, 1f), Tooltip("하루가 이만큼 지나면(0~1) 노을이 시작된다. 화면이 노을로 섞이기 시작하고, 이때부터 파란 피부 손님이 나올 수 있다(밤 시작까지 확률이 0에서 100%로 늘어난다).")] private float sunsetStartElapsed = 0.5f;
     [SerializeField, Range(0f, 1f), Tooltip("하루가 이만큼 지나면(0~1) 밤이다. 밤에는 파란 피부 손님만 오고 시계와 화면이 밤 모습이 된다.")] private float nightStartElapsed = 0.75f;
 
+    [SerializeField, Range(0f, 1f), Tooltip("하루가 이만큼 지나면(0~1) 시나리오의 '낮>밤 전환' 손님이 다음 손님으로 온다(절반이면 0.5).")] private float transitionVisitElapsed = 0.5f;
+
+    /// <summary>하루가 이만큼 지나면(0~1) 시나리오의 낮>밤 전환 손님이 다음 손님으로 온다.</summary>
+    public float TransitionVisitElapsed => transitionVisitElapsed;
+
     public float DayRemaining { get; private set; }
     public float MoodRemaining { get; private set; }
 

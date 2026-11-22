@@ -65,7 +65,7 @@ public static class DayPuzzleGenerator
             hintColorName = fallback != null ? fallback.ColorName : "특별한";
         }
 
-        // 꾸미기 용품은 얻은 용품(기본 지급, 카탈로그 주문, 선물)만 주문에 나온다
+        // 꾸미기 용품은 얻은 용품(기본 지급, 카탈로그 주문, 시나리오 획득)만 주문에 나온다
         var decorations = DataRegistry.Instance.Decorations.Where(d => d != null && CurrencyManager.Instance.HasObtainedDecoration(d.id)).ToList();
         OrderComposer.Result composed = OrderComposer.Compose(day, preset, hintColor, hintColorName, templates, decorations);
         return new DayOrder
@@ -106,10 +106,32 @@ public static class DayPuzzleGenerator
         }
 
         var used = flowers.Take(2).ToList();
-        bool Fits(WrapperPresetData p) => used.GroupBy(f => f.flower.flowerRole).All(g => g.Sum(f => f.count) <= p.CountByTag(g.Key));
+        return BuildFixedOrder(day, requirement, wrapperId, orderLine, p => used.GroupBy(f => f.flower.flowerRole).All(g => g.Sum(f => f.count) <= p.CountByTag(g.Key)));
+    }
 
+    /// <summary>
+    /// 시나리오에 정해진 색 주문("분홍색꽃x2": 그 색 꽃을 count송이 이상)으로 낮 주문을 만든다. 포장지와 프리셋은 GenerateFixedOrder와 같이 고른다(그 색 꽃이 count송이 들어가는 프리셋).
+    /// </summary>
+    public static DayOrder GenerateFixedColorOrder(int day, FlowerData.Color color, int count, int wrapperId, string orderLine)
+    {
+        var requirement = new OrderComposer.CustomerRequirement
+        {
+            requirementId = day,
+            baseAmount = OrderComposer.BaseAmount,
+            type = OrderComposer.RequirementType.Color,
+            color = color,
+            minCount = Mathf.Max(1, count),
+            flowerId = -1,
+            flowerId2 = -1,
+        };
+        return BuildFixedOrder(day, requirement, wrapperId, orderLine, p => OrderComposer.ColorCapacity(p, color) >= requirement.minCount);
+    }
+
+    /// <summary>정해진 요구사항으로, fits를 만족하는 프리셋(그 포장지 안에서)을 무작위로 골라 낮 주문을 만든다.</summary>
+    private static DayOrder BuildFixedOrder(int day, OrderComposer.CustomerRequirement requirement, int wrapperId, string orderLine, System.Func<WrapperPresetData, bool> fits)
+    {
         var all = PlayablePresets(wrapperId > 0 ? new[] { wrapperId } : CurrencyManager.Instance.UsableWrappers).ToList();
-        var pool = all.Where(p => Fits(DataRegistry.Instance.GetWrapper(p.wrapperId).presets[p.presetIndex])).ToList();
+        var pool = all.Where(p => fits(DataRegistry.Instance.GetWrapper(p.wrapperId).presets[p.presetIndex])).ToList();
         if (pool.Count == 0) // 꽃이 다 들어가는 프리셋이 없을 때의 대비
         {
             Debug.LogWarning($"[DayPuzzleGenerator] 고정 주문의 꽃이 다 들어가는 프리셋이 없어 아무 프리셋으로 진행합니다 (포장지 {wrapperId}).");
