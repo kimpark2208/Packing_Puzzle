@@ -597,6 +597,7 @@ public class MainUI : MonoBehaviour
 
     private void OnRejectClicked()
     {
+        if (PopupOpen) return; // 카탈로그·달력이 열려 있는 동안 뒤의 손님 말풍선 버튼은 눌리지 않는다
         if (dialoguePlayer != null && dialoguePlayer.Playing) { dialoguePlayer.Answer(rejectButton); return; }
         if (changingCustomer) return;
         if (showingReaction) speech.Show(forceAcceptLine);
@@ -605,6 +606,7 @@ public class MainUI : MonoBehaviour
 
     private void OnAcceptClicked()
     {
+        if (PopupOpen) return;
         if (dialoguePlayer != null && dialoguePlayer.Playing) { dialoguePlayer.Answer(acceptButton); return; }
         if (changingCustomer) return;
         if (showingReaction)
