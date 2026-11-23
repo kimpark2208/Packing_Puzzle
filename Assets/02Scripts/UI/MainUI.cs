@@ -391,6 +391,7 @@ public class MainUI : MonoBehaviour
         {
             var before = new Dialogue { id = dialogue.id, lines = dialogue.lines.GetRange(0, orderLineIndex) }; // 주문 줄 앞까지
             yield return TalkScripted(npc, before, previousLeaves, leaveAfter: false);
+            yield return SwapSpeaker(dialogue.lines[orderLineIndex].speaker); // 주문 줄을 말하는 캐릭터로 그림을 바꾼다(앞 대사의 마지막 화자 그림이 남지 않게)
 
             SetAnswerButtons(true);
             speech.ShowOrder(order); // 주문 줄: 평소의 주문과 같이 말하고 수락/되묻기를 받는다
@@ -561,6 +562,7 @@ public class MainUI : MonoBehaviour
     private void SetBubble(bool on)
     {
         if (bubbleContainer != null) bubbleContainer.SetActive(on);
+        if (!on) speech?.Clear();
         SetAnswerButtons(on);
     }
 

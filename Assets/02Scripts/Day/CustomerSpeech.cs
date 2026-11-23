@@ -23,6 +23,12 @@ public class CustomerSpeech
     /// <summary>대사가 한 글자씩 드러나는 중인가.</summary>
     public bool IsTyping => typewriter != null && typewriter.IsTyping;
 
+    /// <summary>말풍선 글자를 비운다(말풍선을 숨길 때 불러, 다시 켜질 때 이전 손님의 대사나 에디터의 시험 문장이 잠깐 보이지 않게 한다).</summary>
+    public void Clear()
+    {
+        if (bubbleText != null) bubbleText.text = "";
+    }
+
     public void Show(string line)
     {
         if (typewriter != null) typewriter.Play(line);
