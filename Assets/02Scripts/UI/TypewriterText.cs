@@ -62,7 +62,7 @@ public class TypewriterText : MonoBehaviour
         if (!typing) return;
 
         Pointer pointer = Pointer.current;
-        if (pointer != null && pointer.press.wasPressedThisFrame)
+        if (pointer != null && pointer.press.wasPressedThisFrame && !TutorialPopup.IsShowing) // 튜토리얼 팝업이 떠 있는 동안의 눌림은 건너뛰기로 치지 않는다
         {
             Finish(); // 화면 아무 곳이나 누르면 전부 보인다
             return;

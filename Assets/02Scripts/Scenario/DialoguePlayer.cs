@@ -147,6 +147,6 @@ public class DialoguePlayer
     {
         while (speech.IsTyping) yield return null;
         yield return null;
-        while (Pointer.current == null || !Pointer.current.press.wasPressedThisFrame) yield return null;
+        while (Pointer.current == null || !Pointer.current.press.wasPressedThisFrame || TutorialPopup.IsShowing) yield return null; // 튜토리얼 팝업이 떠 있는 동안의 눌림은 대사를 넘기지 않는다
     }
 }
