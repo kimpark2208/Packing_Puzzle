@@ -273,7 +273,7 @@ public partial class GameManager : Singleton<GameManager>
             if (flowers.Count == 0) return DayPuzzleGenerator.GenerateFixedColorOrder(day, orderColor.Value, colorCount, wrapperId, orderLine.text);
             Debug.LogWarning($"[GameManager] 대화 '{dialogue.id}'의 주문에 색과 꽃 이름이 함께 있어 꽃 이름만 씁니다.");
         }
-        if (flowers.Count == 0) return null;
+        if (flowers.Count == 0 && wrapperId == 0) return null; // 꽃도 포장지도 없으면 무작위 주문. 포장지만 있으면 꽃 요구 없는 주문
 
         // 대체하면 같은 꽃이 두 번 나올 수 있어 합친다(예: 카네이션 1 + 장미 1 → 장미 2)
         flowers = flowers.GroupBy(f => f.flower).Select(g => (g.Key, g.Sum(f => f.count))).ToList();

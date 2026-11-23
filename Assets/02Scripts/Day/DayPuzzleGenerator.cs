@@ -93,8 +93,8 @@ public static class DayPuzzleGenerator
             requirementId = day,
             baseAmount = OrderComposer.BaseAmount,
             type = OrderComposer.RequirementType.Flower,
-            flowerId = flowers[0].flower.flowerID,
-            flowerCount = flowers[0].count,
+            flowerId = flowers.Count > 0 ? flowers[0].flower.flowerID : -1, // 꽃 없이 포장지만 정한 주문은 꽃 요구가 없다(flowerId -1, minCount 0)
+            flowerCount = flowers.Count > 0 ? flowers[0].count : 0,
             flowerId2 = -1,
         };
         requirement.minCount = requirement.flowerCount;

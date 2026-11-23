@@ -20,13 +20,14 @@ public class FlowerNotebook : MonoBehaviour, IPointerClickHandler
         public Button button;
         public TMP_Text label;
         public Image background;
+        [NonSerialized] public Color? baseColor; // 에디터에서 칠해 둔 칩 색(처음 한 번 기억해서, 비활성이 풀리면 되돌린다)
     }
 
     private const float CenterRadius = 70f;                         // 퍼즐 보드의 중앙 칸 반지름(칸 그림 140)
     private const float CellUnitsPerPixel = 0.5f;                   // 칸 그림 1픽셀 = 보드 0.5단위(퍼즐 보드와 같다)
     private static readonly float[] RingOuterRadius = { 170f, 270f, 370f }; // 1~3링 칸의 바깥 반지름(퍼즐 보드의 칸 크기). 2링 포장지의 맨 바깥 링은 바깥 그림 크기를 쓴다
     private const float IdleAlpha = 0.45f, ActiveAlpha = 0.95f;
-    private static readonly Color ChipOn = new(0.6f, 0.6f, 0.6f), ChipOff = new(1f, 1f, 1f), ChipDisabled = new(0.8f, 0.8f, 0.8f);
+    private static readonly Color ChipDisabled = new(0.8f, 0.8f, 0.8f);
     private static readonly Color TextDark = new(0.25f, 0.25f, 0.25f);
 
     [SerializeField] private TMP_Text orderText;
@@ -208,15 +209,18 @@ public class FlowerNotebook : MonoBehaviour, IPointerClickHandler
         foreach (TagButton tag in tags)
         {
             int total = selection.CellsOf(tag.role);
-            bool locked = isLocked(tag.role);
-            tag.button.gameObject.SetActive(total > 0); // 이 포장지에 칸이 없는 태그는 숨긴다
+            bool locked = total == 0 || isLocked(tag.role); // 이 포장지에 칸이 없는 태그는 숨기지 않고 눌리지 않게만 한다
             tag.button.interactable = !locked;
             if (tag.label != null)
             {
                 tag.label.text = RoleName(tag.role);
                 tag.label.color = TextDark;
             }
-            if (tag.background != null) tag.background.color = locked ? ChipDisabled : tag.role == activeRole ? ChipOn : ChipOff;
+            if (tag.background != null)
+            {
+                tag.baseColor ??= tag.background.color; // 칩 색은 에디터에서 칠한 그대로 두고, 비활성일 때만 ChipDisabled로 칠한다
+                tag.background.color = locked ? ChipDisabled : tag.baseColor.Value;
+            }
         }
     }
 

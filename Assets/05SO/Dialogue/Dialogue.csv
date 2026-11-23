@@ -153,7 +153,7 @@ gogwajang_d3_outro,1,고과장,,그럼… 다음에 또 봐요. 남은 시간도
 jian_d3_intro,1,지안,,…,주문 받을게요.,무슨 일 있으세요?,,3일차 낮>밤 전환 · 지안 등장(고과장이 나가자마자) / 연출: 고과장이 나가자마자 지안이 들어온다
 jian_d3_intro,2,지안,응답1,"…아, 네. 죄송해요.",,,,
 jian_d3_intro,3,지안,응답2,"네? 아, 네. 아니… 아뇨. 무슨 일 없어요. 익숙한 향이 나서…",,,,
-jian_d3_intro,4,지안,,작약 한 송이요. 포장은 분홍색으로요. 새로 들어왔나 봐요?,,,주문:작약x1;주문:포장지3,
+jian_d3_intro,4,지안,,작약 한 송이요. 포장은 파란색으로요. 새로 들어왔나 봐요?,,,주문:작약x1;주문:포장지4,
 jian_d3_outro,1,지안,,아직 스타티스 없잖아요. 그죠? 제가 가장 좋아하는 색 포장지가 들어왔으니 한 번 봐드릴게요!,,,,
 jian_d3_outro,2,지안,,"아, 그리고 사장님. 스타티스 들어오면요, 꼭 하나는 빼주세요. 저 정말 필요하거든요!",,,,3일차 낮>밤 전환 · 지안 친밀 대사(아웃트로 대사)
 jian_d3_outro,3,지안,,…그럼 가볼게요. 안녕히 계세요!,,,,연출: 지안의 웃는 표정
@@ -215,7 +215,7 @@ ping_jian_d4_outro,15,핑,응답1,…좋은 쪽이다. 아마도.,,,,
 ping_jian_d4_outro,16,지안,응답2,사장님?,,,,(방긋)
 ping_jian_d4_outro,17,핑,,…간다. 볼 일 끝났다.,,,,연출: 핑 퇴장
 ping_jian_d4_outro,18,지안,,귀엽네. 다음에 또 오시려나.,,,,
-jian_d4_intro,1,지안,,저도 분홍색으로요. 작약 한 송이.,,,주문:작약x1;주문:포장지3,4일차 낮 · 지안 주문
+jian_d4_intro,1,지안,,저는 파란색으로요. 작약 한 송이.,,,주문:작약x1;주문:포장지4,4일차 낮 · 지안 주문
 santa_gogwajang_d4_intro,1,산타,,자네도 퇴근길인가? 표정이 딱 야근쟁이구먼.,,,,4일차 낮>밤 전환 · 산타·고과장 조우(주문 직전 장면) / 연출: 퇴근길의 산타가 계산하는 사이 고과장이 들어온다
 santa_gogwajang_d4_intro,2,고과장,,…티가… 나나요…,,,,
 santa_gogwajang_d4_intro,3,산타,,상사 때문이지? 우리 상사는 코가 빨개. 여름에도.,,,,
@@ -362,7 +362,7 @@ jaemin_jian_d6_outro,25,구재민,응답1,아니거든요.,,,,
 jaemin_jian_d6_outro,26,지안,응답1,아니거든요.,,,,
 jaemin_jian_d6_outro,27,지안,응답1,"…아니면 아닌 거지, 왜 쪽팔리게 저랑 합을 맞춰요?",,,,
 jaemin_jian_d6_outro,28,구재민,응답1,"뭐, 뭔 소리야! 따지자면 내가 먼저 말했으니 그쪽이 저 따라한 거죠.",,,,
-jian_d6_intro,1,지안,,저는 거베라 한 송이요. 분홍색 꽃다발로요.,,,주문:거베라x1;주문:포장지3,6일차 낮 · 지안 주문
+jian_d6_intro,1,지안,,저는 거베라 한 송이요. 파란색 꽃다발로요.,,,주문:거베라x1;주문:포장지4,6일차 낮 · 지안 주문
 hero_jaemin_jian_d6_intro,1,이세계용사,,"주민 1과 마법사! 파티가 모였군! 마왕만 있더라도 딱이었을 텐데, 아쉽군.",,,,6일차 낮 · 이세계용사 등장(주민 1·마법사와 파티) / 연출: 문이 벌컥 열리며 이세계용사 등장. 빵빠레 효과음
 hero_jaemin_jian_d6_intro,2,구재민,,모인 거 아니라고요.,,,,
 hero_jaemin_jian_d6_intro,3,지안,,큰 분은 오늘 안 와요?,,,,
@@ -548,7 +548,7 @@ gogwajang_santa_superidol_d8_intro,6,고과장,,…두 분… 아는 사이세�
 gogwajang_santa_superidol_d8_intro,7,산타,,여기 단골끼리는 다 아는 사이가 되더군.,,,,
 gogwajang_santa_superidol_d8_intro,8,산타,,원치 않아도…,,,,
 gogwajang_santa_superidol_d8_intro,9,슈퍼아이돌,,꽃은 누구 주시려고요?,,,,
-gogwajang_santa_superidol_d8_intro,10,고과장,,…딸이요… 분홍색을 좋아해요… 말은… 새침하게 하는데… 웃을 땐… 꼭 방긋… 소리가 날 것 같은 애라…,,,,
+gogwajang_santa_superidol_d8_intro,10,고과장,,…딸이요… 파란색을 좋아해요… 말은… 새침하게 하는데… 웃을 땐… 꼭 방긋… 소리가 날 것 같은 애라…,,,,
 gogwajang_santa_superidol_d8_intro,11,산타,,"허허, 딸바보로구먼.",,,,
 gogwajang_santa_superidol_d8_intro,12,고과장,,…스타티스를… 제일 좋아했어요… 말려도 색이 안 변한다고… 오래가는 게 좋다고…,,,,
 gogwajang_santa_superidol_d8_intro,13,슈퍼아이돌,,…좋아했어요?,,,,
@@ -559,7 +559,7 @@ gogwajang_santa_superidol_d8_intro,17,고과장,응답2,…그래요…?,,,,
 gogwajang_santa_superidol_d8_intro,18,고과장,응답2,…그 손님도… 오래 기다렸겠네요…,,,,
 gogwajang_santa_superidol_d8_intro,19,산타,,…자네. 그 딸 말일세.,,,,
 gogwajang_santa_superidol_d8_intro,20,산타,,…아닐세. 꽃이나 고르게.,,,,
-gogwajang_santa_superidol_d8_intro,21,고과장,,"자, 작약 한 송이에 분홍 포장지로…",,,주문:작약x1;주문:포장지3,8일차 밤 · 고과장 주문
+gogwajang_santa_superidol_d8_intro,21,고과장,,"자, 작약 한 송이에 파란 포장지로…",,,주문:작약x1;주문:포장지4,8일차 밤 · 고과장 주문
 santa_d8_intro,1,산타,,"난 항상 주문하던 장미에, 흰 포장지로 부탁하네.",,,주문:장미x1;주문:포장지1,8일차 밤 · 산타 주문
 santa_superidol_d8_outro,1,슈퍼아이돌,,…,,,,
 santa_superidol_d8_outro,2,슈퍼아이돌,,"네? 아, 전 괜찮아요. 그냥 불빛이 있길래 들른 거라.",,,,
